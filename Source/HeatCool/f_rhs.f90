@@ -3,7 +3,7 @@ subroutine f_rhs(num_eq, time, e_in, energy, rpar, ipar)
 
       use fundamental_constants_module, only: e_to_cgs, density_to_cgs, & 
                                               heat_from_cgs
-      use eos_module, only: iterate_ne
+      use eos_module, only: iterate_ne_for_vode
       use atomic_rates_module, ONLY: TCOOLMIN, TCOOLMAX, NCOOLTAB, deltaT, &
                                      MPROTON, XHYDROGEN, &
                                      AlphaHp, AlphaHep, AlphaHepp, Alphad, &
@@ -45,7 +45,7 @@ subroutine f_rhs(num_eq, time, e_in, energy, rpar, ipar)
       end if
 
       ! Get gas temperature and individual ionization species
-      call iterate_ne(z_vode, U, T_vode, nh, ne_vode, nh0, nhp, nhe0, nhep, nhepp)
+      call iterate_ne_for_vode(z_vode, U, T_vode, nh, ne_vode, nh0, nhp, nhe0, nhep, nhepp)
 
       ! Convert species to CGS units: 
       ne_vode = nh * ne_vode

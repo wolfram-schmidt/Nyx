@@ -218,6 +218,74 @@ module eos_module
 
       ! ****************************************************************************
 
+      subroutine iterate_ne_for_vode(z, U, t, nh, ne, nh0, nhp, nhe0, nhep, nhepp)
+
+      use atomic_rates_module, ONLY: this_z, YHELIUM
+
+      integer :: i
+
+      double precision, intent (in   ) :: z, U, nh
+      double precision, intent (inout) :: ne
+      double precision, intent (  out) :: t, nh0, nhp, nhe0, nhep, nhepp
+
+      double precision, parameter :: xacc = 1.0d-2
+
+      double precision :: f, df, eps
+      double precision :: nhp_plus, nhep_plus, nhepp_plus
+      double precision :: dnhp_dne, dnhep_dne, dnhepp_dne, dne
+
+      ! Check if we have interpolated to this z
+      if (abs(z-this_z) .gt. xacc*z) &
+          STOP 'iterate_ne(): Wrong redshift!'
+
+      i = 0
+      ! CHANGE -- WE ARE NO LONGER RE-SETTING NE TO ONE
+      ! ne = 1.0d0 ! 0 is a bad guess
+      do  ! Newton-Raphson solver
+         i = i + 1
+
+         ! Ion number densities
+         call ion_n(U, nh, ne, nhp, nhep, nhepp, t)
+
+         ! Forward difference derivatives
+         if (ne .gt. 0.0d0) then
+            eps = xacc*ne
+         else
+            eps = 1.0d-24
+         endif
+         call ion_n(U, nh, (ne+eps), nhp_plus, nhep_plus, nhepp_plus, t)
+
+         dnhp_dne   = (nhp_plus   - nhp)   / eps
+         dnhep_dne  = (nhep_plus  - nhep)  / eps
+         dnhepp_dne = (nhepp_plus - nhepp) / eps
+
+         f   = ne - nhp - nhep - 2.0d0*nhepp
+         df  = 1.0d0 - dnhp_dne - dnhep_dne - 2.0d0*dnhepp_dne
+         dne = f/df
+
+         ne = max((ne-dne), 0.0d0)
+
+!        print *,'   NE IN NR ',ne,f 
+
+         if (abs(dne) < xacc) exit
+
+         if (i .gt. 15) &
+            STOP 'iterate_ne(): No convergence in Newton-Raphson!'
+
+      enddo
+
+      ! Get rates for the final ne
+      call ion_n(U, nh, ne, nhp, nhep, nhepp, t)
+
+!     print *,'DOING ',i, 'NEWTON-RAPHSON ITERS ' 
+
+      ! Neutral fractions:
+      nh0   = 1.0d0 - nhp
+      nhe0  = YHELIUM - (nhep + nhepp)
+      end subroutine iterate_ne_for_vode
+
+      ! ****************************************************************************
+
       subroutine ion_n(U, nh, ne, nhp, nhep, nhepp, t)
 
       use meth_params_module, only: gamma_minus_1
