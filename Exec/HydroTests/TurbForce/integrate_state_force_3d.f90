@@ -67,7 +67,6 @@ subroutine integrate_state_force(lo, hi, &
     ! Do *not* assume this is just the valid region
     ! apply heating-cooling to UEDEN and UEINT
 
-    !$OMP parallel do private(k,j,i,rho,rho_e_orig,rho_K_res,T_orig,ne,delta,delta_re,eint0,press,small_eint)
     do k = lo(3),hi(3)
         do j = lo(2),hi(2)
             do i = lo(1),hi(1)
@@ -134,8 +133,6 @@ subroutine integrate_state_force(lo, hi, &
 !   write(6,*)dx(1),dx(2),dx(3)
 !   write (6,*) "In add_turb_forcing"
     
-    !$OMP parallel do private(k,j,i,xpos,ypos,zpos,f3,f2,f1,kz,ky,kx) &
-    !$OMP private(kzd,kyd,kxd,freqz,freqy,freqx,kappa,xt)
     do k = lo(3),hi(3)
        zpos = (dble(k) + HALF) * dx(3)
 
