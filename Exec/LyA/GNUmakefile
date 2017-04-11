@@ -27,11 +27,10 @@ GIMLET_DIR ?= /home/vince/Development/gimlet
 FFTW_INC ?= /usr/include
 FFTW_DIR ?= /usr/lib/x86_64-linux-gnu
 
-REEBER_HOME ?= $(HOME)/devel/Reeber/dev
+REEBER_HOME ?= /project/projectdirs/nyx/ghweber/reeber2
 # Reeber needs Boost (both headers and libraries) and diy2.
-BOOST_INCLUDE_DIR ?= /usr/local/include
-BOOST_LIB_DIR ?= /usr/local/lib
-DIY2_INCLUDE_DIR ?= /usr/local/include
+BOOST_INCLUDE_DIR ?= /project/projectdirs/nyx/ghweber/boost-1.61.0-noarch/include
+DIY_INCLUDE_DIR ?= /project/projectdirs/nyx/ghweber/diy/include
 
 USE_HPGMG = FALSE
 HPGMG_FCYCLES = FALSE
