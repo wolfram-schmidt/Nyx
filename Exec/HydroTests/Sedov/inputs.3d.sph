@@ -33,16 +33,16 @@ nyx.change_max     = 1.1     # maximum increase in dt over successive steps
 
 # DIAGNOSTICS & VERBOSITY
 nyx.sum_interval   = 1       # timesteps between computing mass
-nyx.v              = 1       # verbosity in Castro.cpp
-amr.v                 = 1       # verbosity in Amr.cpp
+nyx.v              = 0       # verbosity in Castro.cpp
+amr.v                 = 0       # verbosity in Amr.cpp
 #amr.grid_log         = grdlog  # name of grid logging file
 
 # REFINEMENT / REGRIDDING
-amr.max_level       = 2       # maximum level number allowed
+amr.max_level       = 1       # maximum level number allowed
 amr.ref_ratio       = 2 2 2 2 # refinement ratio
 amr.regrid_int      = 2       # how often to regrid
 amr.blocking_factor = 4       # block factor in grid generation
-amr.max_grid_size   = 128
+amr.max_grid_size   = 64
 
 # CHECKPOINT FILES
 amr.check_file      = chk     # root name of checkpoint file

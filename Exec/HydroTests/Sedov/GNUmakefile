@@ -7,7 +7,7 @@ TOP = ../../..
 # compilation options
 COMP    = gcc
 
-USE_MPI = TRUE
+USE_MPI = FALSE
 USE_OMP = TRUE
 
 PRECISION = DOUBLE

@@ -170,7 +170,10 @@ Nyx::initData ()
             int         nd       = D_new.nComp();
             D_new.setVal(0., Temp_comp);
             D_new.setVal(0.,   Ne_comp);
-
+#ifdef MHD
+	    MFIter bfi(Mx_new,true); 
+	    std::cout<< bfi <<std::endl;
+#endif
             for (MFIter mfi(S_new,true); mfi.isValid(); ++mfi)
             {
                 const Box& bx = mfi.tilebox();
@@ -181,11 +184,16 @@ Nyx::initData ()
                      ns, BL_TO_FORTRAN(S_new[mfi]), 
                      nd, BL_TO_FORTRAN(D_new[mfi]), 
 #ifdef MHD
-		     nbx, BL_TO_FORTRAN(Mx_new[mfi],
-		     nby, BL_TO_FORTRAN(My_new[mfi],
-		     nbz, BL_TO_FORTRAN(Mz_new[mfi],
+		     nbx, BL_TO_FORTRAN(Mx_new[bfi],
+		     nby, BL_TO_FORTRAN(My_new[bfi],
+		     nbz, BL_TO_FORTRAN(Mz_new[bfi],
 #endif
 		     dx, gridloc.lo(), gridloc.hi());
+#ifdef MHD
+	 	 if(bfi.isValid()){
+			bfi++;
+			}
+#endif
             }
 
            compute_new_temp();

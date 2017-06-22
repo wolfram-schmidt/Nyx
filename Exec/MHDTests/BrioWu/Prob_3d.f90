@@ -17,7 +17,8 @@
       namelist /fortin/ comoving_OmM, comoving_OmB, comoving_h, &
            p_l, u_l, rho_l, p_r, u_r, rho_r, frac, idir, &
            denerr,  dengrad,  max_denerr_lev,  max_dengrad_lev, &
-           presserr,pressgrad,max_presserr_lev,max_pressgrad_lev
+           presserr,pressgrad,max_presserr_lev,max_pressgrad_lev, &
+	   B_x_l, B_y_l, B_z_l, B_x_r, B_y_r, B_z_r
 
 !
 !     Build "probin" filename -- the name of file containing fortin namelist.
@@ -42,10 +43,16 @@
       p_l = 1.0               ! left pressure (erg/cc)
       u_l = 0.0               ! left velocity (cm/s)
       rho_l = 1.0             ! left density (g/cc)
+      B_x_l = 0.75	      ! left x component of magnetic field
+      B_y_l = 1.	      ! left y component of magnetic field
+      B_z_l = 0.	      ! left z component of magnetic field
 
       p_r = 0.1               ! right pressure (erg/cc)
       u_r = 0.0               ! right velocity (cm/s)
       rho_r = 0.125           ! right density (g/cc)
+      B_x_r = 0.75	      ! right x component of magnetic field
+      B_y_r = -1.	      ! right y component of magnetic field
+      B_z_r = 0.	      ! right z component of magnetic field
 
       idir = 1                ! direction across which to jump
       frac = 0.5              ! fraction of the domain for the interface
@@ -100,6 +107,9 @@
       subroutine fort_initdata(level,time,lo,hi, &
                                ns, state   ,s_l1,s_l2,s_l3,s_h1,s_h2,s_h3, &
                                nd, diag_eos,d_l1,d_l2,d_l3,d_h1,d_h2,d_h3, &
+                               nbx, mag_x ,bx_l1,bx_l2,bx_l3,bx_h1,bx_h2,bx_h3, &
+                               nby, mag_y ,by_l1,by_l2,by_l3,by_h1,by_h2,by_h3, &
+                               nbz, mag_z ,bz_l1,bz_l2,bz_l3,bz_h1,bz_h2,bz_h3, &
                                delta,xlo,xhi)  &
                                bind(C, name="fort_initdata")
 
@@ -109,13 +119,19 @@
      use meth_params_module, only : NVAR, URHO, UMX, UMY, UMZ, UEDEN, UEINT, UFS
      implicit none
 
-     integer  :: level, ns, nd
+     integer  :: level, ns, nd, nbx, nby, nbz
      integer  :: lo(3), hi(3)
      integer  :: s_l1,s_l2,s_l3,s_h1,s_h2,s_h3
      integer  :: d_l1,d_l2,d_l3,d_h1,d_h2,d_h3
+     integer  :: bx_l1,bx_l2,bx_l3,bx_h1,bx_h2,bx_h3
+     integer  :: by_l1,by_l2,by_l3,by_h1,by_h2,by_h3
+     integer  :: bz_l1,bz_l2,bz_l3,bz_h1,bz_h2,bz_h3
      real(rt) ::  xlo(3), xhi(3), time, delta(3)
      real(rt) ::     state(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,ns)
      real(rt) ::  diag_eos(d_l1:d_h1,d_l2:d_h2,d_l3:d_h3,nd)
+     real(rt) ::  mag_x(bx_l1:bx_h1,bx_l2:bx_h2,bx_l3:bx_h3)
+     real(rt) ::  mag_y(by_l1:by_h1,by_l2:by_h2,by_l3:by_h3)
+     real(rt) ::  mag_z(bz_l1:bz_h1,bz_l2:bz_h2,bz_l3:bz_h3)
 
      real(rt) :: xcen,ycen,zcen
      integer  :: i,j,k
@@ -137,6 +153,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_l + 0.5*rho_l*u_l*u_l
                      state(i,j,k,UEINT) = rhoe_l
+		     mag_x(i,j,k) = B_x_l
+		     mag_y(i,j,k) = B_y_l
+		     mag_z(i,j,k) = B_z_l
                   else
                      state(i,j,k,URHO) = rho_r
                      state(i,j,k,UMX) = rho_r*u_r
@@ -144,6 +163,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_r + 0.5*rho_r*u_r*u_r
                      state(i,j,k,UEINT) = rhoe_r
+		     mag_x(i,j,k) = B_x_r
+		     mag_y(i,j,k) = B_y_r
+		     mag_z(i,j,k) = B_z_r
                   endif
 
                else if (idir == 2) then
@@ -154,6 +176,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_l + 0.5*rho_l*u_l*u_l
                      state(i,j,k,UEINT) = rhoe_l
+		     mag_x(i,j,k) = B_x_l
+		     mag_y(i,j,k) = B_y_l
+		     mag_z(i,j,k) = B_z_l
                   else
                      state(i,j,k,URHO) = rho_r
                      state(i,j,k,UMX) = 0.d0
@@ -161,6 +186,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_r + 0.5*rho_r*u_r*u_r
                      state(i,j,k,UEINT) = rhoe_r
+		     mag_x(i,j,k) = B_x_r
+		     mag_y(i,j,k) = B_y_r
+		     mag_z(i,j,k) = B_z_r
                   endif
 
                else if (idir == 3) then
@@ -171,6 +199,9 @@
                      state(i,j,k,UMZ) = rho_l*u_l
                      state(i,j,k,UEDEN) = rhoe_l + 0.5*rho_l*u_l*u_l
                      state(i,j,k,UEINT) = rhoe_l
+		     mag_x(i,j,k) = B_x_l
+		     mag_y(i,j,k) = B_y_l
+		     mag_z(i,j,k) = B_z_l
                   else
                      state(i,j,k,URHO) = rho_r
                      state(i,j,k,UMX) = 0.d0
@@ -178,6 +209,9 @@
                      state(i,j,k,UMZ) = rho_r*u_r
                      state(i,j,k,UEDEN) = rhoe_r + 0.5*rho_r*u_r*u_r
                      state(i,j,k,UEINT) = rhoe_r
+		     mag_x(i,j,k) = B_x_r
+		     mag_y(i,j,k) = B_y_r
+		     mag_z(i,j,k) = B_z_r
                   endif
 
                else

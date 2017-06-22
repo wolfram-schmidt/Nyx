@@ -22,10 +22,6 @@ CEXE_sources += strang_splitting.cpp
 endif
 
 ifeq ($(MHD), TRUE)
-CEXE_sources += Nyx_mhd.cpp
-CEXE_sources += sum_integrated_quantities_mhd.cpp
-CEXE_sources += sum_utils_mhd.cpp
-CEXE_sources += strang_splitting_mhd.cpp
 #More
 endif 
 
