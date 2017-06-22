@@ -31,14 +31,6 @@ enum StateType {
 };
 #endif
 
-#ifdef MHD
-enum StateType {
-     Mag_Type_x = 0, 
-     Mag_Type_y, 
-     Mag_Type_z
-};
-#endif
-
 #ifndef NO_HYDRO
 enum StateType {
     State_Type = 0,
@@ -46,6 +38,11 @@ enum StateType {
 #ifdef GRAVITY
     PhiGrav_Type,
     Gravity_Type,
+#endif
+#ifdef MHD
+     Mag_Type_x, 
+     Mag_Type_y, 
+     Mag_Type_z,
 #endif
     NUM_STATE_TYPE
 };
@@ -590,6 +587,9 @@ protected:
     void compute_average_density();
     void compute_average_temperature(amrex::Real& average_temperature);
     void compute_average_species(int nspec, int naux, amrex::Array<amrex::Real>& average_species);
+    #ifdef MHD
+	//Maybe do something here
+    #endif
 
     void set_small_values();
 #endif
@@ -598,6 +598,9 @@ protected:
 
 #ifndef NO_HYDRO
     amrex::FluxRegister* flux_reg;
+#ifdef MHD
+	//Something something flux
+#endif
 #endif
 
     //
@@ -746,7 +749,9 @@ Nyx::get_flux_reg()
     BL_ASSERT(flux_reg);
     return *flux_reg;
 }
-
+#ifdef MHD
+	//Something here maybe.
+#endif 
 inline
 amrex::FluxRegister&
 Nyx::get_flux_reg(int level)

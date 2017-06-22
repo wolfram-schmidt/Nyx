@@ -73,8 +73,14 @@ extern "C"
   void fort_initdata
     (const int& level, const amrex::Real& time, const int* lo, const int* hi,
      const int& num_state, BL_FORT_FAB_ARG(state),
-     const int& num_diag,  BL_FORT_FAB_ARG(diag_eos), const amrex::Real dx[],
-     const amrex::Real xlo[], const amrex::Real xhi[]);
+     const int& num_diag,  BL_FORT_FAB_ARG(diag_eos)
+#ifdef MHD //Gives MHD if needed
+     const int& num_bx, BL_FORT_FAB_ARG(mag_x),
+     const int& num_by, BL_FORT_FAB_ARG(mag_z),
+     const int& num_bz, BL_FORT_FAB_ARG(mag_z),
+#endif
+     const amrex::Real dx[], const amrex::Real xlo[],
+     const amrex::Real xhi[]);
 
   void fort_check_initial_species
     (const int* lo, const int* hi, BL_FORT_FAB_ARG(state));

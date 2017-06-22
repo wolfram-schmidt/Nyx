@@ -540,7 +540,7 @@ Nyx::hydro_setup()
                    BL_FORT_PROC_CALL(DERFORCEZ, derforcez), the_same_box);
     derive_lst.addComponent("forcez", desc_lst, State_Type, Density, 1);
 #endif
-
+	
     //
     // Velocities
     //
@@ -558,6 +558,37 @@ Nyx::hydro_setup()
                    BL_FORT_PROC_CALL(DERVEL, dervel), the_same_box);
     derive_lst.addComponent("z_velocity", desc_lst, State_Type, Density, 1);
     derive_lst.addComponent("z_velocity", desc_lst, State_Type, Zmom, 1);
+
+#ifdef MHD
+//Electric Field at the face
+//------------------------------- Need to think about Index Type -------------------------------//
+//Magnetic Field Cell Centered
+	derive_lst.add("mag_center", IndexType::TheCellType(), 3,
+					BL_FORT_PROC_CALL(DERMAGCENTER,dermagcenter), the_same_box);
+	derive_lst.addComponent("mag_center", desc_lst, State_Type, Mag_Type_x,1);
+	derive_lst.addComponent("mag_center", desc_lst, State_Type, Mag_Type_y,1);
+	derive_lst.addComponent("mag_center", desc_lst, State_Type, Mag_Type_z,1);
+
+	derive_lst.add("electric_x", IndexType::TheCellType(),1,
+					BL_FORT_PROC_CALL(DERELECX, derelecx), the_same_box);
+	derive_lst.addComponent("electric_x", desc_lst, State_Type, mag_center,1);
+	derive_lst.addComponent("electric_x", desc_lst, State_Type, z_velocity,1);
+	derive_lst.addComponent("electric_x", desc_lst, State_Type, y_velocity,1);
+
+//y component
+	derive_lst.add("electric_y", IndexType::TheCellType(),1,
+					BL_FORT_PROC_CALL(DERELECY, derelecy), the_same_box);
+	derive_lst.addComponent("electric_y", desc_lst, State_Type, mag_center,1);
+	derive_lst.addComponent("electric_y", desc_lst, State_Type, z_velocity,1);
+	derive_lst.addComponent("electric_y", desc_lst, State_Type, x_velocity,1);
+
+//z component
+	derive_lst.add("electric_z", IndexType::TheCellType(),1,
+					BL_FORT_PROC_CALL(DERELECZ, derelecz), the_same_box);
+	derive_lst.addComponent("electric_z", desc_lst, State_Type, mag_center,1);
+	derive_lst.addComponent("electric_z", desc_lst, State_Type, y_velocity,1);
+	derive_lst.addComponent("electric_z", desc_lst, State_Type, x_velocity,1);
+#endif
 
     //
     // Magnitude of velocity.

@@ -129,6 +129,18 @@ Nyx::initData ()
     S_new.setVal(0.0);
 #endif
 
+#ifdef MHD
+   // Same comment as Hydro
+   MultiFab& Mx_new	= get_new_data(Mag_Type_x);
+   Mx_new.setVal(0.0);
+
+   MultiFab& My_new	= get_new_data(Mag_Type_y);
+   My_new.setVal(0.0);
+
+   MultiFab& Mz_new	= get_new_data(Mag_Type_z);
+   Mz_new.setVal(0.0);
+#endif
+
     // If you run a pure N-body simulation and Nyx segfaults here, then
     // please check Prob_3d.f90... You might set other variables then density...
     if (verbose && ParallelDescriptor::IOProcessor())
@@ -143,7 +155,11 @@ Nyx::initData ()
 
 #ifndef NO_HYDRO
     int         ns       = S_new.nComp();
-
+#ifdef MHD
+    int 	nbx 	 = Mx_new.nComp();
+    int 	nby 	 = My_new.nComp();
+    int 	nbz 	 = Mz_new.nComp();
+#endif
     Real  cur_time = state[State_Type].curTime();
 
     if ( (do_santa_barbara == 0) && (do_readin_ics == 0) && (particle_init_type != "Cosmological") )
@@ -164,7 +180,12 @@ Nyx::initData ()
                     (level, cur_time, bx.loVect(), bx.hiVect(), 
                      ns, BL_TO_FORTRAN(S_new[mfi]), 
                      nd, BL_TO_FORTRAN(D_new[mfi]), 
-                     dx, gridloc.lo(), gridloc.hi());
+#ifdef MHD
+		     nbx, BL_TO_FORTRAN(Mx_new[mfi],
+		     nby, BL_TO_FORTRAN(My_new[mfi],
+		     nbz, BL_TO_FORTRAN(Mz_new[mfi],
+#endif
+		     dx, gridloc.lo(), gridloc.hi());
             }
 
            compute_new_temp();
@@ -187,6 +208,8 @@ Nyx::initData ()
     }
 
 #endif // end NO_HYDRO
+
+
 
 #ifdef GRAVITY
 

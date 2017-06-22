@@ -167,6 +167,7 @@ Nyx::writePlotFile (const std::string& dir,
     Real cur_time = state[State_Type].curTime();
 #endif
 
+
     if (level == 0 && ParallelDescriptor::IOProcessor())
     {
         //
