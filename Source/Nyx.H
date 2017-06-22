@@ -31,6 +31,14 @@ enum StateType {
 };
 #endif
 
+#ifdef MHD
+enum StateType {
+     Mag_Type_x = 0, 
+     Mag_Type_y, 
+     Mag_Type_z
+};
+#endif
+
 #ifndef NO_HYDRO
 enum StateType {
     State_Type = 0,

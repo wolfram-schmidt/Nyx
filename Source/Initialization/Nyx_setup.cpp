@@ -261,6 +261,26 @@ Nyx::hydro_setup()
                            StateDescriptor::Point, 1, 2, interp,
                            state_data_extrap, store_in_checkpoint);
 
+#ifdef MHD
+	store_in_checkpoint = true; 
+	desc_lst.addDescriptor(Mag_Type_x, IndexType::{1,0,0},
+			 	StateDescriptor::Point, 1, 1,
+				&div_cons_interp, state_data_extrap, 
+				store_in_checkpoint);
+
+	desc_lst.addDescriptor(Mag_Type_y, IndexType::{0,1,0},
+			 	StateDescriptor::Point, 1, 1,
+				&div_cons_interp, state_data_extrap, 
+				store_in_checkpoint);
+
+	desc_lst.addDescriptor(Mag_Type_z, IndexType::{0,0,1},
+			 	StateDescriptor::Point, 1, 1,
+				&div_cons_interp, state_data_extrap, 
+				store_in_checkpoint);	
+/* Maybe do Electric Field 
+   Need to write div_cons_interp*/
+#endif
+
 #ifdef GRAVITY
     store_in_checkpoint = true;
     desc_lst.addDescriptor(PhiGrav_Type, IndexType::TheCellType(),
