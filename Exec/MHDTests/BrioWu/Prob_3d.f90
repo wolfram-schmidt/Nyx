@@ -129,9 +129,9 @@
      real(rt) ::  xlo(3), xhi(3), time, delta(3)
      real(rt) ::     state(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,ns)
      real(rt) ::  diag_eos(d_l1:d_h1,d_l2:d_h2,d_l3:d_h3,nd)
-     real(rt) ::  mag_x(bx_l1:bx_h1,bx_l2:bx_h2,bx_l3:bx_h3)
-     real(rt) ::  mag_y(by_l1:by_h1,by_l2:by_h2,by_l3:by_h3)
-     real(rt) ::  mag_z(bz_l1:bz_h1,bz_l2:bz_h2,bz_l3:bz_h3)
+     real(rt) ::  mag_x(bx_l1:bx_h1,bx_l2:bx_h2,bx_l3:bx_h3,nbx)
+     real(rt) ::  mag_y(by_l1:by_h1,by_l2:by_h2,by_l3:by_h3,nby)
+     real(rt) ::  mag_z(bz_l1:bz_h1,bz_l2:bz_h2,bz_l3:bz_h3,nbz)
 
      real(rt) :: xcen,ycen,zcen
      integer  :: i,j,k
@@ -153,9 +153,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_l + 0.5*rho_l*u_l*u_l
                      state(i,j,k,UEINT) = rhoe_l
-		     mag_x(i,j,k) = B_x_l
-		     mag_y(i,j,k) = B_y_l
-		     mag_z(i,j,k) = B_z_l
+		     mag_x(i,j,k,1) = B_x_l
+		     mag_y(i,j,k,1) = B_y_l
+		     mag_z(i,j,k,1) = B_z_l
                   else
                      state(i,j,k,URHO) = rho_r
                      state(i,j,k,UMX) = rho_r*u_r
@@ -163,9 +163,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_r + 0.5*rho_r*u_r*u_r
                      state(i,j,k,UEINT) = rhoe_r
-		     mag_x(i,j,k) = B_x_r
-		     mag_y(i,j,k) = B_y_r
-		     mag_z(i,j,k) = B_z_r
+		     mag_x(i,j,k,1) = B_x_r
+		     mag_y(i,j,k,1) = B_y_r
+		     mag_z(i,j,k,1) = B_z_r
                   endif
 
                else if (idir == 2) then
@@ -176,9 +176,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_l + 0.5*rho_l*u_l*u_l
                      state(i,j,k,UEINT) = rhoe_l
-		     mag_x(i,j,k) = B_x_l
-		     mag_y(i,j,k) = B_y_l
-		     mag_z(i,j,k) = B_z_l
+		     mag_x(i,j,k,1) = B_x_l
+		     mag_y(i,j,k,1) = B_y_l
+		     mag_z(i,j,k,1) = B_z_l
                   else
                      state(i,j,k,URHO) = rho_r
                      state(i,j,k,UMX) = 0.d0
@@ -186,9 +186,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_r + 0.5*rho_r*u_r*u_r
                      state(i,j,k,UEINT) = rhoe_r
-		     mag_x(i,j,k) = B_x_r
-		     mag_y(i,j,k) = B_y_r
-		     mag_z(i,j,k) = B_z_r
+		     mag_x(i,j,k,1) = B_x_r
+		     mag_y(i,j,k,1) = B_y_r
+		     mag_z(i,j,k,1) = B_z_r
                   endif
 
                else if (idir == 3) then
@@ -199,9 +199,9 @@
                      state(i,j,k,UMZ) = rho_l*u_l
                      state(i,j,k,UEDEN) = rhoe_l + 0.5*rho_l*u_l*u_l
                      state(i,j,k,UEINT) = rhoe_l
-		     mag_x(i,j,k) = B_x_l
-		     mag_y(i,j,k) = B_y_l
-		     mag_z(i,j,k) = B_z_l
+		     mag_x(i,j,k,1) = B_x_l
+		     mag_y(i,j,k,1) = B_y_l
+		     mag_z(i,j,k,1) = B_z_l
                   else
                      state(i,j,k,URHO) = rho_r
                      state(i,j,k,UMX) = 0.d0
@@ -209,9 +209,9 @@
                      state(i,j,k,UMZ) = rho_r*u_r
                      state(i,j,k,UEDEN) = rhoe_r + 0.5*rho_r*u_r*u_r
                      state(i,j,k,UEINT) = rhoe_r
-		     mag_x(i,j,k) = B_x_r
-		     mag_y(i,j,k) = B_y_r
-		     mag_z(i,j,k) = B_z_r
+		     mag_x(i,j,k,1) = B_x_r
+		     mag_y(i,j,k,1) = B_y_r
+		     mag_z(i,j,k,1) = B_z_r
                   endif
 
                else

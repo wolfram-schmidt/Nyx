@@ -263,17 +263,21 @@ Nyx::hydro_setup()
 
 #ifdef MHD
 	store_in_checkpoint = true; 
-	desc_lst.addDescriptor(Mag_Type_x, IndexType::{1,0,0},
+//Need to define index type for Magnetic Fields
+	IndexType xface(IntVect{AMREX_D_DECL(1,0,0)});
+	desc_lst.addDescriptor(Mag_Type_x, IndexType::xface,
 			 	StateDescriptor::Point, 1, 1,
 				&div_cons_interp, state_data_extrap, 
 				store_in_checkpoint);
 
-	desc_lst.addDescriptor(Mag_Type_y, IndexType::{0,1,0},
+	IndexType yface(IntVect{AMREX_D_DECL(0,1,0)});
+	desc_lst.addDescriptor(Mag_Type_y, IndexType::yface,
 			 	StateDescriptor::Point, 1, 1,
 				&div_cons_interp, state_data_extrap, 
 				store_in_checkpoint);
 
-	desc_lst.addDescriptor(Mag_Type_z, IndexType::{0,0,1},
+	IndexType zface(IntVect{AMREX_D_DECL(0,0,1)});
+	desc_lst.addDescriptor(Mag_Type_z, IndexType::zface,
 			 	StateDescriptor::Point, 1, 1,
 				&div_cons_interp, state_data_extrap, 
 				store_in_checkpoint);	
