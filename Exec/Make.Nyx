@@ -17,6 +17,10 @@ ifeq ($(USE_GRAV), TRUE)
   DEFINES += -DGRAVITY
 endif
 
+ifeq ($(USE_MHD), TRUE)
+  DEFINES += -DMHD
+endif
+
 ifeq ($(NO_HYDRO), TRUE)
   DEFINES += -DNO_HYDRO
 endif

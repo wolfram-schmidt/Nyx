@@ -7,7 +7,6 @@ TOP = ../../..
 # compilation options
 COMP    = gcc
 
-MHD = TRUE
 USE_MPI = FALSE
 USE_OMP = FALSE
 
@@ -17,6 +16,7 @@ DEBUG     = TRUE
 
 # physics
 DIM      = 3
+USE_MHD = TRUE
 USE_GRAV = FALSE
 
 Bpack := ./Make.package
