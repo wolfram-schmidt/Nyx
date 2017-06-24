@@ -960,8 +960,8 @@
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-		vx = dat(i,j,k,4)/dat(i,j,k,3)
-		vy = dat(i,j,k,5)/dat(i,j,k,3)
+			vx = dat(i,j,k,4)/dat(i,j,k,3)
+			vy = dat(i,j,k,5)/dat(i,j,k,3)
     		E_z(i,j,k,1) = -vx*dat(i,j,k,2) + vy*dat(i,j,k,1)
             end do
          end do
@@ -969,4 +969,45 @@
 
       end subroutine derez
 
+
+!--------------------------------------------------------------------------------------
+
+   subroutine derdivb(divb,divb_l1,divb_l2,divb_l3,divb_h1,divb_h2,divb_h3, Ebz, &
+                              dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
+                              lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
+      !
+      ! This routine will derive the divergence of the magnetic field. 
+      ! out = div(B)
+      !
+      use amrex_fort_module, only : rt => amrex_real
+      implicit none
+
+      integer          lo(3), hi(3)
+      integer          divb_l1,divb_l2,divb_l3,divb_h1,divb_h2,divb_h3, Ebz
+      integer          dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc
+      integer          domlo(3), domhi(3)
+      integer          bc(3,2,nc)
+      real(rt) delta(3), xlo(3), time, dt
+      real(rt) divb(divb_l1:divb_h1,divb_l2:divb_h2,divb_l3:divb_h3,Ebz)
+      real(rt)    dat(dat_l1:dat_h1,dat_l2:dat_h2,dat_l3:dat_h3,nc)
+      integer    level, grid_no
+
+      integer i,j,k
+      real dx,dy,dz
+      ! 
+      ! Here dat contains (mag_x,mag_y,mag_z)
+      ! 
+	divb = 0.0
+      do k = lo(3) + 1, hi(3)
+         do j = lo(2) + 1, hi(2)
+            do i = lo(1) + 1, hi(1)
+				dx = dat(i,j,k,1) - dat(i-1,j,k,1)
+				dy = dat(i,j,k,2) - dat(i,j-1,k,2)
+				dz = dat(i,j,k,3) - dat(i,j,k-1,3)
+    			divb(i,j,k,1) = dx+ dy + dz
+            end do
+         end do
+      end do
+
+      end subroutine derdivb
 

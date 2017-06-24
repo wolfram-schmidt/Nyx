@@ -603,7 +603,7 @@ std::cout<<"Hi 5"<<std::endl;
 //y component
 	derive_lst.add("E_y", IndexType::TheCellType(),1,
 			BL_FORT_PROC_CALL(DEREY, derey), the_same_box);
-	derive_lst.addComponent("E_y", desc_lst, Mag_Type_y, 0,1);
+	derive_lst.addComponent("E_y", desc_lst, Mag_Type_x, 0,1);
 	derive_lst.addComponent("E_y", desc_lst, Mag_Type_z, 0,1);
     derive_lst.addComponent("E_y", desc_lst, State_Type, Density, 1); //For velocities
     derive_lst.addComponent("E_y", desc_lst, State_Type, Xmom, 1);
@@ -612,11 +612,19 @@ std::cout<<"Hi 5"<<std::endl;
 //z component
 	derive_lst.add("E_z", IndexType::TheCellType(),1,
 			BL_FORT_PROC_CALL(DEREZ, derez), the_same_box);
-	derive_lst.addComponent("E_z", desc_lst, Mag_Type_y, 0,1);
-	derive_lst.addComponent("E_z", desc_lst, Mag_Type_z, 0,1);
+	derive_lst.addComponent("E_z", desc_lst, Mag_Type_x, 0, 1);
+	derive_lst.addComponent("E_z", desc_lst, Mag_Type_y, 0, 1);
     derive_lst.addComponent("E_z", desc_lst, State_Type, Density, 1); //For velocities
     derive_lst.addComponent("E_z", desc_lst, State_Type, Xmom, 1);
     derive_lst.addComponent("E_z", desc_lst, State_Type, Ymom, 1);
+
+//Divergence of B
+	derive_lst.add("Div_B", IndexType::TheCellType(), 1,
+			BL_FORT_PROC_CALL(DERDIVB,derdivb), the_same_box);
+	derive_lst.addComponent("B_x", desc_lst, Mag_Type_x, 0 ,1);
+	derive_lst.addComponent("B_y", desc_lst, Mag_Type_y, 0 ,1);
+	derive_lst.addComponent("B_z", desc_lst, Mag_Type_z, 0 ,1);
+
 #endif
 
     //
