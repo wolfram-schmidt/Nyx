@@ -92,6 +92,11 @@ int Nyx::Eint = -1;
 int Nyx::Xmom = -1;
 int Nyx::Ymom = -1;
 int Nyx::Zmom = -1;
+#ifdef MHD
+int Nyx::B_x  = -1;
+int Nyx::B_y  = -1;
+int Nyx::B_z  = -1;
+#endif
 
 int Nyx::Temp_comp = -1;
 int Nyx::  Ne_comp = -1;

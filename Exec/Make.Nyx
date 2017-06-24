@@ -93,8 +93,8 @@ endif
 ifeq ($(USE_AGN), TRUE)
    Bdirs 	+= Source/AGN
 endif
-ifeq ($(MHD), TRUE)
-#   Bdirs	+= Source/MHD
+ifeq ($(USE_MHD), TRUE)
+ #  Bdirs	+= Source/MHD
 endif
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))

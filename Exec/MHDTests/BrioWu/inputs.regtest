@@ -61,8 +61,8 @@ amr.check_int       = 1000    # number of timesteps between checkpoints
 # PLOTFILES
 amr.plot_file       = plt_y_  # root name of plotfile
 amr.plot_int        = 200     # number of timesteps between plotfiles
-amr.plot_vars        = density
-amr.derive_plot_vars = pressure eint_E Temp y_velocity # these variables appear in the plotfile
+amr.plot_vars        = density 
+amr.derive_plot_vars = pressure eint_E Temp y_velocity B_x B_y B_z # these variables appear in the plotfile
 
 #PROBIN FILENAME
 amr.probin_file = probin-bwu-y

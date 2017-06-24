@@ -189,7 +189,6 @@ Nyx::hydro_setup()
     Eden    = 4;
     Eint    = 5;
     int cnt = 6;
-
     NumAdv = 0;
     if (NumAdv > 0)
     {
@@ -265,21 +264,21 @@ Nyx::hydro_setup()
 	store_in_checkpoint = true; 
 //Need to define index type for Magnetic Fields
 	IndexType xface(IntVect{AMREX_D_DECL(1,0,0)});
-	desc_lst.addDescriptor(Mag_Type_x, IndexType::xface,
+	desc_lst.addDescriptor(Mag_Type_x, xface,
 			 	StateDescriptor::Point, 1, 1,
-				&div_cons_interp, state_data_extrap, 
+				interp, state_data_extrap, 
 				store_in_checkpoint);
 
 	IndexType yface(IntVect{AMREX_D_DECL(0,1,0)});
-	desc_lst.addDescriptor(Mag_Type_y, IndexType::yface,
+	desc_lst.addDescriptor(Mag_Type_y, yface,
 			 	StateDescriptor::Point, 1, 1,
-				&div_cons_interp, state_data_extrap, 
+				interp, state_data_extrap, 
 				store_in_checkpoint);
 
 	IndexType zface(IntVect{AMREX_D_DECL(0,0,1)});
-	desc_lst.addDescriptor(Mag_Type_z, IndexType::zface,
+	desc_lst.addDescriptor(Mag_Type_z, zface,
 			 	StateDescriptor::Point, 1, 1,
-				&div_cons_interp, state_data_extrap, 
+				interp, state_data_extrap, 
 				store_in_checkpoint);	
 /* Maybe do Electric Field 
    Need to write div_cons_interp*/
@@ -316,6 +315,13 @@ Nyx::hydro_setup()
     cnt++;
     set_scalar_bc(bc, phys_bc);  bcs[cnt] = bc;  name[cnt] = "rho_e";
 
+#if 0
+    cnt++;
+    set_y_vel_bc(bc, phys_bc);  bcs[cnt] = bc;  name[cnt] = "B_y";
+    cnt++;
+    set_z_vel_bc(bc, phys_bc);  bcs[cnt] = bc;  name[cnt] = "B_z";
+    cnt++;
+#endif
     for (int i = 0; i < NumAdv; ++i)
     {
         cnt++;
@@ -347,7 +353,7 @@ Nyx::hydro_setup()
            std::cout << spec_names[i] << ' ' << ' ';
         std::cout << '\n';
     }
-
+std::cout<<"Hi 1"<<std::endl;
     if (use_const_species == 0)
     {
         for (int i = 0; i < NumSpec; ++i)
@@ -358,7 +364,7 @@ Nyx::hydro_setup()
                 name[cnt] = "rho_" + spec_names[i];
          }
     }
-
+std::cout<<"Hi 2"<<std::endl;
     // Get the auxiliary names from the network model.
     Array<std::string> aux_names(NumAux);
 
@@ -393,7 +399,7 @@ Nyx::hydro_setup()
             name[cnt] = "rho_" + aux_names[i];
         }
     }
-
+std::cout<<"Hi 3"<<std::endl;
     desc_lst.setComponent(State_Type, Density, name, bcs,
                           BndryFunc(denfill,hypfill));
 
@@ -566,32 +572,51 @@ Nyx::hydro_setup()
 #ifdef MHD
 //Electric Field at the face
 //------------------------------- Need to think about Index Type -------------------------------//
-//Magnetic Field Cell Centered
-	derive_lst.add("mag_center", IndexType::TheCellType(), 3,
-					BL_FORT_PROC_CALL(DERMAGCENTER,dermagcenter), the_same_box);
-	derive_lst.addComponent("mag_center", desc_lst, State_Type, Mag_Type_x,1);
-	derive_lst.addComponent("mag_center", desc_lst, State_Type, Mag_Type_y,1);
-	derive_lst.addComponent("mag_center", desc_lst, State_Type, Mag_Type_z,1);
 
-	derive_lst.add("electric_x", IndexType::TheCellType(),1,
-					BL_FORT_PROC_CALL(DERELECX, derelecx), the_same_box);
-	derive_lst.addComponent("electric_x", desc_lst, State_Type, mag_center,1);
-	derive_lst.addComponent("electric_x", desc_lst, State_Type, z_velocity,1);
-	derive_lst.addComponent("electric_x", desc_lst, State_Type, y_velocity,1);
+//Magnetic Field Cell Centered
+std::cout<<"Hi 4"<<std::endl;
+//x component
+	derive_lst.add("B_x", IndexType::TheCellType(), 1,
+			BL_FORT_PROC_CALL(DERMAGCENX,dermagcenx), the_same_box);
+	derive_lst.addComponent("B_x", desc_lst, Mag_Type_x, 0 ,1);
+std::cout<<"Hi 5"<<std::endl;
+//y component
+	derive_lst.add("B_y", IndexType::TheCellType(), 1,
+			BL_FORT_PROC_CALL(DERMAGCENY,dermagceny), the_same_box);
+	derive_lst.addComponent("B_y", desc_lst, Mag_Type_y, 0 ,1);
+//z component
+	derive_lst.add("B_z", IndexType::TheCellType(), 1,
+			BL_FORT_PROC_CALL(DERMAGCENZ,dermagcenz), the_same_box);
+	derive_lst.addComponent("B_z", desc_lst, Mag_Type_z, 0 ,1);
+
+//Electric Field 
+
+//x component
+	derive_lst.add("E_x", IndexType::TheCellType(),1,
+			BL_FORT_PROC_CALL(DEREX, derex), the_same_box);
+	derive_lst.addComponent("E_x", desc_lst, Mag_Type_y, 0,1);
+	derive_lst.addComponent("E_x", desc_lst, Mag_Type_z, 0,1);
+    derive_lst.addComponent("E_x", desc_lst, State_Type, Density, 1); //For velocities
+    derive_lst.addComponent("E_x", desc_lst, State_Type, Ymom, 1);
+    derive_lst.addComponent("E_x", desc_lst, State_Type, Zmom, 1);
 
 //y component
-	derive_lst.add("electric_y", IndexType::TheCellType(),1,
-					BL_FORT_PROC_CALL(DERELECY, derelecy), the_same_box);
-	derive_lst.addComponent("electric_y", desc_lst, State_Type, mag_center,1);
-	derive_lst.addComponent("electric_y", desc_lst, State_Type, z_velocity,1);
-	derive_lst.addComponent("electric_y", desc_lst, State_Type, x_velocity,1);
+	derive_lst.add("E_y", IndexType::TheCellType(),1,
+			BL_FORT_PROC_CALL(DEREY, derey), the_same_box);
+	derive_lst.addComponent("E_y", desc_lst, Mag_Type_y, 0,1);
+	derive_lst.addComponent("E_y", desc_lst, Mag_Type_z, 0,1);
+    derive_lst.addComponent("E_y", desc_lst, State_Type, Density, 1); //For velocities
+    derive_lst.addComponent("E_y", desc_lst, State_Type, Xmom, 1);
+    derive_lst.addComponent("E_y", desc_lst, State_Type, Zmom, 1);
 
 //z component
-	derive_lst.add("electric_z", IndexType::TheCellType(),1,
-					BL_FORT_PROC_CALL(DERELECZ, derelecz), the_same_box);
-	derive_lst.addComponent("electric_z", desc_lst, State_Type, mag_center,1);
-	derive_lst.addComponent("electric_z", desc_lst, State_Type, y_velocity,1);
-	derive_lst.addComponent("electric_z", desc_lst, State_Type, x_velocity,1);
+	derive_lst.add("E_z", IndexType::TheCellType(),1,
+			BL_FORT_PROC_CALL(DEREZ, derez), the_same_box);
+	derive_lst.addComponent("E_z", desc_lst, Mag_Type_y, 0,1);
+	derive_lst.addComponent("E_z", desc_lst, Mag_Type_z, 0,1);
+    derive_lst.addComponent("E_z", desc_lst, State_Type, Density, 1); //For velocities
+    derive_lst.addComponent("E_z", desc_lst, State_Type, Xmom, 1);
+    derive_lst.addComponent("E_z", desc_lst, State_Type, Ymom, 1);
 #endif
 
     //
