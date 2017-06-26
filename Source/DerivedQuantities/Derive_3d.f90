@@ -981,7 +981,6 @@
       !
       use amrex_fort_module, only : rt => amrex_real
       implicit none
-
       integer          lo(3), hi(3)
       integer          divb_l1,divb_l2,divb_l3,divb_h1,divb_h2,divb_h3, Ebz
       integer          dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc
@@ -997,14 +996,15 @@
       ! 
       ! Here dat contains (mag_x,mag_y,mag_z)
       ! 
+		 write(*,*) 'Computing Divergence!'
 	divb = 0.0
       do k = lo(3) + 1, hi(3)
          do j = lo(2) + 1, hi(2)
             do i = lo(1) + 1, hi(1)
-				dx = dat(i,j,k,1) - dat(i-1,j,k,1)
-				dy = dat(i,j,k,2) - dat(i,j-1,k,2)
-				dz = dat(i,j,k,3) - dat(i,j,k-1,3)
-    			divb(i,j,k,1) = dx+ dy + dz
+			dx = dat(i,j,k,1) - dat(i-1,j,k,1)
+			dy = dat(i,j,k,2) - dat(i,j-1,k,2)
+			dz = dat(i,j,k,3) - dat(i,j,k-1,3)
+    			divb(i,j,k,1) = dx/delta(1) + dy/delta(2) + dz/delta(3)
             end do
          end do
       end do

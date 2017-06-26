@@ -1,0 +1,93 @@
+\BOOKMARK [0][-]{chapter.1}{Getting Started}{}% 1
+\BOOKMARK [1][-]{section.1.1}{Downloading the Code}{chapter.1}% 2
+\BOOKMARK [1][-]{section.1.2}{Building the Code}{chapter.1}% 3
+\BOOKMARK [1][-]{section.1.3}{Running the Code}{chapter.1}% 4
+\BOOKMARK [1][-]{section.1.4}{Visualization of the Results}{chapter.1}% 5
+\BOOKMARK [0][-]{chapter.2}{Inputs Files}{}% 6
+\BOOKMARK [1][-]{section.2.1}{Problem Geometry}{chapter.2}% 7
+\BOOKMARK [2][-]{subsection.2.1.1}{List of Parameters}{section.2.1}% 8
+\BOOKMARK [2][-]{subsection.2.1.2}{Examples of Usage}{section.2.1}% 9
+\BOOKMARK [1][-]{section.2.2}{Domain Boundary Conditions}{chapter.2}% 10
+\BOOKMARK [2][-]{subsection.2.2.1}{List of Parameters}{section.2.2}% 11
+\BOOKMARK [2][-]{subsection.2.2.2}{Notes}{section.2.2}% 12
+\BOOKMARK [2][-]{subsection.2.2.3}{Examples of Usage}{section.2.2}% 13
+\BOOKMARK [1][-]{section.2.3}{Resolution}{chapter.2}% 14
+\BOOKMARK [2][-]{subsection.2.3.1}{List of Parameters}{section.2.3}% 15
+\BOOKMARK [2][-]{subsection.2.3.2}{Examples of Usage}{section.2.3}% 16
+\BOOKMARK [1][-]{section.2.4}{Tagging}{chapter.2}% 17
+\BOOKMARK [2][-]{subsection.2.4.1}{List of Parameters}{section.2.4}% 18
+\BOOKMARK [2][-]{subsection.2.4.2}{Notes}{section.2.4}% 19
+\BOOKMARK [1][-]{section.2.5}{Regridding}{chapter.2}% 20
+\BOOKMARK [2][-]{subsection.2.5.1}{Overview}{section.2.5}% 21
+\BOOKMARK [2][-]{subsection.2.5.2}{List of Parameters}{section.2.5}% 22
+\BOOKMARK [2][-]{subsection.2.5.3}{Notes}{section.2.5}% 23
+\BOOKMARK [2][-]{subsection.2.5.4}{Examples of Usage}{section.2.5}% 24
+\BOOKMARK [2][-]{subsection.2.5.5}{How Grids are Created}{section.2.5}% 25
+\BOOKMARK [1][-]{section.2.6}{Simulation Time}{chapter.2}% 26
+\BOOKMARK [2][-]{subsection.2.6.1}{List of Parameters}{section.2.6}% 27
+\BOOKMARK [2][-]{subsection.2.6.2}{Notes}{section.2.6}% 28
+\BOOKMARK [2][-]{subsection.2.6.3}{Examples of Usage}{section.2.6}% 29
+\BOOKMARK [1][-]{section.2.7}{Time Step}{chapter.2}% 30
+\BOOKMARK [2][-]{subsection.2.7.1}{List of Parameters}{section.2.7}% 31
+\BOOKMARK [2][-]{subsection.2.7.2}{Examples of Usage}{section.2.7}% 32
+\BOOKMARK [1][-]{section.2.8}{Subcycling}{chapter.2}% 33
+\BOOKMARK [2][-]{subsection.2.8.1}{List of Parameters}{section.2.8}% 34
+\BOOKMARK [2][-]{subsection.2.8.2}{Examples of Usage}{section.2.8}% 35
+\BOOKMARK [1][-]{section.2.9}{Restart Capability}{chapter.2}% 36
+\BOOKMARK [2][-]{subsection.2.9.1}{List of Parameters}{section.2.9}% 37
+\BOOKMARK [2][-]{subsection.2.9.2}{Notes}{section.2.9}% 38
+\BOOKMARK [2][-]{subsection.2.9.3}{Examples of Usage}{section.2.9}% 39
+\BOOKMARK [1][-]{section.2.10}{Controlling PlotFile Generation}{chapter.2}% 40
+\BOOKMARK [2][-]{subsection.2.10.1}{List of Parameters}{section.2.10}% 41
+\BOOKMARK [2][-]{subsection.2.10.2}{Notes}{section.2.10}% 42
+\BOOKMARK [2][-]{subsection.2.10.3}{Examples of Usage}{section.2.10}% 43
+\BOOKMARK [1][-]{section.2.11}{Screen Output}{chapter.2}% 44
+\BOOKMARK [2][-]{subsection.2.11.1}{List of Parameters}{section.2.11}% 45
+\BOOKMARK [2][-]{subsection.2.11.2}{Notes}{section.2.11}% 46
+\BOOKMARK [2][-]{subsection.2.11.3}{Examples of Usage}{section.2.11}% 47
+\BOOKMARK [1][-]{section.2.12}{Gravity}{chapter.2}% 48
+\BOOKMARK [2][-]{subsection.2.12.1}{List of Parameters}{section.2.12}% 49
+\BOOKMARK [2][-]{subsection.2.12.2}{Notes}{section.2.12}% 50
+\BOOKMARK [1][-]{section.2.13}{Physics}{chapter.2}% 51
+\BOOKMARK [2][-]{subsection.2.13.1}{List of Parameters}{section.2.13}% 52
+\BOOKMARK [0][-]{chapter.3}{Units and Constants}{}% 53
+\BOOKMARK [1][-]{section.3.1}{Units and Constants}{chapter.3}% 54
+\BOOKMARK [0][-]{chapter.4}{Equations in Comoving Coordinates}{}% 55
+\BOOKMARK [1][-]{section.4.1}{Hydrodynamic Equations in Comoving Coordinates}{chapter.4}% 56
+\BOOKMARK [2][-]{subsection.4.1.1}{Conservative Form}{section.4.1}% 57
+\BOOKMARK [2][-]{subsection.4.1.2}{Tracing}{section.4.1}% 58
+\BOOKMARK [1][-]{section.4.2}{Subgrid Scale Model in Comoving Coordinates}{chapter.4}% 59
+\BOOKMARK [0][-]{chapter.5}{Gravity}{}% 60
+\BOOKMARK [0][-]{chapter.6}{Dark Matter Particles}{}% 61
+\BOOKMARK [1][-]{section.6.1}{Equations}{chapter.6}% 62
+\BOOKMARK [1][-]{section.6.2}{Initializing the Particles}{chapter.6}% 63
+\BOOKMARK [2][-]{subsection.6.2.1}{Read from an ASCII file}{section.6.2}% 64
+\BOOKMARK [2][-]{subsection.6.2.2}{Read from a binary file}{section.6.2}% 65
+\BOOKMARK [2][-]{subsection.6.2.3}{Read from a binary "meta" file}{section.6.2}% 66
+\BOOKMARK [2][-]{subsection.6.2.4}{Reading SPH particles}{section.6.2}% 67
+\BOOKMARK [2][-]{subsection.6.2.5}{Random placement}{section.6.2}% 68
+\BOOKMARK [2][-]{subsection.6.2.6}{Cosmological}{section.6.2}% 69
+\BOOKMARK [3][-]{subsubsection.6.2.6.1}{Generating a transfer function}{subsection.6.2.6}% 70
+\BOOKMARK [3][-]{subsubsection.6.2.6.2}{Setting up the initial displacements}{subsection.6.2.6}% 71
+\BOOKMARK [3][-]{subsubsection.6.2.6.3}{Using Nyx with cosmological initial conditions}{subsection.6.2.6}% 72
+\BOOKMARK [1][-]{section.6.3}{Time Stepping}{chapter.6}% 73
+\BOOKMARK [2][-]{subsection.6.3.1}{Random}{section.6.3}% 74
+\BOOKMARK [2][-]{subsection.6.3.2}{Motion by Self-Gravity}{section.6.3}% 75
+\BOOKMARK [3][-]{subsubsection.6.3.2.1}{Move-Kick-Drift Algorithm}{subsection.6.3.2}% 76
+\BOOKMARK [3][-]{subsubsection.6.3.2.2}{Computing g}{subsection.6.3.2}% 77
+\BOOKMARK [1][-]{section.6.4}{Output Format}{chapter.6}% 78
+\BOOKMARK [2][-]{subsection.6.4.1}{Checkpoint Files}{section.6.4}% 79
+\BOOKMARK [2][-]{subsection.6.4.2}{Plot Files}{section.6.4}% 80
+\BOOKMARK [2][-]{subsection.6.4.3}{ASCII Particle Files}{section.6.4}% 81
+\BOOKMARK [2][-]{subsection.6.4.4}{Run-time Data Logs}{section.6.4}% 82
+\BOOKMARK [2][-]{subsection.6.4.5}{Run-time Screen Output}{section.6.4}% 83
+\BOOKMARK [0][-]{chapter.7}{Visualization}{}% 84
+\BOOKMARK [1][-]{section.7.1}{amrvis}{chapter.7}% 85
+\BOOKMARK [1][-]{section.7.2}{VisIt}{chapter.7}% 86
+\BOOKMARK [1][-]{section.7.3}{yt}{chapter.7}% 87
+\BOOKMARK [1][-]{section.7.4}{Controlling What's in the PlotFile}{chapter.7}% 88
+\BOOKMARK [0][-]{chapter.8}{Post-processing}{}% 89
+\BOOKMARK [1][-]{section.8.1}{Reeber}{chapter.8}% 90
+\BOOKMARK [1][-]{section.8.2}{Gimlet}{chapter.8}% 91
+\BOOKMARK [1][-]{section.8.3}{Usage}{chapter.8}% 92
+\BOOKMARK [0][-]{section.8.3}{References}{}% 93

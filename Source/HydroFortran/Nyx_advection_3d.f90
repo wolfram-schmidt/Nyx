@@ -252,7 +252,7 @@
       real(rt) a_old,a_new,a_half
 
       ! Left and right state arrays (edge centered, cell centered)
-      real(rt), pointer:: dqx(:,:,:,:), dqy(:,:,:,:), dqz(:,:,:,:)
+      real(rt), pointer::dqx(:,:,:,:), dqy(:,:,:,:), dqz(:,:,:,:)
       real(rt), pointer::qxm(:,:,:,:),qym(:,:,:,:), qzm(:,:,:,:)
       real(rt), pointer::qxp(:,:,:,:),qyp(:,:,:,:), qzp(:,:,:,:)
 
@@ -270,7 +270,7 @@
       real(rt), pointer::qzl(:,:,:,:),qzr(:,:,:,:)
 
       ! Work arrays to hold 3 planes of riemann state and conservative fluxes
-      real(rt), pointer::   fx(:,:,:,:),  fy(:,:,:,:), fz(:,:,:,:)
+      real(rt), pointer::fx(:,:,:,:),  fy(:,:,:,:), fz(:,:,:,:)
 
       real(rt), pointer::fxy(:,:,:,:),fxz(:,:,:,:)
       real(rt), pointer::fyx(:,:,:,:),fyz(:,:,:,:)

@@ -78,7 +78,6 @@
       center(3) = frac*(problo(3)+probhi(3))
 
 ! compute the internal energy (erg/cc) for the left and right state
-      write(*,*) 'p_l', p_l, 'gamma_minus_1', gamma_minus_1
       rhoe_l = p_l/gamma_minus_1
       rhoe_r = p_r/gamma_minus_1
 

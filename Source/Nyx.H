@@ -524,9 +524,6 @@ public:
     static int NUM_STATE;
     static int Density, Xmom, Ymom, Zmom, Eden, Eint;
     static int Temp_comp, Ne_comp;
-#ifdef MHD
-	static int B_x, B_y, B_z;
-#endif
     static int FirstSpec, FirstAux, FirstAdv;
     static int NumSpec, NumAux, NumAdv;
 

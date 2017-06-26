@@ -280,8 +280,6 @@ Nyx::hydro_setup()
 			 	StateDescriptor::Point, 1, 1,
 				interp, state_data_extrap, 
 				store_in_checkpoint);	
-/* Maybe do Electric Field 
-   Need to write div_cons_interp*/
 #endif
 
 #ifdef GRAVITY
@@ -353,7 +351,6 @@ Nyx::hydro_setup()
            std::cout << spec_names[i] << ' ' << ' ';
         std::cout << '\n';
     }
-std::cout<<"Hi 1"<<std::endl;
     if (use_const_species == 0)
     {
         for (int i = 0; i < NumSpec; ++i)
@@ -364,7 +361,6 @@ std::cout<<"Hi 1"<<std::endl;
                 name[cnt] = "rho_" + spec_names[i];
          }
     }
-std::cout<<"Hi 2"<<std::endl;
     // Get the auxiliary names from the network model.
     Array<std::string> aux_names(NumAux);
 
@@ -399,7 +395,6 @@ std::cout<<"Hi 2"<<std::endl;
             name[cnt] = "rho_" + aux_names[i];
         }
     }
-std::cout<<"Hi 3"<<std::endl;
     desc_lst.setComponent(State_Type, Density, name, bcs,
                           BndryFunc(denfill,hypfill));
 
@@ -574,12 +569,11 @@ std::cout<<"Hi 3"<<std::endl;
 //------------------------------- Need to think about Index Type -------------------------------//
 
 //Magnetic Field Cell Centered
-std::cout<<"Hi 4"<<std::endl;
+
 //x component
 	derive_lst.add("B_x", IndexType::TheCellType(), 1,
 			BL_FORT_PROC_CALL(DERMAGCENX,dermagcenx), the_same_box);
 	derive_lst.addComponent("B_x", desc_lst, Mag_Type_x, 0 ,1);
-std::cout<<"Hi 5"<<std::endl;
 //y component
 	derive_lst.add("B_y", IndexType::TheCellType(), 1,
 			BL_FORT_PROC_CALL(DERMAGCENY,dermagceny), the_same_box);
@@ -590,27 +584,26 @@ std::cout<<"Hi 5"<<std::endl;
 	derive_lst.addComponent("B_z", desc_lst, Mag_Type_z, 0 ,1);
 
 //Electric Field 
-
 //x component
-	derive_lst.add("E_x", IndexType::TheCellType(),1,
+	derive_lst.add("E_x", IndexType::TheCellType(), 1,
 			BL_FORT_PROC_CALL(DEREX, derex), the_same_box);
-	derive_lst.addComponent("E_x", desc_lst, Mag_Type_y, 0,1);
-	derive_lst.addComponent("E_x", desc_lst, Mag_Type_z, 0,1);
+	derive_lst.addComponent("E_x", desc_lst, Mag_Type_y, 0, 1);
+	derive_lst.addComponent("E_x", desc_lst, Mag_Type_z, 0, 1);
     derive_lst.addComponent("E_x", desc_lst, State_Type, Density, 1); //For velocities
     derive_lst.addComponent("E_x", desc_lst, State_Type, Ymom, 1);
     derive_lst.addComponent("E_x", desc_lst, State_Type, Zmom, 1);
 
 //y component
-	derive_lst.add("E_y", IndexType::TheCellType(),1,
+	derive_lst.add("E_y", IndexType::TheCellType(), 1,
 			BL_FORT_PROC_CALL(DEREY, derey), the_same_box);
-	derive_lst.addComponent("E_y", desc_lst, Mag_Type_x, 0,1);
-	derive_lst.addComponent("E_y", desc_lst, Mag_Type_z, 0,1);
+	derive_lst.addComponent("E_y", desc_lst, Mag_Type_x, 0, 1);
+	derive_lst.addComponent("E_y", desc_lst, Mag_Type_z, 0, 1);
     derive_lst.addComponent("E_y", desc_lst, State_Type, Density, 1); //For velocities
     derive_lst.addComponent("E_y", desc_lst, State_Type, Xmom, 1);
     derive_lst.addComponent("E_y", desc_lst, State_Type, Zmom, 1);
 
 //z component
-	derive_lst.add("E_z", IndexType::TheCellType(),1,
+	derive_lst.add("E_z", IndexType::TheCellType(), 1,
 			BL_FORT_PROC_CALL(DEREZ, derez), the_same_box);
 	derive_lst.addComponent("E_z", desc_lst, Mag_Type_x, 0, 1);
 	derive_lst.addComponent("E_z", desc_lst, Mag_Type_y, 0, 1);
@@ -621,9 +614,9 @@ std::cout<<"Hi 5"<<std::endl;
 //Divergence of B
 	derive_lst.add("Div_B", IndexType::TheCellType(), 1,
 			BL_FORT_PROC_CALL(DERDIVB,derdivb), the_same_box);
-	derive_lst.addComponent("B_x", desc_lst, Mag_Type_x, 0 ,1);
-	derive_lst.addComponent("B_y", desc_lst, Mag_Type_y, 0 ,1);
-	derive_lst.addComponent("B_z", desc_lst, Mag_Type_z, 0 ,1);
+	derive_lst.addComponent("Div_B", desc_lst, Mag_Type_x, 0 , 1);
+	derive_lst.addComponent("Div_B", desc_lst, Mag_Type_y, 0 , 1);
+	derive_lst.addComponent("Div_B", desc_lst, Mag_Type_z, 0 , 1);
 
 #endif
 
