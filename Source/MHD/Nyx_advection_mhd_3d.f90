@@ -3,7 +3,7 @@
 ! ::: ----------------------------------------------------------------
 ! :::
 
-      subroutine fort_advance_gas(time,lo,hi,&
+      subroutine fort_advance_mhd(time,lo,hi,&
            uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
            uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
            ugdnvx_out,ugdnvx_l1,ugdnvx_l2,ugdnvx_l3,ugdnvx_h1,ugdnvx_h2,ugdnvx_h3, &
@@ -16,7 +16,7 @@
            flux2,flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3, &
            flux3,flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3, &
            courno,a_old,a_new,e_added,ke_added,print_fortran_warnings,do_grav) &
-           bind(C, name="fort_advance_gas")
+           bind(C, name="fort_advance_mhd")
 
       use amrex_fort_module, only : rt => amrex_real
       use mempool_module, only : bl_allocate, bl_deallocate
@@ -164,7 +164,7 @@
                                     lo,hi)
       end if
 
-      end subroutine fort_advance_gas
+      end subroutine fort_advance_mhd
 
 
 ! ::: ---------------------------------------------------------------

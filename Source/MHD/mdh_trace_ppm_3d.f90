@@ -1,4 +1,4 @@
-module trace_ppm_module
+module mhd_trace_ppm_module
 
   implicit none
 
@@ -1255,4 +1255,4 @@ contains
 
     end subroutine tracez_ppm
 
-end module trace_ppm_module
+end module mhd_trace_ppm_module

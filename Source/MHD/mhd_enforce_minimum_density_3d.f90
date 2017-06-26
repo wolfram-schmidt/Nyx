@@ -5,7 +5,7 @@
     !===========================================================================
     ! This is called from within threaded loops in advance_gas_tile so *no* OMP here ...
     !===========================================================================
-    subroutine enforce_minimum_density(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
+    subroutine mhd_enforce_minimum_density(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
                                        uout,uout_l1,uout_l2,uout_l3, &
                                        uout_h1,uout_h2,uout_h3, &
                                        lo,hi,print_fortran_warnings)
@@ -261,4 +261,4 @@
          enddo
       enddo
 
-    end subroutine enforce_minimum_density
+    end subroutine mhd_enforce_minimum_density
