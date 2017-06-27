@@ -15,15 +15,15 @@ CEXE_sources += comoving.cpp
 CEXE_sources += write_info.cpp
 CEXE_sources += bl_random_c.cpp
 
+ifeq ($(MHD), TRUE)
+#More
+else
 ifneq ($(NO_HYDRO), TRUE)
 CEXE_sources += Nyx_hydro.cpp
 CEXE_sources += sum_integrated_quantities.cpp
 CEXE_sources += sum_utils.cpp
 CEXE_sources += strang_splitting.cpp
 endif
-
-ifeq ($(MHD), TRUE)
-#More
 endif 
 
 CEXE_headers += Nyx.H

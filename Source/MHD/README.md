@@ -36,7 +36,9 @@ ADVANCE_MHD_TILE ---   ctoprim   ---  uflaten  (in flatten_3d.f90)
 ->                 ---   add_grav_source  (in add_grav_source_3d.f90)
 
 ->                 ---   enforce_nonnegative_species (NOTE: FORT_ENFORCE_NONNEGATIVE_SPECIES is also called from the C++;
+
 ->                                                          FORT_ENFORCE_NONNEGATIVE_SPECIES then calls enforce_nonnegative_species;
+
 ->                                                    both of these routines are in Nyx/Source/Src_3d/enforce_nonnegative_species_3d.f90)
 
 ->                 ---   normalize_new_species 
