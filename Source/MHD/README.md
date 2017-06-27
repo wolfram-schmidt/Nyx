@@ -10,35 +10,35 @@ In Nyx_advection_mhd_3d.f90:
   ctoprim
   consup
   cmpflx
-  riemannus
+  hlld
   divu
 
 In normalize_species_3d.f90:
   normalize_species_fluxes
   normalize_new_species
 
-FORT_ADVANCE_MHD --- (tiling) ---> ADVANCE_MHD_TILE
+FORT_ADVANCE_MHD  --- (tiling)    ---> ADVANCE_MHD_TILE
 
-ADVANCE_MHD_TILE ---   ctoprim   ---  uflaten  (in flatten_3d.f90)
+ADVANCE_MHD_TILE  ---   ctoprim   ---  uflaten  (in flatten_3d.f90)
 
-->                 ---   umeth3d   ---  ppm*     (in mhd_ppm_3d.f90)
+->                ---   umeth3d   ---  ppm*     (in mhd_ppm_3d.f90)
 ->                                ---  trace*   (in mhd_trace_ppm_3d.f90)
-->                                 ---  uslope   (in mhd_slope_3d.f90)
-->                                 ---  trans*   (in mhd_trans_3d.f90)
-->                                 ---  cmpflx  ---  riemann --- analriem
+->                                ---  uslope   (in mhd_slope_3d.f90)
+->                                ---  trans*   (in mhd_trans_3d.f90)
+->                                ---  cmpflx  ---  riemann --- analriem
 
-->                 ---   divu 
+->                ---   divu 
 
-->                 ---   consup    ---  normalize_species_fluxes 
+->                ---   consup    ---  normalize_species_fluxes 
 
-->                 ---   enforce_minimum_density
+->                ---   enforce_minimum_density
 
-->                 ---   add_grav_source  (in add_grav_source_3d.f90)
+->                ---   add_grav_source  (in add_grav_source_3d.f90)
 
-->                 ---   enforce_nonnegative_species (NOTE: FORT_ENFORCE_NONNEGATIVE_SPECIES is also called from the C++;
+->                ---   enforce_nonnegative_species (NOTE: FORT_ENFORCE_NONNEGATIVE_SPECIES is also called from the C++;
 
-->                                                          FORT_ENFORCE_NONNEGATIVE_SPECIES then calls enforce_nonnegative_species;
+->                ---    FORT_ENFORCE_NONNEGATIVE_SPECIES then calls enforce_nonnegative_species;
 
-->                                                    both of these routines are in Nyx/Source/Src_3d/enforce_nonnegative_species_3d.f90)
+->                ---     both of these routines are in Nyx/Source/Src_3d/enforce_nonnegative_species_3d.f90)
 
-->                 ---   normalize_new_species 
+->                ---   normalize_new_species 

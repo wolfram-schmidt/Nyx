@@ -394,6 +394,197 @@
 ! ::: ----------------------------------------------------------------
 ! :::
 
+      subroutine fort_set_mhd_method_params( &
+                 dm, numadv, do_hydro, ppm_type_in, ppm_ref_in, &
+                 ppm_flatten_before_integrals_in, &
+                 use_colglaz_in, use_flattening_in, &
+                 corner_coupling_in, version_2_in, &
+                 use_const_species_in, gamma_in, normalize_species_in, heat_cool_in, comm) &
+                 bind(C, name = "fort_set_mhd_method_params")
+
+        ! Passing data from C++ into f90
+
+        use amrex_fort_module, only : rt => amrex_real
+        use meth_mhd_params_module
+        use  eos_params_module
+        use atomic_rates_module
+        use comoving_module, only : comoving_type
+        use network, only : nspec, naux
+        use eos_module
+        use parallel
+
+        implicit none
+
+        integer,  intent(in) :: dm
+        integer,  intent(in) :: numadv
+        integer,  intent(in) :: do_hydro
+        integer,  intent(in) :: ppm_type_in
+        integer,  intent(in) :: ppm_ref_in
+        integer,  intent(in) :: ppm_flatten_before_integrals_in
+        integer,  intent(in) :: use_colglaz_in
+        integer,  intent(in) :: use_flattening_in
+        integer,  intent(in) :: version_2_in
+        integer,  intent(in) :: corner_coupling_in
+        real(rt), intent(in) :: gamma_in
+        integer,  intent(in) :: use_const_species_in
+        integer,  intent(in) :: normalize_species_in
+        integer,  intent(in) :: heat_cool_in
+        integer,  intent(in), optional :: comm
+
+        integer             :: QNEXT
+        integer             :: UNEXT
+
+        integer             :: iadv, ispec
+
+        if (present(comm)) then
+          call parallel_initialize(comm=comm)
+        else
+          call parallel_initialize()
+        end if
+
+        use_const_species = use_const_species_in
+
+        iorder = 2
+        difmag = 0.1d0
+
+        grav_source_type = 1
+
+        comoving_type = 1
+
+           TEMP_COMP = 1
+             NE_COMP = 2
+
+           !---------------------------------------------------------------------
+           ! conserved state components
+           !---------------------------------------------------------------------
+    
+           ! NTHERM: number of thermodynamic variables
+           ! NVAR  : number of total variables in initial system
+           ! dm refers to momentum components, '3' refers to (rho, rhoE, rhoe)
+           NTHERM = dm + 3
+
+           if (use_const_species .eq. 1) then
+              if (nspec .ne. 2 .or. naux .ne. 0) then
+                  call bl_error("Bad nspec or naux in set_method_params")
+              end if
+              NVAR = NTHERM + numadv
+           else
+              NVAR = NTHERM + nspec + naux + numadv
+           end if
+
+           nadv = numadv
+
+           ! We use these to index into the state "U"
+           URHO  = 1
+           UMX   = 2
+           UMY   = 3
+           UMZ   = 4
+           UEDEN = 5
+           UEINT = 6
+           UNEXT = 7
+
+           UFA   = -1
+           UFS   = -1
+           if (numadv .ge. 1) then
+               UFA = UNEXT 
+               if (use_const_species .eq. 0) then
+                   UFS = UFA + numadv
+               end if
+           else
+             if (use_const_species .eq. 0) then
+                 UFS = UNEXT
+             end if
+           end if
+
+           !---------------------------------------------------------------------
+           ! primitive state components
+           !---------------------------------------------------------------------
+
+           ! IMPORTANT: if use_const_species = 0, then we assume that 
+           !   the auxiliary quantities immediately follow the species
+           !   so we can loop over species and auxiliary quantities.
+   
+           ! QTHERM: number of primitive variables, which includes pressure (+1) 
+           !         but not big E (-1) 
+           ! QVAR  : number of total variables in primitive form
+
+           QTHERM = NTHERM
+           if (use_const_species .eq. 1) then
+              QVAR = QTHERM + numadv
+           else
+              QVAR = QTHERM + nspec + naux + numadv
+           end if
+
+           ! We use these to index into the state "Q"
+           QRHO   = 1   ! rho
+           QU     = 2   ! u
+           QV     = 3   ! v
+           QW     = 4   ! w
+           QPRES  = 5   ! p
+           QREINT = 6   ! (rho e)
+
+           QNEXT  = QREINT+1
+   
+           QFS = -1
+           if (numadv .ge. 1) then
+             QFA = QNEXT
+             if (use_const_species .eq. 0) &
+                 QFS = QFA + numadv
+           else
+             QFA = -1
+             if (use_const_species .eq. 0) &
+                 QFS = QNEXT
+           end if
+
+           ! constant ratio of specific heats
+           if (gamma_in .gt. 0.d0) then
+              gamma_const = gamma_in
+           else
+              gamma_const = 5.d0/3.d0
+           end if
+           gamma_minus_1 = gamma_const - 1.d0
+
+           ppm_type                     = ppm_type_in
+           ppm_reference                = ppm_ref_in
+           ppm_flatten_before_integrals = ppm_flatten_before_integrals_in
+           use_colglaz                  = use_colglaz_in
+           use_flattening               = use_flattening_in
+           version_2                    = version_2_in
+           corner_coupling              = corner_coupling_in
+           normalize_species            = normalize_species_in
+
+           heat_cool_type               = heat_cool_in
+
+        if (heat_cool_type .eq. 1 .or. heat_cool_type .eq. 3 .or. heat_cool_type .eq. 5) then
+           call tabulate_rates()
+        end if
+
+        ! Easy indexing for the passively advected quantities.  
+        ! This lets us loop over all four groups (advected, species, aux)
+        ! in a single loop.
+        allocate(qpass_map(QVAR))
+        allocate(upass_map(NVAR))
+        npassive = 0
+        do iadv = 1, nadv
+           upass_map(npassive + iadv) = UFA + iadv - 1
+           qpass_map(npassive + iadv) = QFA + iadv - 1
+        enddo
+        npassive = npassive + nadv
+        if(QFS > -1) then
+           do ispec = 1, nspec+naux
+              upass_map(npassive + ispec) = UFS + ispec - 1
+              qpass_map(npassive + ispec) = QFS + ispec - 1
+           enddo
+           npassive = npassive + nspec + naux
+        endif
+
+      end subroutine fort_set_mhd_method_params
+
+
+! :::
+! ::: ----------------------------------------------------------------
+! :::
+
       subroutine fort_set_eos_params(h_species_in, he_species_in) &
         bind(C, name="fort_set_eos_params")
 

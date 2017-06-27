@@ -1990,7 +1990,8 @@ Nyx::network_init ()
 
 #ifndef NO_HYDRO
 void
-Nyx::reset_internal_energy (MultiFab& S_new, MultiFab& D_new)
+Nyx::reset_internal_energy (MultiFab& S_new, MultiFab& D_new
+)
 {
     BL_PROFILE("Nyx::reset_internal_energy()");
     // Synchronize (rho e) and (rho E) so they are consistent with each other

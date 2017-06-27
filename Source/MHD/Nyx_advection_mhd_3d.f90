@@ -20,7 +20,7 @@
 
       use amrex_fort_module, only : rt => amrex_real
       use mempool_module, only : bl_allocate, bl_deallocate
-      use meth_params_module, only : QVAR, NVAR, NHYP, normalize_species
+      use meth_mhd_params_module, only : QVAR, NVAR, NHYP, normalize_species
       use enforce_module, only : enforce_nonnegative_species
       use bl_constants_module
 
@@ -173,6 +173,9 @@
 ! ::: ::
 ! ::: :: inputs/outputs
 ! ::: :: q           => (const)  input state, primitives
+! ::: :: bx 	     => (const)  input magnetic field in x
+! ::: :: by 	     => (const)  input magnetic field in y
+! ::: :: bz 	     => (const)  input magnetic field in z
 ! ::: :: c           => (const)  sound speed
 ! ::: :: csml        => (const)  local small c val
 ! ::: :: flatn       => (const)  flattening parameter
@@ -189,7 +192,7 @@
 ! ::: :: flux3      <=  (modify) flux in Z direction on Z edges
 ! L:: ----------------------------------------------------------------
 
-      subroutine umeth3d(q, c, csml, flatn, qd_l1, qd_l2, qd_l3, qd_h1, qd_h2, qd_h3, &
+      subroutine umeth3d(q, bx, by, bz, c, csml, flatn, qd_l1, qd_l2, qd_l3, qd_h1, qd_h2, qd_h3, &
                          srcQ, srcq_l1, srcq_l2, srcq_l3, srcq_h1, srcq_h2, srcq_h3, &
                          ilo1, ilo2, ilo3, ihi1, ihi2, ihi3, dx, dy, dz, dt, &
                          flux1, fd1_l1, fd1_l2, fd1_l3, fd1_h1, fd1_h2, fd1_h3, &
@@ -233,6 +236,9 @@
       integer i,j
 
       real(rt)     q(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3,QVAR)
+      real(rt)     bx(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
+      real(rt)     by(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
+      real(rt)     bz(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
       real(rt)     c(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
       real(rt)  csml(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
       real(rt) flatn(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
@@ -866,7 +872,7 @@
 ! ::: ------------------------------------------------------------------
 ! :::
 
-      subroutine ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
+      subroutine ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, bx, by, bz &
                          q,c,csml,flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
                          src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                          srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
@@ -885,7 +891,7 @@
       use eos_module
       use flatten_module
       use bl_constants_module
-      use meth_params_module, only : NVAR, URHO, UMX, UMY, UMZ, &
+      use meth_mhd_params_module, only : NVAR, URHO, UMX, UMY, UMZ, &
                                      UEDEN, UEINT, UFA, UFS, &
                                      QVAR, QRHO, QU, QV, QW, &
                                      QREINT, QPRES, QFA, QFS, &
@@ -904,6 +910,9 @@
       integer srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3
 
       real(rt) :: uin(uin_l1:uin_h1,uin_l2:uin_h2,uin_l3:uin_h3,NVAR)
+      real(rt) :: bx(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
+      real(rt) :: by(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
+      real(rt) :: bz(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) ::     q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
       real(rt) ::     c(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) ::  csml(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
@@ -1013,7 +1022,8 @@
                end if
 
                ! Define the soundspeed from the EOS
-               call nyx_eos_soundspeed(c(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT))
+               call nyx_eos_soundspeed_mhd(c(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT) &
+					   bx(i,j,k), by(i,j,k), bz(i,j,k))
 
                ! Set csmal based on small_pres and small_dens
                csml(i,j,k) = sqrt(gamma_const * small_pres_over_dens)
@@ -1021,8 +1031,10 @@
                ! Convert "e" back to "rho e"
                q(i,j,k,QREINT) = q(i,j,k,QREINT)*q(i,j,k,QRHO)
 
-               ! Pressure = (gamma - 1) * rho * e
-               q(i,j,k,QPRES) = gamma_minus_1 * q(i,j,k,QREINT)
+               ! Pressure = (gamma - 1) * rho * e + 0.5 B dot B
+               q(i,j,k,QPRES) = gamma_minus_1 * q(i,j,k,QREINT) &
+				+ 0.5d0*(bx(i,j,k)*bx(i,j,k) + by(i,j,k)*by(i,j,k)&
+		 		+ bz(i,j,k)*bz(i,j,k))
 
             end do
          end do
