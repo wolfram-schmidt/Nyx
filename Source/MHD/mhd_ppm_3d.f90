@@ -1,5 +1,5 @@
 module mhd_ppm_module
-
+!Needs lots of work, basically has been taken from Hydro, needs all 7 wave forms. 
   implicit none
 
   private
@@ -149,7 +149,9 @@ contains
     ! x-direction
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	if(n .eq. QBX) then 
-		!Do something ip = QBX(i+1), im = QBX(i-1)
+		do i = ilo1-1, ihi1
+			Ip(i,:,:,:,:) = s(i+1,:,:)
+		enddo
 	else
     ! cell-centered indexing w/extra x-ghost cell
     call bl_allocate(dsvl,ilo1-2,ihi1+2,ilo2-1,ihi2+1)
@@ -299,7 +301,9 @@ contains
     ! y-direction
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	if(n .eq. QBY) then
-	!Do normal interp
+		do j = ilo2-1, ihi2
+			Ip(:,j,:,:,:) = s(:,j+1,:)
+		enddo
 	else
     ! cell-centered indexing w/extra y-ghost cell
     call bl_allocate( dsvl,ilo1-1,ihi1+1,ilo2-2,ihi2+2)
