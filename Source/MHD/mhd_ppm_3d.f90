@@ -1,4 +1,4 @@
-module ppm_module
+module mhd_ppm_module
 
   implicit none
 
@@ -11,13 +11,13 @@ contains
   ! characteristics based on u
   !
   !===========================================================================
-  ! This is called from within threaded loops in advance_gas_tile so *no* OMP here ...
+  ! This is called from within threaded loops in advance_mhd_tile so *no* OMP here ...
   !===========================================================================
   subroutine ppm(s,s_l1,s_l2,s_l3,s_h1,s_h2,s_h3, &
                  u,cspd,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
                  flatn,f_l1,f_l2,f_l3,f_h1,f_h2,f_h3, &
                  Ip,Im, &
-                 ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt,k3d,kc,a_old)
+                 ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt,k3d,kc,a_old,n)
 
     use amrex_fort_module, only : rt => amrex_real
     use meth_params_module, only : ppm_type
@@ -27,7 +27,7 @@ contains
     integer         , intent(in   ) ::   s_l1, s_l2, s_l3, s_h1, s_h2, s_h3
     integer         , intent(in   ) ::  qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3
     integer         , intent(in   ) ::   f_l1, f_l2, f_l3, f_h1, f_h2, f_h3
-    integer         , intent(in   ) ::  ilo1,ilo2,ihi1,ihi2
+    integer         , intent(in   ) ::  ilo1,ilo2,ihi1,ihi2,n
  
     real(rt), intent(in   ) ::      s( s_l1: s_h1, s_l2: s_h2, s_l3: s_h3)
     real(rt), intent(in   ) ::      u(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3,3)
@@ -49,7 +49,7 @@ contains
         call ppm_type1(s,s_l1,s_l2,s_l3,s_h1,s_h2,s_h3, &
                        u,cspd,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
                        flatn,f_l1,f_l2,f_l3,f_h1,f_h2,f_h3, &
-                       Ip,Im,ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt_over_a,k3d,kc)
+                       Ip,Im,ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt_over_a,k3d,kc,n)
 
     else if (ppm_type .eq. 2) then
 
@@ -72,7 +72,7 @@ contains
   subroutine ppm_type1(s,s_l1,s_l2,s_l3,s_h1,s_h2,s_h3, &
                        u,cspd,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
                        flatn,f_l1,f_l2,f_l3,f_h1,f_h2,f_h3, &
-                       Ip,Im,ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt_over_a,k3d,kc)
+                       Ip,Im,ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt_over_a,k3d,kc, n)
 
     use mempool_module, only: bl_allocate, bl_deallocate
     use amrex_fort_module, only : rt => amrex_real
@@ -84,15 +84,15 @@ contains
     integer           s_l1, s_l2, s_l3, s_h1, s_h2, s_h3
     integer          qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3
     integer           f_l1, f_l2, f_l3, f_h1, f_h2, f_h3
-    integer          ilo1,ilo2,ihi1,ihi2
+    integer          ilo1,ilo2,ihi1,ihi2 ,n 
 
     real(rt), intent(in) :: s( s_l1: s_h1, s_l2: s_h2, s_l3: s_h3)
     real(rt), intent(in) :: u(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3,3)
     real(rt), intent(in) :: cspd(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
     real(rt), intent(in) :: flatn(f_l1: f_h1, f_l2: f_h2, f_l3: f_h3)
 
-    real(rt), intent(out) :: Ip(ilo1-1:ihi1+1,ilo2-1:ihi2+1,1:2,1:3,1:3)
-    real(rt), intent(out) :: Im(ilo1-1:ihi1+1,ilo2-1:ihi2+1,1:2,1:3,1:3)
+    real(rt), intent(out) :: Ip(ilo1-1:ihi1+1,ilo2-1:ihi2+1,1:2,1:3,1:3) !interpolate + 
+    real(rt), intent(out) :: Im(ilo1-1:ihi1+1,ilo2-1:ihi2+1,1:2,1:3,1:3) !interpolate -
 
     ! Note that dt_over_a = dt / a_old
     real(rt), intent(in) :: dx,dy,dz,dt_over_a
@@ -148,7 +148,9 @@ contains
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! x-direction
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+	if(n .eq. QBX) then 
+		!Do something ip = QBX(i+1), im = QBX(i-1)
+	else
     ! cell-centered indexing w/extra x-ghost cell
     call bl_allocate(dsvl,ilo1-2,ihi1+2,ilo2-1,ihi2+1)
 
@@ -292,11 +294,13 @@ contains
     call bl_deallocate(dsr)
     call bl_deallocate(sedge)
     call bl_deallocate(dsvl)
-
+	end if
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! y-direction
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+	if(n .eq. QBY) then
+	!Do normal interp
+	else
     ! cell-centered indexing w/extra y-ghost cell
     call bl_allocate( dsvl,ilo1-1,ihi1+1,ilo2-2,ihi2+2)
 
@@ -438,11 +442,14 @@ contains
     call bl_deallocate(dsr)
     call bl_deallocate(dsvl)
     call bl_deallocate(sedge)
-
+	endif
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! z-direction
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+	
+	if(n.eq.QBZ) then
+	!Do interp normal to Bz
+	else
     ! cell-centered indexing
     call bl_allocate( dsvl,ilo1-1,ihi1+1,ilo2-1,ihi2+1)
     call bl_allocate(dsvlm,ilo1-1,ihi1+1,ilo2-1,ihi2+1)
@@ -608,12 +615,13 @@ contains
     call bl_deallocate(dsvl)
     call bl_deallocate(dsvlm)
     call bl_deallocate(dsvlp)
+	endif
+
     call bl_deallocate(sp)
     call bl_deallocate(sm)
     call bl_deallocate(sedgez)
     call bl_deallocate(sigma)
     call bl_deallocate(s6)
-
   end subroutine ppm_type1
 
   ! :::
@@ -1231,5 +1239,5 @@ contains
 
   end subroutine ppm_type2
 
-end module ppm_module
+end module mhd_ppm_module
 

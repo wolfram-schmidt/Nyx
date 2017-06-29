@@ -437,7 +437,7 @@ contains
 ! dens     -- mass density (g/cc)
 ! temp     -- temperature (K)
 ! xmass    -- the mass fractions of the individual isotopes
-! bx - bz  -- the magnetic field components 
+! bx - bz  -- the magnetic field components cell centered
 ! pres     -- the pressure (dyn/cm**2)
 ! eint     -- the internal energy (erg/g)
 ! c_v      -- specific heat at constant volume

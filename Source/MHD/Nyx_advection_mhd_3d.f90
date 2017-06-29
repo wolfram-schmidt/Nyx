@@ -192,7 +192,7 @@
 ! ::: :: flux3      <=  (modify) flux in Z direction on Z edges
 ! L:: ----------------------------------------------------------------
 
-      subroutine umeth3d(q, bx, by, bz, c, csml, flatn, qd_l1, qd_l2, qd_l3, qd_h1, qd_h2, qd_h3, &
+      subroutine umeth3d(q, c, csml, flatn, qd_l1, qd_l2, qd_l3, qd_h1, qd_h2, qd_h3, &
                          srcQ, srcq_l1, srcq_l2, srcq_l3, srcq_h1, srcq_h2, srcq_h3, &
                          ilo1, ilo2, ilo3, ihi1, ihi2, ihi3, dx, dy, dz, dt, &
                          flux1, fd1_l1, fd1_l2, fd1_l3, fd1_h1, fd1_h2, fd1_h3, &
@@ -217,7 +217,7 @@
       use trace_ppm_module
       use trace_src_module
       use transverse_module
-      use ppm_module
+      use mhd_ppm_module
 
       implicit none
 
@@ -235,10 +235,7 @@
       integer print_fortran_warnings
       integer i,j
 
-      real(rt)     q(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3,QVAR)
-      real(rt)     bx(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
-      real(rt)     by(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
-      real(rt)     bz(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
+      real(rt)     q(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3,QVAR) !Q contains the Cell Centered B-field
       real(rt)     c(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
       real(rt)  csml(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
       real(rt) flatn(qd_l1:qd_h1,qd_l2:qd_h2,qd_l3:qd_h3)
@@ -442,7 +439,7 @@
                         q(:,:,:,QU:),c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
                         flatn,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
                         Ip(:,:,:,:,:,n),Im(:,:,:,:,:,n), &
-                        ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt,k3d,kc,a_old)
+                        ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt,k3d,kc,a_old,n)
             end do
 
             if (version_2 .eq. 2) then
@@ -913,7 +910,7 @@
       real(rt) :: bx(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) :: by(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) :: bz(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
-      real(rt) ::     q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
+      real(rt) ::     q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR) !Contains Cell Centered Mag Field
       real(rt) ::     c(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) ::  csml(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) :: flatn(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
@@ -997,6 +994,20 @@
 
       small_pres_over_dens = small_pres / small_dens
 
+	  !Calculate Cell Centered Magnetic Field 
+	 q(:,:,:,QBX) = bx 
+	 q(:,:,:,QBY) = by 
+	 q(:,:,;,QBZ) = bz 
+		do i = loq(1) + 1, hiq(1)
+			q(i,:,:,QBX) = 0.5d0*(bx(i,:,:) + bx(i-1,:,:))
+		end do
+		do j = loq(2) + 1, hiq(2)
+			q(:,j,:,QBY) = 0.5d0*(bx(:,j,:) + bx(:,j-1,:))
+		end do
+		do k = loq(3) + 1, hiq(3)
+			q(:,:,k,QBZ) = 0.5d0*(bx(:,:,k) + bx(:,:,k-1))
+		end do
+
       ! Get p, T, c, csml using q state
       do k = loq(3), hiq(3)
          do j = loq(2), hiq(2)
@@ -1023,7 +1034,7 @@
 
                ! Define the soundspeed from the EOS
                call nyx_eos_soundspeed_mhd(c(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT) &
-					   bx(i,j,k), by(i,j,k), bz(i,j,k))
+					   q(i,j,k,QBX), q(i,j,k,QBY), q(i,j,k,QBZ))
 
                ! Set csmal based on small_pres and small_dens
                csml(i,j,k) = sqrt(gamma_const * small_pres_over_dens)
@@ -1033,8 +1044,7 @@
 
                ! Pressure = (gamma - 1) * rho * e + 0.5 B dot B
                q(i,j,k,QPRES) = gamma_minus_1 * q(i,j,k,QREINT) &
-				+ 0.5d0*(bx(i,j,k)*bx(i,j,k) + by(i,j,k)*by(i,j,k)&
-		 		+ bz(i,j,k)*bz(i,j,k))
+				+ 0.5d0*(q(i,j,k,QBX)**2 + q(i,j,k,QBY)**2 + q(i,j,k,QBZ)**2)
 
             end do
          end do
@@ -1169,7 +1179,7 @@
       end subroutine ctoprim
 ! :::
 ! ::: ------------------------------------------------------------------
-! :::
+! ::: 
 
     subroutine consup(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
                       uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
@@ -1807,7 +1817,7 @@
                if (ustar(i) .gt. ZERO) then
                   uflx(i,j,kflux,n) = uflx(i,j,kflux,URHO)*ql(i,j,kc,nq)
                else if (ustar(i) .lt. ZERO) then
-                  uflx(i,j,kflux,n) = uflx(i,j,kflux,URHO)*qr(i,j,kc,nq)
+                  uflx(i,j,kflux,n) = uflx(i,j,kfluxe,URHO)*qr(i,j,kc,nq)
                else
                   qavg(i) = HALF * (ql(i,j,kc,nq) + qr(i,j,kc,nq))
                   uflx(i,j,kflux,n) = uflx(i,j,kflux,URHO)*qavg(i)

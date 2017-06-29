@@ -506,9 +506,10 @@
    
            ! QTHERM: number of primitive variables, which includes pressure (+1) 
            !         but not big E (-1) 
+		   ! QMAG  : number of magnetic vars
            ! QVAR  : number of total variables in primitive form
 
-           QTHERM = NTHERM
+           QTHERM = NTHERM + QMAG
            if (use_const_species .eq. 1) then
               QVAR = QTHERM + numadv
            else
@@ -522,8 +523,10 @@
            QW     = 4   ! w
            QPRES  = 5   ! p
            QREINT = 6   ! (rho e)
-
-           QNEXT  = QREINT+1
+		   QMAGX  = 7   ! Bx centered
+		   QMAGY  = 8   ! By centered 
+		   QMAGZ  = 9   ! Bz centered
+           QNEXT  = QMAGZ+1
    
            QFS = -1
            if (numadv .ge. 1) then

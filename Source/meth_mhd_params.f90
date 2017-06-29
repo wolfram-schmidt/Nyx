@@ -23,7 +23,7 @@ module meth_mhd_params_module
   integer         , save :: TEMP_COMP, NE_COMP
 
   ! QTHERM: number of primitive hydrodynamic variables
-  ! QMAG:   number of primitive magnetic variables
+  ! QMAG:   number of primitive magnetic variables (Cell Centered Mag Vars)
   integer         , save :: QTHERM, QVAR, QMAG
   integer         , save :: QRHO, QU, QV, QW, QPRES, QREINT, QBX, QBY, QBZ,  QFA, QFS
   
