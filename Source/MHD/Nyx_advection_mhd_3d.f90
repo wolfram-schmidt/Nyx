@@ -134,6 +134,16 @@
                   flux3,flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3, &
                   div,pdivu,lo,hi,dx,dy,dz,dt,a_old,a_new)
 
+      ! Magnetic Update
+      call magup(bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+		 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+		 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
+		 bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
+		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
+		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
+		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
+		 q,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3)
+
       ! We are done with these here so can go ahead and free up the space.
       call bl_deallocate(q)
       call bl_deallocate(flatn)

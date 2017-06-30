@@ -521,12 +521,12 @@
            QU     = 2   ! u
            QV     = 3   ! v
            QW     = 4   ! w
-	   QMAGX  = 5   ! Bx centered
-	   QMAGY  = 6   ! By centered 
-	   QMAGZ  = 7   ! Bz centered
-           QPRES  = 8   ! p
-           QREINT = 9   ! (rho e)
-           QNEXT  = QREINT+1   
+	   QPRES  = 5   ! p
+           QREINT = 6   ! (rho e)
+	   QMAGX  = 7   ! Bx centered
+	   QMAGY  = 8   ! By centered 
+	   QMAGZ  = 9   ! Bz centered
+           QNEXT  = QMAGZ+1   
            QFS = -1
            if (numadv .ge. 1) then
              QFA = QNEXT
