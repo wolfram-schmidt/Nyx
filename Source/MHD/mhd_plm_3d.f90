@@ -1,6 +1,8 @@
 module mhd_plm_module
 !Module that gives a piecewise linear interpolation for the primitive variables 
 !They are projected onto the characteristic variables for tracing. 
+
+use meth_params_module
 implicit none
 
   private vanleer, lvecx, lvecy, lvecz, rvecx, rvecy, rvecz, evals
