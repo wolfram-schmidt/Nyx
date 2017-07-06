@@ -2,7 +2,7 @@ module hlld_solver
 
 implicit none
 
-private hlldx,hlldy,hlldz, primtoflux
+private hlldx, hlldy, hlldz, primtofluxx, primtofluxy, primtofluxz
 public hlld
 
 
@@ -70,8 +70,8 @@ implicit none
 	real(rt)			  :: QssR(QVAR), FssR(QVAR)
 
 !Riemann solve
-	call primtoflux(qm, FL)
-	call primtoflux(qp, FR)
+	call primtofluxx(qm, FL)
+	call primtofluxx(qp, FR)
 	
 	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
 	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
@@ -205,8 +205,8 @@ implicit none
 	real(rt)			  :: QssR(QVAR), FssR(QVAR)
 
 !Riemann solve
-	call primtoflux(qm, FL)
-	call primtoflux(qp, FR)
+	call primtofluxy(qm, FL)
+	call primtofluxy(qp, FR)
 	
 	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
 	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
@@ -340,8 +340,8 @@ implicit none
 	real(rt)			  :: QssR(QVAR), FssR(QVAR)
 
 !Riemann solve
-	call primtoflux(qm, FL)
-	call primtoflux(qp, FR)
+	call primtofluxz(qm, FL)
+	call primtofluxz(qp, FR)
 	
 	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
 	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
@@ -451,8 +451,78 @@ implicit none
 	endif
 end subroutine hlldz
 
+!====================================================== Fluxes ================================================================================
 
-subroutine primtoflux()
+!----------------------------------------- X Direction ---------------------------------------------------------
 
-end subroutine primtoflux
+subroutine primtofluxx(Q, F)
+ use amrex_fort_module, only : rt => amrex_real
+ use meth_mhd_params_module
+implicit none
+
+	real(rt), intent(in)  :: Q(QVAR)
+	real(rt), intent(out) :: F(QVAR)
+	real(rt)			  :: e
+
+
+	e 		 = Q(QPRES)/(Q(QRHO)*gamma_minus_1)
+	F(QRHO)  = Q(QRHO)*Q(QU)
+	F(QU)	 = Q(QRHO)*Q(QU)**2 + Q(PRES) - Q(QMAGX)**2
+	F(QV)    = Q(QRHO)*Q(QU)*Q(QV) - Q(QMAGX)*Q(QMAGY)
+	F(QW)    = Q(QRHO)*Q(QU)*Q(QW) - Q(QMAGX)*Q(QMAGZ)
+	F(QPRES) = Q(QU)*(Q(QRHO)*e + Q(QPRES)) -Q(QMAGX)*dot_product(Q(QMAGX:QMAGZ),Q(QU:QW))
+	F(QMAGX) = 0.d0
+	F(QMAGY) = Q(QV)*Q(QMAGX) - Q(QMAGY)*Q(QU)
+	F(QMAGZ) = Q(QW)*Q(QMAGX) - Q(QMAGZ)*Q(QU)
+
+end subroutine primtofluxx
+
+!-------------------------------------- Y Direction ------------------------------------------------------------
+
+subroutine primtofluxy(Q, F)
+ use amrex_fort_module, only : rt => amrex_real
+ use meth_mhd_params_module
+implicit none
+
+	real(rt), intent(in)  :: Q(QVAR)
+	real(rt), intent(out) :: F(QVAR)
+	real(rt)			  :: e
+
+
+	e 		 = Q(QPRES)/(Q(QRHO)*gamma_minus_1)
+	F(QRHO)  = Q(QRHO)*Q(QV)
+	F(QU)	 = Q(QRHO)*Q(QU)*Q(QV) - Q(QMAGX)*Q(QMAGY)
+	F(QV)    = Q(QRHO)*Q(QV)**2 + Q(QPRES) - Q(QMAGY)**2
+	F(QW)    = Q(QRHO)*Q(QV)*Q(QW) - Q(QMAGY)*Q(QMAGZ)
+	F(QPRES) = Q(QV)*(Q(QRHO)*e + Q(QPRES)) -Q(QMAGY)*dot_product(Q(QMAGX:QMAGZ),Q(QU:QW))
+	F(QMAGX) = Q(QU)*Q(QMAGY) - Q(QMAGX)*Q(QV)
+	F(QMAGY) = 0.d0
+	F(QMAGZ) = Q(QW)*Q(QMAGY) - Q(QMAGZ)*Q(QV)
+
+end subroutine primtofluxy
+
+!-------------------------------------- Z Direction ------------------------------------------------------------
+
+subroutine primtofluxz(Q, F)
+ use amrex_fort_module, only : rt => amrex_real
+ use meth_mhd_params_module
+implicit none
+
+	real(rt), intent(in)  :: Q(QVAR)
+	real(rt), intent(out) :: F(QVAR)
+	real(rt)			  :: e
+
+
+	e 		 = Q(QPRES)/(Q(QRHO)*gamma_minus_1)
+	F(QRHO)  = Q(QRHO)*Q(QW)
+	F(QU)	 = Q(QRHO)*Q(QW)*Q(QU) - Q(QMAGX)*Q(QMAGZ)
+	F(QV)    = Q(QRHO)*Q(QW)*Q(QV) - Q(QMAGY)*Q(QMAGZ)
+	F(QW)    = Q(QRHO)*Q(QW)**2 + Q(QPRES) - Q(QMAGZ)**2
+	F(QPRES) = Q(QW)*(Q(QRHO)*e + Q(QPRES)) -Q(QMAGZ)*dot_product(Q(QMAGX:QMAGZ),Q(QU:QW))
+	F(QMAGX) = Q(QU)*Q(QMAGZ) - Q(QMAGX)*Q(QW)
+	F(QMAGY) = Q(QV)*Q(QMAGZ) - Q(QMAGY)*Q(QW)
+	F(QMAGZ) = 0.d0
+
+end subroutine primtofluxz
+
 end module hlld_solver
