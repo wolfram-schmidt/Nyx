@@ -219,13 +219,13 @@ contains
 	cay = (Q(QMAGY)**2)/Q(RHO)
 	caz = (Q(QMAGZ)**2)/Q(RHO)
 	!Sloooooooooow
-	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cax)
-	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay)
-	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz)
+	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cax))
+	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay))
+	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz))
 	!Fassssst
-	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax)
-	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay)
-	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz)
+	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax))
+	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay))
+	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz))
 
 	if(dir.eq.1) then	
 		!Ax eigenvalues
@@ -279,9 +279,9 @@ contains
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cax = (Q(QMAGX)**2)/Q(RHO)
 	!Sloooooooooow
-	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cax)
+	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cax))
 	!Fassssst
-	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax)
+	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax))
 	!useful constants
 	alf = (as - csx)/(cfx - csx)
 	als = (cfx - as)/(cfx - csx)
@@ -327,9 +327,9 @@ contains
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cay = (Q(QMAGY)**2)/Q(RHO)
 	!Sloooooooooow
-	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay)
+	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!Fassssst
-	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay)
+	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!useful constants
 	alf = (as - csy)/(cfy - csy)
 	als = (cfy - as)/(cfy - csy)
@@ -376,9 +376,9 @@ contains
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	caz = (Q(QMAGZ)**2)/Q(RHO)
 	!Sloooooooooow
-	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz)
+	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz))
 	!Fassssst
-	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz)
+	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz))
 	!useful constants
 	alf = (as - csz)/(cfz - csz)
 	als = (cfz - as)/(cfz - csz)
@@ -424,9 +424,9 @@ contains
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cax = (Q(QMAGX)**2)/Q(RHO)
 	!Sloooooooooow
-	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*a*casx)
+	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*a*casx))
 	!Fassssst
-	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*a*casx)
+	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*a*casx))
 	!useful constants
 	alf = (as - csx)/(cfx - csx)
 	als = (cfx - as)/(cfx - csx)
@@ -472,9 +472,9 @@ contains
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cay = (Q(QMAGY)**2)/Q(RHO)
 	!Sloooooooooow
-	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay)
+	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!Fassssst
-	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay)
+	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!useful constants
 	alf = (as - csy)/(cfy - csy)
 	als = (cfy - as)/(cfy - csy)
@@ -520,9 +520,9 @@ contains
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	caz = (Q(QMAGZ)**2)/Q(RHO)
 	!Sloooooooooow
-	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz)
+	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz))
 	!Fassssst
-	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz)
+	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz))
 	!useful constants
 	alf = (as - csz)/(cfz - csz)
 	als = (cfz - as)/(cfz - csz)
