@@ -543,7 +543,7 @@ contains
     c_v = dedT
 	
 	!Compute total pressure = thermal pressure + magnetic pressure 
-	pres = pres + 0.5d0*(bx*bx + by*by + bz*bz)
+	!pres = pres + 0.5d0*(bx*bx + by*by + bz*bz)
 
   end subroutine eos_mhd
 

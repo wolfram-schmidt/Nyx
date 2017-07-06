@@ -2,7 +2,7 @@ module mhd_plm_module
 !Module that gives a piecewise linear interpolation for the primitive variables 
 !They are projected onto the characteristic variables for tracing. 
 
-use meth_params_module
+use meth_mhd_params_module
 implicit none
 
   private vanleer, lvecx, lvecy, lvecz, rvecx, rvecy, rvecz, evals
@@ -214,18 +214,18 @@ contains
 	!Speeeeeeeedssssss
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
-	ca  = (Q(QBX)**2 + Q(QBY)**2 + Q(QBZ)**2)/Q(QRHO)
-	cax = (Q(QBX)**2)/Q(RHO)
-	cay = (Q(QBY)**2)/Q(RHO)
-	caz = (Q(QBZ)**2)/Q(RHO)
+	ca  = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
+	cax = (Q(QMAGX)**2)/Q(RHO)
+	cay = (Q(QMAGY)**2)/Q(RHO)
+	caz = (Q(QMAGZ)**2)/Q(RHO)
 	!Sloooooooooow
-	csx = 0.5d0*((a + ca) - sqrt((as + ca)**2 - 4.0d0*a*cax)
-	csy = 0.5d0*((a + ca) - sqrt((as + ca)**2 - 4.0d0*a*cay)
-	csz = 0.5d0*((a + ca) - sqrt((as + ca)**2 - 4.0d0*a*caz)
+	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cax)
+	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay)
+	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz)
 	!Fassssst
-	cfx = 0.5d0*((a + ca) + sqrt((as + ca)**2 - 4.0d0*a*cax)
-	cfy = 0.5d0*((a + ca) + sqrt((as + ca)**2 - 4.0d0*a*cay)
-	cfz = 0.5d0*((a + ca) + sqrt((as + ca)**2 - 4.0d0*a*caz)
+	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax)
+	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay)
+	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz)
 
 	if(dir.eq.1) then	
 		!Ax eigenvalues
@@ -276,20 +276,20 @@ contains
 	!Speeeeeeeedssssss
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
-	ca = (Q(QBX)**2 + Q(QBY)**2 + Q(QBZ)**2)/Q(QRHO)
-	cax = (Q(QBX)**2)/Q(RHO)
+	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
+	cax = (Q(QMAGX)**2)/Q(RHO)
 	!Sloooooooooow
-	csx = 0.5d0*((a + ca) - sqrt((as + ca)**2 - 4.0d0*a*cax)
+	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cax)
 	!Fassssst
-	cfx = 0.5d0*((a + ca) + sqrt((as + ca)**2 - 4.0d0*a*cax)
+	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax)
 	!useful constants
 	alf = (as - csx)/(cfx - csx)
 	als = (cfx - as)/(cfx - csx)
-	bety = Q(QBY)/(sqrt(Q(QBY)**2 + Q(QBZ)**2))
-	betz = Q(QBZ)/(sqrt(Q(QBY)**2 + Q(QBZ)**2))
+	bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
+	betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 	cff = cfx*alf
 	css = csx*als
-	S = sign(1.0d0, Q(QBX))
+	S = sign(1.0d0, Q(QMAGX))
 	Qf = cfx*alf*S
 	Qs = csx*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
@@ -324,20 +324,20 @@ contains
 	!Speeeeeeeedssssss
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
-	ca = (Q(QBX)**2 + Q(QBY)**2 + Q(QBZ)**2)/Q(QRHO)
-	cay = (Q(QBY)**2)/Q(RHO)
+	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
+	cay = (Q(QMAGY)**2)/Q(RHO)
 	!Sloooooooooow
-	csy = 0.5d0*((a + ca) - sqrt((as + ca)**2 - 4.0d0*a*cay)
+	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay)
 	!Fassssst
-	cfy = 0.5d0*((a + ca) + sqrt((as + ca)**2 - 4.0d0*a*cay)
+	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay)
 	!useful constants
 	alf = (as - csy)/(cfy - csy)
 	als = (cfy - as)/(cfy - csy)
-	betx = Q(QBX)/(sqrt(Q(QBX)**2 + Q(QBZ)**2))
-	betz = Q(QBZ)/(sqrt(Q(QBX)**2 + Q(QBZ)**2))
+	betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
+	betz = Q(QMAGZ)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
 	cff = cfy*alf
 	css = csy*als
-	S = sign(1.0d0, Q(QBY))
+	S = sign(1.0d0, Q(QMAGY))
 	Qf = cfy*alf*S
 	Qs = csy*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
@@ -373,20 +373,20 @@ contains
 	!Speeeeeeeedssssss
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
-	ca = (Q(QBX)**2 + Q(QBY)**2 + Q(QBZ)**2)/Q(QRHO)
-	caz = (Q(QBZ)**2)/Q(RHO)
+	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
+	caz = (Q(QMAGZ)**2)/Q(RHO)
 	!Sloooooooooow
-	csz = 0.5d0*((a + ca) - sqrt((as + ca)**2 - 4.0d0*a*caz)
+	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz)
 	!Fassssst
-	cfz = 0.5d0*((a + ca) + sqrt((as + ca)**2 - 4.0d0*a*caz)
+	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz)
 	!useful constants
 	alf = (as - csz)/(cfz - csz)
 	als = (cfz - as)/(cfz - csz)
-	betx = Q(QBX)/(sqrt(Q(QBX)**2 + Q(QBY)**2))
-	bety = Q(QBY)/(sqrt(Q(QBX)**2 + Q(QBY)**2))
+	betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
+	bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 	cff = cfz*alf
 	css = csz*als
-	S = sign(1.0d0, Q(QBZ))
+	S = sign(1.0d0, Q(QMAGZ))
 	Qf = cfz*alf*S
 	Qs = csz*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
@@ -421,20 +421,20 @@ contains
 	!Speeeeeeeedssssss
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
-	ca = (Q(QBX)**2 + Q(QBY)**2 + Q(QBZ)**2)/Q(QRHO)
-	cax = (Q(QBX)**2)/Q(RHO)
+	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
+	cax = (Q(QMAGX)**2)/Q(RHO)
 	!Sloooooooooow
-	csx = 0.5d0*((a + ca) - sqrt((as + ca)**2 - 4.0d0*a*cax)
+	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*a*casx)
 	!Fassssst
-	cfx = 0.5d0*((a + ca) + sqrt((as + ca)**2 - 4.0d0*a*cax)
+	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*a*casx)
 	!useful constants
 	alf = (as - csx)/(cfx - csx)
 	als = (cfx - as)/(cfx - csx)
-	bety = Q(QBY)/(sqrt(Q(QBY)**2 + Q(QBZ)**2))
-	betz = Q(QBZ)/(sqrt(Q(QBY)**2 + Q(QBZ)**2))
+	bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
+	betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 	cff = cfx*alf
 	css = csx*als
-	S = sign(1.0d0, Q(QBX))
+	S = sign(1.0d0, Q(QMAGX))
 	Qf = cfx*alf*S
 	Qs = csx*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
@@ -469,20 +469,20 @@ contains
 	!Speeeeeeeedssssss
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
-	ca = (Q(QBX)**2 + Q(QBY)**2 + Q(QBZ)**2)/Q(QRHO)
-	cay = (Q(QBY)**2)/Q(RHO)
+	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
+	cay = (Q(QMAGY)**2)/Q(RHO)
 	!Sloooooooooow
-	csy = 0.5d0*((a + ca) - sqrt((as + ca)**2 - 4.0d0*a*cay)
+	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay)
 	!Fassssst
-	cfy = 0.5d0*((a + ca) + sqrt((as + ca)**2 - 4.0d0*a*cay)
+	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay)
 	!useful constants
 	alf = (as - csy)/(cfy - csy)
 	als = (cfy - as)/(cfy - csy)
-	betx = Q(QBX)/(sqrt(Q(QBX)**2 + Q(QBZ)**2))
-	betz = Q(QBZ)/(sqrt(Q(QBX)**2 + Q(QBZ)**2))
+	betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
+	betz = Q(QMAGZ)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
 	cff = cfy*alf
 	css = csy*als
-	S = sign(1.0d0, Q(QBY))
+	S = sign(1.0d0, Q(QMAGY))
 	Qf = cfy*alf*S
 	Qs = csy*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
@@ -517,20 +517,20 @@ contains
 	!Speeeeeeeedssssss
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
-	ca = (Q(QBX)**2 + Q(QBY)**2 + Q(QBZ)**2)/Q(QRHO)
-	caz = (Q(QBZ)**2)/Q(RHO)
+	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
+	caz = (Q(QMAGZ)**2)/Q(RHO)
 	!Sloooooooooow
-	csz = 0.5d0*((a + ca) - sqrt((as + ca)**2 - 4.0d0*a*caz)
+	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz)
 	!Fassssst
-	cfz = 0.5d0*((a + ca) + sqrt((as + ca)**2 - 4.0d0*a*caz)
+	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz)
 	!useful constants
 	alf = (as - csz)/(cfz - csz)
 	als = (cfz - as)/(cfz - csz)
-	betx = Q(QBX)/(sqrt(Q(QBX)**2 + Q(QBY)**2))
-	bety = Q(QBY)/(sqrt(Q(QBX)**2 + Q(QBY)**2))
+	betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
+	bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 	cff = cfz*alf
 	css = csz*als
-	S = sign(1.0d0, Q(QBZ))
+	S = sign(1.0d0, Q(QMAGZ))
 	Qf = cfz*alf*S
 	Qs = csz*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
