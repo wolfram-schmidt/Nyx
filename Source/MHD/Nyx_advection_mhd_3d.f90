@@ -425,9 +425,377 @@
       cdtdy = THIRD*dtdy/a_half
       cdtdz = THIRD*dtdz/a_half
 
-      
+      ! Initialize pdivu to zero
+      pdivu(:,:,:) = ZERO
 
- 	
+      ! Initialize kc (current k-level) and km (previous k-level)
+      kc = 1
+      km = 2
+
+      do k3d = ilo3-1, ihi3+1
+
+         ! Swap pointers to levels
+         kt = km
+         km = kc
+         kc = kt
+
+         if (ppm_type .gt. 0) then
+
+            !do n=1,QVAR
+               call ppm(q(:,:,:,n),qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                        q(:,:,:,QU:),c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                        flatn,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                        Ip(:,:,:,:,:,n),Im(:,:,:,:,:,n), &
+                        ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt,k3d,kc,a_old,n)
+            end do
+
+            if (version_2 .eq. 2) then
+               do n=1,3
+                  call ppm(srcQ(:,:,:,QU+n-1),srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                           q(:,:,:,QU:),c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                           flatn,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                           Ip_g(:,:,:,:,:,n),Im_g(:,:,:,:,:,n), &
+                           ilo1,ilo2,ihi1,ihi2,dx,dy,dz,dt,k3d,kc,a_old)
+               end do
+            else
+               Ip_g(:,:,:,:,:,:) = ZERO
+               Im_g(:,:,:,:,:,:) = ZERO
+            end if
+
+            ! Compute U_x and U_y at kc (k3d)
+            call tracexy_ppm(q,c,flatn,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                             Ip,Im,Ip_g,Im_g, &
+                             qxm,qxp,qym,qyp,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                             ilo1,ilo2,ihi1,ihi2,dt,a_old,kc,k3d)
+
+         else if (ppm_type .eq. 0) then
+
+            ! Compute all slopes at kc (k3d)
+            call uslope(q,flatn,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                        dqx,dqy,dqz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                        ilo1,ilo2,ihi1,ihi2,kc,k3d,QVAR)
+
+            ! Compute U_x and U_y at kc (k3d)
+            if (use_colglaz .eq. 1) then
+               call tracexy_cg(q,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                               dqx,dqy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               qxm,qxp,qym,qyp,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               ilo1,ilo2,ihi1,ihi2,dx,dy,dt,kc,k3d,a_old)
+            else
+               call tracexy(q,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                            dqx,dqy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                            qxm,qxp,qym,qyp,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                            ilo1,ilo2,ihi1,ihi2,dx,dy,dt,kc,k3d,a_old)
+            end if
+
+         else 
+            print *,'>>> ... we only support ppm_type >= 0, not: ',ppm_type 
+            call bl_error("Error:: Nyx_advection_3d.f90 :: umeth3d")
+         end if
+
+         ! On x-edges -- choose state fx based on qxm, qxp
+         call cmpflx(qxm,qxp,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                     fx,ilo1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                     ugdnvx,pgdnvx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                     csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                     1,ilo1,ihi1+1,ilo2-1,ihi2+1,kc,kc,k3d,print_fortran_warnings)
+
+         ! On y-edges -- choose state fy based on qym, qyp
+         call cmpflx(qym,qyp,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                     fy,ilo1-1,ilo2,1,ihi1+1,ihi2+1,2, &
+                     ugdnvy,pgdnvy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                     csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                     2,ilo1-1,ihi1+1,ilo2,ihi2+1,kc,kc,k3d,print_fortran_warnings)
+
+ 
+         if (corner_coupling .eq. 1) then
+
+             ! On x-edges
+             ! qxm + d/dy (fy) --> qmxy
+             ! qxp + d/dy (fy) --> qpxy
+             call transy1(qxm,qmxy,qxp,qpxy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                          fy,ilo1-1,ilo2,1,ihi1+1,ihi2+1,2, &
+                          ugdnvy,pgdnvy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                          cdtdy,ilo1-1,ihi1+1,ilo2,ihi2,kc,k3d)
+
+             ! On y-edges
+             ! qym + d/dx (fx) --> qmyx
+             ! qyp + d/dx (fx) --> qpyx
+             call transx1(qym,qmyx,qyp,qpyx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                          fx,ilo1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                          ugdnvx,pgdnvx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                          cdtdx,ilo1,ihi1,ilo2-1,ihi2+1,kc,k3d)
+
+             ! On x-edges -- choose state fxy based on qmxy, qpxy
+             call cmpflx(qmxy,qpxy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                         fxy,ilo1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                         ugdnvtmpx,pgdnvtmpx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                         csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                         1,ilo1,ihi1+1,ilo2,ihi2,kc,kc,k3d,print_fortran_warnings)
+
+             ! On y-edges -- choose state fyx based on qmyx, qpyx
+             call cmpflx(qmyx,qpyx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                         fyx,ilo1-1,ilo2,1,ihi1+1,ihi2+1,2, &
+                         ugdnvtmpy,pgdnvtmpy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                         csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                         2,ilo1,ihi1,ilo2,ihi2+1,kc,kc,k3d,print_fortran_warnings)
+
+         end if
+
+         if (k3d.ge.ilo3) then
+
+            ! Compute U_z at kc (k3d)
+            if (ppm_type .gt. 0) then
+               call tracez_ppm(q,c,flatn,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                               Ip,Im,Ip_g,Im_g, &
+                               qzm,qzp,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                               ilo1,ilo2,ihi1,ihi2,dt,a_old,km,kc,k3d)
+            else if (ppm_type .eq. 0) then
+               if (use_colglaz .eq. 1) then
+                  call tracez_cg(q,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                              dqz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                              qzm,qzp,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                              ilo1,ilo2,ihi1,ihi2,dz,dt,km,kc,k3d,a_old)
+               else
+                  call tracez(q,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                              dqz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                              qzm,qzp,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                              ilo1,ilo2,ihi1,ihi2,dz,dt,km,kc,k3d,a_old)
+               end if
+            else 
+               print *,'>>> ... we only support ppm_type >= 0, not: ',ppm_type 
+               call bl_error("Error:: Nyx_advection_3d.f90 :: umeth3d")
+            end if
+
+            ! Compute \tilde{F}^z at kc (k3d)
+            call cmpflx(qzm,qzp,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                        fz,ilo1-1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                        ugdnvz,pgdnvz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                        csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                        3,ilo1-1,ihi1+1,ilo2-1,ihi2+1,kc,kc,k3d,print_fortran_warnings)
+
+            if (corner_coupling .eq. 1) then
+
+                ! On z-edges
+                ! qzm + d/dy (fy) --> qmzy
+                ! qzp + d/dy (fy) --> qpzy
+                call transy2(qzm,qmzy,qzp,qpzy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             fy,ilo1-1,ilo2,1,ihi1+1,ihi2+1,2, &
+                             ugdnvy,pgdnvy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             cdtdy,ilo1-1,ihi1+1,ilo2,ihi2,kc,km,k3d)
+
+                ! On z-edges
+                ! qzm + d/dx (fx) --> qmzx
+                ! qzp + d/dx (fx) --> qpzx
+                call transx2(qzm,qmzx,qzp,qpzx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             fx,ilo1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                             ugdnvx,pgdnvx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             cdtdx,ilo1,ihi1,ilo2-1,ihi2+1,kc,km,k3d)
+
+                ! On z-edges -- choose state fzx based on qmzx, qpzx
+                call cmpflx(qmzx,qpzx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                            fzx,ilo1,ilo2-1,1,ihi1,ihi2+1,2, &
+                            ugdnvtmpz1,pgdnvtmpz1,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                            csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                            3,ilo1,ihi1,ilo2-1,ihi2+1,kc,kc,k3d,print_fortran_warnings)
+
+                ! On z-edges -- choose state fzy based on qmzy, qpzy
+                call cmpflx(qmzy,qpzy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                            fzy,ilo1-1,ilo2,1,ihi1+1,ihi2,2, &
+                            ugdnvtmpz2,pgdnvtmpz2,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                            csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                            3,ilo1-1,ihi1+1,ilo2,ihi2,kc,kc,k3d,print_fortran_warnings)
+
+                ! On z-edges
+                ! qzm + d/dx (fxy) + d/dy (fyx) --> qzl
+                ! qzp + d/dx (fxy) + d/dy (fyx) --> qzr
+                call transxy(qzm,qzl,qzp,qzr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             fxy,ilo1  ,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                             fyx,ilo1-1,ilo2  ,1,ihi1+1,ihi2+1,2, &
+                             ugdnvtmpx,pgdnvtmpx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             ugdnvtmpy,pgdnvtmpy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                             hdt,hdtdx,hdtdy,ilo1,ihi1,ilo2,ihi2,kc,km,k3d,a_old,a_new)
+
+            else
+                ! On z-edges
+                ! qzm + d/dx (fx) + d/dy (fy) --> qzl
+                ! qzp + d/dx (fx) + d/dy (fy) --> qzr
+                call transxy(qzm,qzl,qzp,qzr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             fx,ilo1  ,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                             fy,ilo1-1,ilo2  ,1,ihi1+1,ihi2+1,2, &
+                             ugdnvx,pgdnvx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             ugdnvy,pgdnvy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                             srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                             hdt,hdtdx,hdtdy,ilo1,ihi1,ilo2,ihi2,kc,km,k3d,a_old,a_new)
+            endif
+
+            if (version_2 .eq. 3) then
+               call tracez_src(q,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                               qzl,qzr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                               ilo1,ilo2,ihi1,ihi2,dt,a_old,km,kc,k3d)
+            endif
+
+            ! Compute F^z at kc (k3d) -- note that flux3 is indexed by k3d, not kc
+            ! On z-edges -- choose state fluxf3 based on qzl, qzr
+            call cmpflx(qzl,qzr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                        flux3,fd3_l1,fd3_l2,fd3_l3,fd3_h1,fd3_h2,fd3_h3, &
+                        ugdnvzf,pgdnvzf,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                        csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                        3,ilo1,ihi1,ilo2,ihi2,kc,k3d,k3d,print_fortran_warnings)
+
+            do j=ilo2-1,ihi2+1
+               do i=ilo1-1,ihi1+1
+                  ugdnvz_out(i,j,k3d) = ugdnvzf(i,j,kc)
+               end do
+            end do
+
+            if (k3d .ge. ilo3+1 .and. k3d .le. ihi3+1) then
+               do j = ilo2,ihi2
+                  do i = ilo1,ihi1
+!                    pdivu(i,j,k3d-1) = pdivu(i,j,k3d-1) +  &
+!                         HALF*(pgdnvzf(i,j,kc)+pgdnvzf(i,j,km)) * &
+!                               (ugdnvzf(i,j,kc)-ugdnvzf(i,j,km))/dz
+                     pdivu(i,j,k3d-1) = pdivu(i,j,k3d-1) +  &
+                                (ugdnvzf(i,j,kc)-ugdnvzf(i,j,km))/dz
+                  end do
+               end do
+            end if
+
+            if (k3d.gt.ilo3) then
+
+               if (corner_coupling .eq. 1) then
+
+                   ! On x-edges:
+                   ! qxm + d/dz (fz) --> qmxz
+                   ! qxp + d/dz (fz) --> qpxz
+                   ! On y-edges:
+                   ! qym + d/dz (fz) --> qmyz 
+                   ! qyp + d/dz (fz) --> qpyz
+                   call transz(qxm,qmxz,qxp,qpxz, &
+                               qym,qmyz,qyp,qpyz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               fz,ilo1-1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                               ugdnvz,pgdnvz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               cdtdz,ilo1-1,ihi1+1,ilo2-1,ihi2+1,km,kc,k3d)
+    
+                   ! On x-edges -- choose state fxz based on qmxz, qpxz
+                   call cmpflx(qmxz,qpxz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               fxz,ilo1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                               ugdnvx,pgdnvx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                               1,ilo1,ihi1+1,ilo2-1,ihi2+1,km,km,k3d-1,print_fortran_warnings)
+
+                   ! On y-edges -- choose state fyz based on qmyz, qpyz
+                   call cmpflx(qmyz,qpyz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               fyz,ilo1-1,ilo2,1,ihi1+1,ihi2+1,2, &
+                               ugdnvy,pgdnvy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                               csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                               2,ilo1-1,ihi1+1,ilo2,ihi2+1,km,km,k3d-1,print_fortran_warnings)
+    
+                   ! On x-edges:
+                   ! qxm + d/dy (fyz) + d/dz(fzy) --> qxl
+                   ! qxp + d/dy (fyz) + d/dz(fzy) --> qxr
+                   call transyz(qxm,qxl,qxp,qxr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                fyz,ilo1-1,ilo2,1,ihi1+1,ihi2+1,2, &
+                                fzy,ilo1-1,ilo2,1,ihi1+1,ihi2  ,2, &
+                                ugdnvy,pgdnvy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                ugdnvtmpz2,pgdnvtmpz2,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                                hdt,hdtdy,hdtdz,ilo1-1,ihi1+1,ilo2,ihi2,km,kc,k3d-1,a_old,a_new)
+
+                   ! On y-edges:
+                   ! qym + d/dx (fxz) + d/dz(fzx) --> qyl
+                   ! qyp + d/dx (fxz) + d/dz(fzx) --> qyr
+                   call transxz(qym,qyl,qyp,qyr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                fxz,ilo1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                                fzx,ilo1,ilo2-1,1,ihi1  ,ihi2+1,2, &
+                                ugdnvx,pgdnvx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                ugdnvtmpz1,pgdnvtmpz1,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                                hdt,hdtdx,hdtdz,ilo1,ihi1,ilo2-1,ihi2+1,km,kc,k3d-1,a_old,a_new)
+
+               else
+
+                   ! On x-edges:
+                   ! qxm + d/dy (fy) + d/dz(fz) --> qxl
+                   ! qxp + d/dy (fy) + d/dz(fz) --> qxr
+                   call transyz(qxm,qxl,qxp,qxr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                fy,ilo1-1,ilo2  ,1,ihi1+1,ihi2+1,2, &
+                                fz,ilo1-1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                                ugdnvy,pgdnvy,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                ugdnvz,pgdnvz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                                hdt,hdtdy,hdtdz,ilo1-1,ihi1+1,ilo2,ihi2,km,kc,k3d-1,a_old,a_new)
+
+                   ! On y-edges:
+                   ! qym + d/dx (fx) + d/dz(fz) --> qyl
+                   ! qyp + d/dx (fx) + d/dz(fz) --> qyr
+                   call transxz(qym,qyl,qyp,qyr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                fx,ilo1  ,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                                fz,ilo1-1,ilo2-1,1,ihi1+1,ihi2+1,2, &
+                                ugdnvx,pgdnvx,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                ugdnvz,pgdnvz,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                                hdt,hdtdx,hdtdz,ilo1,ihi1,ilo2-1,ihi2+1,km,kc,k3d-1,a_old,a_new)
+
+               end if
+
+               if (version_2 .eq. 3) then
+                  call tracex_src(q,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                                  qxl,qxr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                  srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                                  ilo1,ilo2,ihi1,ihi2,dt,a_old,kc,k3d)
+                  call tracey_src(q,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                                  qyl,qyr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                                  srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                                  ilo1,ilo2,ihi1,ihi2,dt,a_old,kc,k3d)
+               endif
+
+               ! On x-edges -- choose state flux1 based on qxl, qxr
+               call cmpflx(qxl,qxr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                           flux1,fd1_l1,fd1_l2,fd1_l3,fd1_h1,fd1_h2,fd1_h3, &
+                           ugdnvxf,pgdnvxf,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                           csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                           1,ilo1,ihi1+1,ilo2,ihi2,km,k3d-1,k3d-1,print_fortran_warnings)
+
+               do j=ilo2-1,ihi2+1
+                  do i=ilo1-1,ihi1+2
+                     ugdnvx_out(i,j,k3d-1) = ugdnvxf(i,j,km)
+                  end do
+               end do
+
+               ! On y-edges -- choose state flux2 based on qyl, qyr
+               call cmpflx(qyl,qyr,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                           flux2,fd2_l1,fd2_l2,fd2_l3,fd2_h1,fd2_h2,fd2_h3, &
+                           ugdnvyf,pgdnvyf,ilo1-1,ilo2-1,1,ihi1+2,ihi2+2,2, &
+                           csml,c,qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3, &
+                           2,ilo1,ihi1,ilo2,ihi2+1,km,k3d-1,k3d-1,print_fortran_warnings)
+
+               do j=ilo2-1,ihi2+2
+                  do i=ilo1-1,ihi1+1
+                     ugdnvy_out(i,j,k3d-1) = ugdnvyf(i,j,km)
+                  end do
+               end do
+
+               do j = ilo2,ihi2
+                  do i = ilo1,ihi1
+!                    pdivu(i,j,k3d-1) = pdivu(i,j,k3d-1) +  &
+!                         HALF*(pgdnvxf(i+1,j,km) + pgdnvxf(i,j,km)) *  &
+!                         (ugdnvxf(i+1,j,km)-ugdnvxf(i,j,km))/dx + &
+!                         HALF*(pgdnvyf(i,j+1,km) + pgdnvyf(i,j,km)) *  &
+!                         (ugdnvyf(i,j+1,km)-ugdnvyf(i,j,km))/dy
+                     pdivu(i,j,k3d-1) = pdivu(i,j,k3d-1) +  &
+                          (ugdnvxf(i+1,j,km)-ugdnvxf(i,j,km))/dx + &
+                          (ugdnvyf(i,j+1,km)-ugdnvyf(i,j,km))/dy
+                  end do
+               end do
+
+            end if
+         end if
+      enddo
 
       call bl_deallocate(pgdnvx)
       call bl_deallocate(pgdnvxf)
