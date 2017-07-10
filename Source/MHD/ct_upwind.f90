@@ -23,6 +23,7 @@ implicit none
 	integer, intent(in)   :: qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3
 	integer, intent(in)   :: flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
 
+	real(rt), intent(in)  :: q(qpd_l1:qpd_h1,qpd_l2:qpd_h2,qpd_l3:qpd_h3,QVAR) !prim vars at time t^n
 	real(rt), intent(in)  :: qm(qpd_l1:qpd_h1,qpd_l2:qpd_h2,qpd_l3:qpd_h3,QVAR,3)
 	real(rt), intent(in)  :: qp(qpd_l1:qpd_h1,qpd_l2:qpd_h2,qpd_l3:qpd_h3,QVAR,3)
 	real(rt), intent(out) :: flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)	
@@ -56,12 +57,15 @@ implicit none
 
 !Use "1D" fluxes To interpolate Temporary Edge Centered Electric Fields
 
-	call elec_interp()
+	call elec_interp(Etemp, q, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
+			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 !Corner Couple
 
-	call corner_couple() !Correct Conservative vars using Transverse Fluxes
-	call corner_couple_mag()
+	call corner_couple(cons_temp_L, cons_temp_R, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
+					   flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3) !Correct Conservative vars using Transverse Fluxes
+	call corner_couple_mag(cons_temp_L, cons_temp_R, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
+						Etemp) !Correct Magnetic Vars using Etemp
 
 !Calculate Flux 2D
 do i = 1,2
@@ -113,17 +117,118 @@ subroutine PrimToCons(q, u, q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3)
 implicit none
 
 	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
-	real(rt), intent(in)	::q(q_l1,q_l2,q_l3,q_h1,q_h2, q_h3)
-	real(rt), intent(out)	::u(q_l1,q_l2,q_l3,q_h1,q_h2, q_h3)
+	real(rt), intent(in)	::q(q_l1,q_l2,q_l3,q_h1,q_h2, q_h3,QVAR)
+	real(rt), intent(out)	::u(q_l1,q_l2,q_l3,q_h1,q_h2, q_h3,QVAR)
 
-	u(QRHO)  = q(QRHO)
-	u(QU)    = q(QRHO)*q(QU)
-	u(QV)    = q(QRHO)*q(QV)
-	u(QW)    = q(QRHO)*q(QW)
-	u(QPRES) = q(QPRES)*gamma_minus_1*q(QRHO)
-	u(QMAGX:QMAGZ) = q(QMAGX:QMAGZ)
-
+ do k = q_l3,q_h3
+ 	 do j = q_l2,q_h2
+ 		 do i = q_l1, q_l2
+ 			u(i,j,k,QRHO)  = q(i,j,k,QRHO)
+ 			u(i,j,k,QU)    = q(i,j,k,QRHO)*q(i,j,k,QU)
+ 			u(i,j,k,QV)    = q(i,j,k,QRHO)*q(i,j,k,QV)
+ 			u(i,j,k,QW)    = q(i,j,k,QRHO)*q(i,j,k,QW)
+			u(i,j,k,QPRES) = q(i,j,k,QPRES)*gamma_minus_1*q(i,j,k,QRHO) &
+ 							 + 0.5d0*(dot_product(q(i,j,k,QMAGX:QMAGZ)*q(i,j,k,QMAGX:QMAGZ))) !Energy
+			u(i,j,k,QMAGX:QMAGZ) = q(i,j,k,QMAGX:QMAGZ)
+		 enddo
+	 enddo
+ enddo
 end subroutine PrimToCons
 
+
+subroutine corner_couple(uL, uR, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
+					   flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+use amrex_fort_module, only : rt => amrex_real
+use meth_mhd_params_module
+
+implicit none
+	
+	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	integer, intent(in)		::flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
+	
+	real(rt), intent(in)	::um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt), intent(in)	::up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt), intent(in) 	::flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)
+
+	real(rt), intent(out)	::uL(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2)
+	real(rt), intent(out)	::uR(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2)
+
+	integer					:: i ,j ,k
+
+	do k = q_l3,q_h3
+		do j = q_l2,q_h2
+			do i = q_l1,q_h1
+	!Left Corrected States
+				uL(i,j,k,QRHO:QPRES,1,1) = um(i,j,k,QRHO:QPRES,1) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,2) - flx(i,j-1,k,QRHO:QPRES,2))
+				uL(i,j,k,QRHO:QPRES,1,2) = um(i,j,k,QRHO:QPRES,1) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,3) - flx(i,j-1,k,QRHO:QPRES,3))
+				uL(i,j,k,QRHO:QPRES,2,1) = um(i,j,k,QRHO:QPRES,2) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,1) - flx(i,j-1,k,QRHO:QPRES,1))
+				uL(i,j,k,QRHO:QPRES,2,2) = um(i,j,k,QRHO:QPRES,2) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,3) - flx(i,j-1,k,QRHO:QPRES,3))
+				uL(i,j,k,QRHO:QPRES,3,1) = um(i,j,k,QRHO:QPRES,3) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,1) - flx(i,j-1,k,QRHO:QPRES,1))
+				uL(i,j,k,QRHO:QPRES,3,2) = um(i,j,k,QRHO:QPRES,3) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,2) - flx(i,j-1,k,QRHO:QPRES,2))
+	!Right Corrected States
+				uR(i,j,k,QRHO:QPRES,1,1) = up(i,j,k,QRHO:QPRES,1) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,2) - flx(i,j-1,k,QRHO:QPRES,2))
+				uR(i,j,k,QRHO:QPRES,1,2) = up(i,j,k,QRHO:QPRES,1) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,3) - flx(i,j-1,k,QRHO:QPRES,3))
+				uR(i,j,k,QRHO:QPRES,2,1) = up(i,j,k,QRHO:QPRES,2) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,1) - flx(i,j-1,k,QRHO:QPRES,1))
+				uR(i,j,k,QRHO:QPRES,2,2) = up(i,j,k,QRHO:QPRES,2) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,3) - flx(i,j-1,k,QRHO:QPRES,3))
+				uR(i,j,k,QRHO:QPRES,3,1) = up(i,j,k,QRHO:QPRES,3) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,1) - flx(i,j-1,k,QRHO:QPRES,1))
+				uR(i,j,k,QRHO:QPRES,3,2) = up(i,j,k,QRHO:QPRES,3) - dt/(3.d0*dx)*(flx(i,j,k,QRHO:QPRES,2) - flx(i,j-1,k,QRHO:QPRES,2))
+			enddo
+		enddo
+	enddo
+end subroutine corner_couple
+
+
+subroutine electric_interp(Etemp, q, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
+			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+
+use amrex_fort_module, only : rt => amrex_real
+use meth_mhd_params_module
+
+implicit none
+	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	integer, intent(in)		::flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
+	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
+	real(rt), intent(in) 	::flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)
+
+	real(rt), intent(out)	::Etemp(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,2,2) !Three coordinates 4 edges
+	
+	real(rt)				::Ecen(3)
+	real(rt)				::dxE_face(2), dxE_edge(2,2,2)
+	real(rt)				::dyE_face(2), dyE_edge(2,2,2)
+	real(rt)				::dzE_face(2), dzE_edge(2,2,2)
+	
+	integer					::i,j,k	
+
+!Interpolate Electric Fields to edge
+	do k = q_l3,q_h3
+		do j = q_l2, q_h2
+			do i = q_l1, q_h1
+				!X-direction
+				!1/4 interpolation
+				call electric(q(i,j,k,:),Ecen)
+				dxE_face(1) = 2.d0*(-flx(i,j,k,QMAGY,3) - Ecen(1))
+				dyE_face(1) = 2.d0*(-flx(i,j,k,QMAGZ,1) - Ecen(2))
+ 				dzE_face(1) = 2.d0*(-flx(i,j,k,QMAGX,2) - Ecen(3))
+				!3/4 interp
+				call electric(q(i+1,j,k,:),Ecen)
+				dxE_face(2) = 2.d0*(Ecen(1) + flx(i,j,k,QMAGY,3))
+				call electric(q(i,j+1,k,:),Ecen)
+				dyE_face(2) = 2.d0*(Ecen(2) + flx(i,j,k,QMAGZ,1))
+				call electric(q(i,j,k+1,:),Ecen)
+				dzE_face(2) = 2.d0*(Ecen(3) + flx(i,j,k,QMAGX,2))
+				if(q(i,j,k,QU).gt. 0.d0) then
+					dxE_edge(1, 1, 1) = dxE_face(1)
+				elseif(q(i,j,k,QU).lt. 0.d0) then 
+					dxE_edge(1, 1, 1) = dxE_face(2)
+				else
+					dxE_edge(1, 1, 1) = 0.5d0*(dxE_face(1) + dxE_face(2))
+				endif
+			enddo
+		enddo
+	enddo
+
+	
+
+end subroutine electric_interp	
 
 end module ct_updwind
