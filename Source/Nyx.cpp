@@ -162,6 +162,11 @@ Real Nyx::he_species        = 0.0;
 
 int Nyx::use_exact_gravity  = 0;
 
+#ifdef AGN
+Real Nyx::mass_halo_min     = 1.e10;
+Real Nyx::mass_seed         = 1.e5;
+#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -465,6 +470,11 @@ Nyx::read_params ()
     }
 
     pp.query("gimlet_int", gimlet_int);
+
+#ifdef AGN
+    pp.query("mass_halo_min", mass_halo_min);
+    pp.query("mass_seed", mass_seed);
+#endif
 }
 
 Nyx::Nyx ()
@@ -2342,6 +2352,10 @@ Nyx::AddProcsToComp(Amr *aptr, int nSidecarProcs, int prevSidecarProcs,
 #ifdef NEUTRINO_PARTICLES
         allReals.push_back(neutrino_cfl);
 #endif
+#ifdef AGN
+        allReals.push_back(mass_halo_min);
+        allReals.push_back(mass_seed);
+#endif        
       }
 
       amrex::BroadcastArray(allReals, scsMyId, ioProcNumAll, scsComm);
@@ -2376,6 +2390,10 @@ Nyx::AddProcsToComp(Amr *aptr, int nSidecarProcs, int prevSidecarProcs,
 #ifdef NEUTRINO_PARTICLES
         neutrino_cfl = allReals[count++];
 #endif
+#ifdef AGN
+        mass_halo_min = allReals[count++];
+        mass_seed = allReals[count++];
+#endif        
         BL_ASSERT(count == allReals.size());
       }
 
