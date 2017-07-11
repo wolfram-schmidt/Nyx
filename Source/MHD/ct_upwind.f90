@@ -177,6 +177,40 @@ implicit none
 	enddo
 end subroutine corner_couple
 
+subroutine corner_couple_mag(uL, uR, um, up,&
+                            q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+       						Etemp)
+use amrex_fort_module, only : rt => amrex_real
+use meth_mhd_params_module
+
+!Correction using Faraday's Law
+implicit none
+
+	integer, intent(in)			::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	real(rt), intent(inout)		::uL(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2)
+	real(rt), intent(inout)     ::uR(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2)
+	real(rt), intent(in)    	::um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt), intent(in)    	::up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)	
+	real(rt), intent(in)		::E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,2,2)
+	
+	integer					:: i ,j ,k
+
+   	do k = q_l3,q_h3
+		do j = q_l2,q_h2
+			do i = q_l1,q_h1	
+		!Left State
+				uL(i,j,k,QMAGX,1,1) = um(i,j,k,QMAGX,1) + deltat/(3.d0*deltax)*&
+										(E(i,j,k,3,1,2) - E(i,j,k,3,1,1))
+				uL(i,j,k,QMAGX,1,2) = um(i,j,k,QMAGX,1) + deltat/(3.d0*deltax)*&
+										(E(i,j,k,3,2,2) - E(i,j,k,3,2,1))
+														
+										
+			enddo
+		enddo
+	enddo
+
+end subroutine corner_couple_mag
+
 
 subroutine electric_interp(Etemp, q, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
 			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
