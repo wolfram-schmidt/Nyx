@@ -18,6 +18,7 @@ subroutine corner_transport( !Cons
 
  use amrex_fort_module, only : rt => amrex_real
  use meth_mhd_params_module
+ use electric_field, only : elec_interp
 implicit none
 
 	integer, intent(in)   :: qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3
@@ -109,6 +110,8 @@ enddo
 
 end subroutine corner_transport
 
+!================================================= Calculate the Conservative Variables ===============================================
+
 subroutine PrimToCons(q, u, q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3)
 
  use amrex_fort_module, only : rt => amrex_real
@@ -135,7 +138,7 @@ implicit none
  enddo
 end subroutine PrimToCons
 
-
+!======================================= Update the Temporary Conservative Variables with Transverse 1D Fluxes ========================
 subroutine corner_couple(uL, uR, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
 					   flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 use amrex_fort_module, only : rt => amrex_real
@@ -177,6 +180,7 @@ implicit none
 	enddo
 end subroutine corner_couple
 
+!================================== Use 1D Electric Fields to Transverse correct the Temporary Magnetic Fields ===========================
 subroutine corner_couple_mag(uL, uR, um, up,&
                             q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
        						Etemp)
@@ -300,62 +304,4 @@ implicit none
 
 end subroutine corner_couple_mag
 
-
-subroutine electric_interp(Etemp, q, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
-			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
-
-use amrex_fort_module, only : rt => amrex_real
-use meth_mhd_params_module
-
-implicit none
-	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
-	integer, intent(in)		::flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
-	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
-	real(rt), intent(in) 	::flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)
-
-	real(rt), intent(out)	::Etemp(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,12) !12 Edges total
-	
-	real(rt)				::Ecen(3)
-	real(rt)				::dxE_face(2), dxE_edge(2,2,2)
-	real(rt)				::dyE_face(2), dyE_edge(2,2,2)
-	real(rt)				::dzE_face(2), dzE_edge(2,2,2)
-	real(rt)				::u_face,v_face,w_face
-	
-	integer					::i,j,k	
-
-!Interpolate Electric Fields to edge
-	do k = q_l3,q_h3
-		do j = q_l2, q_h2
-			do i = q_l1, q_h1
-				!X-direction
-				!1/4 interpolation
-				u_face = flx(i,j,k,QU,1)
-				v_face = flx(i,j,k,QV,2)
-				w_face = flx(i,j,k,QW,3)		
-				call electric(q(i,j,k,:),Ecen)
-				dxE_face(1) = 2.d0*(-flx(i,j,k,QMAGY,3) - Ecen(1))
-				dyE_face(1) = 2.d0*(-flx(i,j,k,QMAGZ,1) - Ecen(2))
- 				dzE_face(1) = 2.d0*(-flx(i,j,k,QMAGX,2) - Ecen(3))
-				!3/4 interp
-				call electric(q(i+1,j,k,:),Ecen)
-				dxE_face(2) = 2.d0*(Ecen(1) + flx(i,j,k,QMAGY,3))
-				call electric(q(i,j+1,k,:),Ecen)
-				dyE_face(2) = 2.d0*(Ecen(2) + flx(i,j,k,QMAGZ,1))
-				call electric(q(i,j,k+1,:),Ecen)
-				dzE_face(2) = 2.d0*(Ecen(3) + flx(i,j,k,QMAGX,2))
-				if(u_face.gt. 0.d0) then
-					dxE_edge(1, 1, 1) = dxE_face(1)
-				elseif(u_face.lt. 0.d0) then 
-					dxE_edge(1, 1, 1) = dxE_face(2)
-				else
-					dxE_edge(1, 1, 1) = 0.5d0*(dxE_face(1) + dxE_face(2))
-				endif
-			enddo
-		enddo
-	enddo
-
-	
-
-end subroutine electric_interp	
-
-end module ct_updwind
+end module ct_upwind
