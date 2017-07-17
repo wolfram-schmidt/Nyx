@@ -1,3 +1,9 @@
+module electric_field
+
+implicit none
+
+contains
+
 subroutine electric(Q, E) !Use ideal Ohm's Law
 use amrex_fort_module, only : rt => amrex_real
 use meth_mhd_params_module, only : QVAR, QU,QV, QW, QMAGX, QMAGY, QMAGZ
@@ -13,3 +19,43 @@ implicit none
 	E(3)	= -Q(QU)*Q(QMAGY) + Q(QV)*Q(QMAGX)
  
 end subroutine electric
+
+
+!=============== Interpolate the Cell Centered/Face Centered Magnetic Field Vars to Get Edge Centered Electric Field Variables ==================
+
+subroutine elec_interp(E, q, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
+			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+
+use amrex_fort_module, only : rt => amrex_real
+use meth_mhd_params_module
+
+implicit none
+	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	integer, intent(in)		::flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
+	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
+	real(rt), intent(in) 	::flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)
+
+	real(rt), intent(out)	::E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,4) !12 Edges total
+	
+	real(rt)				::Ecen(3)
+	real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
+	real(rt)				::u_face ,v_face ,w_face
+	
+	integer					::i ,j ,k	
+
+!Interpolate Electric Fields to edges
+	do k = q_l3,q_h3
+		do j = q_l2, q_h2
+			do i = q_l1, q_h1
+!-----------------------------------Calculate Edge 1 := i + 1/2, j, k - 1/2 -------------------------------------------
+		!Ey 		
+			enddo
+		enddo
+	enddo
+
+	
+
+end subroutine elec_interp	
+
+
+end module electric_field
