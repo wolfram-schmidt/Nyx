@@ -161,7 +161,7 @@ implicit none
                 endif
                 !double derivative
                 dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ey
+                !Edge centered Ex
                 E(i,j,k,1,1) = 0.25d0*(flx(i,j+1,k-1,QMAGZ,2) + flx(i,j+1,k,QMAGZ,2) &
                                 + flx(i,j,k,QMAGX,3) + flx(i,j+1,k,QMAGX,3)) + dd1 + dd2  
                                 
@@ -274,10 +274,64 @@ implicit none
                 endif
                 !double derivative
                 dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ey
-                E(i,j,k,1,1) = 0.25d0*(flx(i,j,k-1,QMAGZ,2) + flx(i,j,k,QMAGZ,2) &
+                !Edge centered Ex
+                E(i,j,k,1,2) = 0.25d0*(flx(i,j,k-1,QMAGZ,2) + flx(i,j,k,QMAGZ,2) &
                                 + flx(i,j-1,k,QMAGX,3) + flx(i,j,k,QMAGX,3)) + dd1 + dd2   
-                                
+
+!-----------------------------------Calculate Edge 5 := i + 1/2, j - 1/2, k -------------------------------------------
+         !Ez
+		        !y-derivative
+		        v_face = flx(i,j,k,QRHO,2)	
+		        call electric(q(i,j,k,:),Ecen,2)
+		        a = 2.d0*(flx(i,j,k,QMAGX,3) - Ecen)
+		        call electric(q(i,j,k-1,:),Ecen,2)
+		        b = 2.d0*(Ecen - flx(i,j,k-1,QMAGX,3))
+		        if(v_face.gt. 0.d0) then
+		            d1 = a
+		        elseif(v_face.lt. 0.d0) then
+		            d1 = b
+		        else 
+		            d1 = 0.5d0*(a + b)
+		        endif
+                a = 2.d0*(flx(i,j+1,k-1,QMAGX,3) - Ecen)
+                v_face = flx(i,j+1,k-1,QRHO,2)
+                if(v_face.gt. 0.d0) then
+                    d2 = b
+                elseif(v_face.lt. 0.d0) then
+                    d2 = a
+                else
+                    d2 = 0.5d0*(a + b)
+                endif
+                !double derivative
+                dd1 = 0.125d0*(d1 - d2)   
+                
+                !x-derivative
+		        u_face = flx(i+1,j,k,QRHO,1)	
+		        call electric(q(i,j,k,:),Ecen,2)
+		        a = 2.d0*(flx(i+1,j,k,QMAGZ,1) - Ecen)
+		        call electric(q(i+1,j,k,:),Ecen,2)
+		        b = 2.d0*(Ecen - flx(i+1,j,k,QMAGZ,1))
+		        if(u_face.gt. 0.d0) then
+		            d1 = a
+		        elseif(u_face.lt. 0.d0) then
+		            d1 = b
+		        else 
+		            d1 = 0.5d0*(a + b)
+		        endif
+                a = 2.d0*(flx(i+2,j,k,QMAGZ,1) - Ecen)
+                u_face = flx(i+2,j,k,QRHO,1)
+                if(u_face.gt. 0.d0) then
+                    d2 = b
+                elseif(u_face.lt. 0.d0) then
+                    d2 = a
+                else
+                    d2 = 0.5d0*(a + b)
+                endif
+                !double derivative
+                dd1 = 0.125d0*(d1 - d2)  
+                !Edge centered Ez
+                E(i,j,k,3,1) = 0.25d0*(flx(i+1,j-1,k,QMAGX,2) + flx(i+1,j,k,QMAGX,2) &
+                                + flx(i+1,j,k,QMAGY,1) + flx(i,j,k,QMAGY,1)) + dd1 + dd2  
                                
 			enddo
 		enddo
