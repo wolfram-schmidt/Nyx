@@ -38,7 +38,7 @@ implicit none
 	real(rt)			  :: cons_half_R(qpd_l1:qpd_h1,qpd_l2:qpd_h2,qpd_l3:qpd_h3,QVAR,3)
 	real(rt)			  :: flx1D(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3) !Flux1d for all directions
 	real(rt)			  :: flx2D(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3, 2) !Flux2d for all directions 2 perpendicular directions
-	real(rt) 			  :: Etemp(qpd_l1:qpd_h1,qpd_l2:qpd_h2,qpd_l3:qpd_h3,3,12) !Temporary Electric Field
+	real(rt) 			  :: Etemp(qpd_l1:qpd_h1,qpd_l2:qpd_h2,qpd_l3:qpd_h3,3,4) !Temporary Electric Field
 
 	
 !Prim to Cons
@@ -81,10 +81,11 @@ do i = 1,2
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 3)
 enddo
 	
-!Use Averaged 2D fluxes to interpolate temporary Edge Centered Electric Fields, reuse flx1D
+!Use Averaged 2D fluxes to interpolate temporary Edge Centered Electric Fields, reuse "flx1D"
 	flx1D(:,:,:,:,:) = 0.5d0*(flx2D(:,:,:,:,:,1) + flx2D(:,:,:,:,:,2))
 	
-	call elec_interp()	!*****TO DO*******
+	call elec_interp(Etemp, q, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
+			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 !Half Step conservative vars
 	call half_step()	!*****TO DO*******
@@ -105,8 +106,9 @@ enddo
 
 	call prim_half()
 
-!Final Electric Field Update		!******TO DO*****
-	call elec_interp()
+!Final Electric Field Update
+	call elec_interp(Etemp, q, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
+			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 end subroutine corner_transport
 
@@ -304,4 +306,46 @@ implicit none
 
 end subroutine corner_couple_mag
 
+!Final Conservative Corrections
+subroutine half_step(uL, uR, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
+					   flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+use amrex_fort_module, only : rt => amrex_real
+use meth_mhd_params_module
+
+implicit none
+	
+	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	integer, intent(in)		::flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
+	
+	real(rt), intent(in)	::um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt), intent(in)	::up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt), intent(in) 	::flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3,2)
+
+	real(rt), intent(out)	::uL(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt), intent(out)	::uR(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+
+	integer					:: i ,j ,k
+
+   	do k = q_l3,q_h3
+		do j = q_l2,q_h2
+			do i = q_l1,q_h1	
+!left state				
+				uL(i,j,k,:,1) = um(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,2) - flx(i,j,k,:,2,2)) &
+											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,1) - flx(i,j,k,:,3,1))
+				uL(i,j,k,:,2) = um(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
+											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
+				uL(i,j,k,:,3) = um(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
+											- 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
+!right state				
+				uR(i,j,k,:,1) = up(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,2) - flx(i,j,k,:,2,2)) &
+											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,1) - flx(i,j,k,:,3,1))
+				uR(i,j,k,:,2) = up(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
+											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
+				uR(i,j,k,:,3) = up(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
+											- 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
+
+			enddo
+		enddo
+	enddo
+end subroutine 
 end module ct_upwind
