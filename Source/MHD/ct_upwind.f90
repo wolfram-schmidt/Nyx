@@ -195,7 +195,7 @@ implicit none
 	real(rt), intent(inout)     ::uR(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2)
 	real(rt), intent(in)    	::um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 	real(rt), intent(in)    	::up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)	
-	real(rt), intent(in)		::E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,12)
+	real(rt), intent(in)		::E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,4)
 	
 	integer					:: i ,j ,k
 
@@ -206,31 +206,31 @@ implicit none
 				!X-direction 
 				!-> Affected by Y flux
 				uL(i,j,k,QMAGX,1,1) = um(i,j,k,QMAGX,1) + deltat/(3.d0*deltax)*&
-										(E(i,j,k,3,1,2) - E(i,j,k,3,1,1))
+										(E(i,j,k,3,3) - E(i,j,k,3,4))
 				uL(i,j,k,QMAGZ,1,1) = um(i,j,k,QMAGZ,1) + deltat/(6.d0*deltax)*&
-										((E(i,j,k,1,2,2) - E(i,j,k,1,2,1)) + &
-										(E(i,j,k,1,1,2) - E(i,j,k,1,1,1))
+										((E(i,j,k,1,4) - E(i,j,k,1,3)) + &
+										(E(i,j,k,1,1) - E(i,j,k,1,2))
 				!-> Affected by Z flux
 				uL(i,j,k,QMAGX,1,2) = um(i,j,k,QMAGX,1) - deltat/(3.d0*deltax)*&
-									 	(E(i,j,k,2,1,2) - E(i,j,k,2,1,1))
+									 	(E(i,j,k,2,4) - E(i,j,k,2,2))
 				uL(i,j,k,QMAGY,1,1) = um(i,j,k,QMAGY,1) - deltat/(6.d0*deltax)*&
-									 	((E(i,j,k,1,2,2) - E(i,j,k,1,2,1)) + &
-										(E(i,j,k,1,1,2) - E(i,j,k,1,1,1))
+									 	((E(i,j,k,1,4) - E(i,j,k,1,3)) + &
+										(E(i,j,k,1,1) - E(i,j,k,1,2))
 
 				uL(i,j,k,QMAGY:QMAGZ,1,2) = um(i,j,k,QMAGY:QMAGZ,1)
 				!Y-direction
 				!-> Affected by X flux
 				uL(i,j,k,QMAGY,2,1) = um(i,j,k,QMAGY,2) - deltat/(3.d0*deltay)*&
-										(E(i,j,k,3,2,2) - E(i,j,k,3,2,1))
+										(E(i,j,k,3,1) - E(i,j,k,3,4))
 				uL(i,j,k,QMAGZ,2,1) = um(i,j,k,QMAGZ,2) - deltat/(6.d0*deltay)*&
-									((E(i,j,k,2,2,2) - E(i,j,k,2,2,1)) + &
-									(E(i,j,k,2,1,2) - E(i,j,k,2,1,1))
+									((E(i,j,k,2,3) - E(i,j,k,2,4)) + &
+									(E(i,j,k,2,1) - E(i,j,k,2,2))
 				!-> Affected by Z flux
 				uL(i,j,k,QMAGY,2,2) = um(i,j,k,QMAGY,2) + deltat/(3.d0*deltay)*&
-										(E(i,j,k,1,2,2) - E(i,j,k,1,2,1))
+										(E(i,j,k,1,3) - E(i,j,k,1,2))
 				uL(i,j,k,QMAGX,2,1) = um(i,j,k,QMAGX,2) + deltat/(6.d0*deltay)*&
-									((E(i,j,k,2,2,2) - E(i,j,k,2,2,1)) + &
-									(E(i,j,k,2,1,2) - E(i,j,k,2,1,1))
+									((E(i,j,k,2,3) - E(i,j,k,2,3)) + &
+									(E(i,j,k,2,1) - E(i,j,k,2,2))
 
 				uL(i,j,k,QMAGX,2,2) = um(i,j,k,QMAGX,2)
 				uL(i,j,k,QMAGZ,2,2) = um(i,j,k,QMAGZ,2)
@@ -238,47 +238,47 @@ implicit none
 				!Z-Direction
 				!-> Affected by X flux
 				uL(i,j,k,QMAGZ,3,1) = um(i,j,k,QMAGZ,3) - deltat/(3.d0*deltaz)*&
-										(E(i,j,k,2,1,2) - E(i,j,k,2,1,1))
+										(E(i,j,k,2,4) - E(i,j,k,2,2))
 				uL(i,j,k,QMAGY,3,1) = um(i,j,k,QMAGZ,3) - deltat/(6.d0*deltaz)*&
-									((E(i,j,k,3,2,2) - E(i,j,k,3,2,1)) + &
-									(E(i,j,k,3,1,2) - E(i,j,k,3,1,1))
+									((E(i,j,k,3,2) - E(i,j,k,3,1)) + &
+									(E(i,j,k,3,3) - E(i,j,k,3,4))
 				!-> Affected by Y flux
 				uL(i,j,k,QMAGZ,3,2) = um(i,j,k,QMAGZ,3) + deltat/(3.d0*deltaz)*&
-										(E(i,j,k,1,2,2) - E(i,j,k,1,2,1))
+										(E(i,j,k,1,3) - E(i,j,k,1,2))
 				uL(i,j,k,QMAGX,3,1) = um(i,j,k,QMAGX,3) + deltat/(6.d0*deltaz)*&
-									((E(i,j,k,3,2,2) - E(i,j,k,3,2,1)) + &
-									(E(i,j,k,3,1,2) - E(i,j,k,3,1,1))
+									((E(i,j,k,3,2) - E(i,j,k,3,1)) + &
+									(E(i,j,k,3,3) - E(i,j,k,3,4))
 
 				uL(i,j,k,QMAGX:QMAGY,3,2) = um(i,j,k,QMAGY:QMAGZ,3)
 		!Right State
 				!X-direction 
 				!-> Affected by Y flux
 				uR(i,j,k,QMAGX,1,1) = up(i,j,k,QMAGX,1) + deltat/(3.d0*deltax)*&
-										(E(i,j,k,3,1,2) - E(i,j,k,3,1,1))
+										(E(i,j,k,3,2) - E(i,j,k,3,1))
 				uR(i,j,k,QMAGZ,1,1) = up(i,j,k,QMAGZ,1) + deltat/(6.d0*deltax)*&
-										((E(i,j,k,1,2,2) - E(i,j,k,1,2,1)) + &
-										(E(i,j,k,1,1,2) - E(i,j,k,1,1,1))
+										((E(i,j,k,1,4) - E(i,j,k,1,3)) + &
+										(E(i,j,k,1,1) - E(i,j,k,1,2))
 				!-> Affected by Z flux
 				uR(i,j,k,QMAGX,1,2) = up(i,j,k,QMAGX,1) - deltat/(3.d0*deltax)*&
-									 	(E(i,j,k,2,1,2) - E(i,j,k,2,1,1))
+									 	(E(i,j,k,2,3) - E(i,j,k,2,1))
 				uR(i,j,k,QMAGY,1,1) = up(i,j,k,QMAGY,1) - deltat/(6.d0*deltax)*&
-									 	((E(i,j,k,1,2,2) - E(i,j,k,1,2,1)) + &
-										(E(i,j,k,1,1,2) - E(i,j,k,1,1,1))
+									 	((E(i,j,k,1,4) - E(i,j,k,1,3)) + &
+										(E(i,j,k,1,1) - E(i,j,k,1,2))
 
 				uR(i,j,k,QMAGY:QMAGZ,1,2) = up(i,j,k,QMAGY:QMAGZ,1)
 				!Y-direction
 				!-> Affected by X flux
 				uR(i,j,k,QMAGY,2,1) = up(i,j,k,QMAGY,2) - deltat/(3.d0*deltay)*&
-										(E(i,j,k,3,2,2) - E(i,j,k,3,2,1))
+										(E(i,j,k,3,2) - E(i,j,k,3,3))
 				uR(i,j,k,QMAGZ,2,1) = up(i,j,k,QMAGZ,2) - deltat/(6.d0*deltay)*&
-									((E(i,j,k,2,2,2) - E(i,j,k,2,2,1)) + &
-									(E(i,j,k,2,1,2) - E(i,j,k,2,1,1))
+									((E(i,j,k,2,3) - E(i,j,k,2,4)) + &
+									(E(i,j,k,2,1) - E(i,j,k,2,2))
 				!-> Affected by Z flux
 				uR(i,j,k,QMAGY,2,2) = up(i,j,k,QMAGY,2) + deltat/(3.d0*deltay)*&
-										(E(i,j,k,1,2,2) - E(i,j,k,1,2,1))
+										(E(i,j,k,1,4) - E(i,j,k,1,1))
 				uR(i,j,k,QMAGX,2,1) = up(i,j,k,QMAGX,2) + deltat/(6.d0*deltay)*&
-									((E(i,j,k,2,2,2) - E(i,j,k,2,2,1)) + &
-									(E(i,j,k,2,1,2) - E(i,j,k,2,1,1))
+									((E(i,j,k,2,3) - E(i,j,k,2,4)) + &
+									(E(i,j,k,2,1) - E(i,j,k,2,2))
 
 				uR(i,j,k,QMAGX,2,2) = up(i,j,k,QMAGX,2)
 				uR(i,j,k,QMAGZ,2,2) = up(i,j,k,QMAGZ,2)
@@ -286,16 +286,16 @@ implicit none
 				!Z-Direction
 				!-> Affected by X flux
 				uR(i,j,k,QMAGZ,3,1) = up(i,j,k,QMAGZ,3) - deltat/(3.d0*deltaz)*&
-										(E(i,j,k,2,1,2) - E(i,j,k,2,1,1))
+										(E(i,j,k,2,3) - E(i,j,k,2,4))
 				uR(i,j,k,QMAGY,3,1) = up(i,j,k,QMAGZ,3) - deltat/(6.d0*deltaz)*&
-									((E(i,j,k,3,2,2) - E(i,j,k,3,2,1)) + &
-									(E(i,j,k,3,1,2) - E(i,j,k,3,1,1))
+									((E(i,j,k,3,2) - E(i,j,k,3,1)) + &
+									(E(i,j,k,3,3) - E(i,j,k,3,4))
 				!-> Affected by Y flux
 				uR(i,j,k,QMAGZ,3,2) = up(i,j,k,QMAGZ,3) + deltat/(3.d0*deltaz)*&
-										(E(i,j,k,1,2,2) - E(i,j,k,1,2,1))
+										(E(i,j,k,1,4) - E(i,j,k,1,3))
 				UR(i,j,k,QMAGX,3,1) = up(i,j,k,QMAGX,3) + deltat/(6.d0*deltaz)*&
-									((E(i,j,k,3,2,2) - E(i,j,k,3,2,1)) + &
-									(E(i,j,k,3,1,2) - E(i,j,k,3,1,1))
+									((E(i,j,k,3,2) - E(i,j,k,3,1)) + &
+									(E(i,j,k,3,3) - E(i,j,k,3,4))
 
 				uR(i,j,k,QMAGX:QMAGY,3,2) = up(i,j,k,QMAGY:QMAGZ,3)
 			enddo

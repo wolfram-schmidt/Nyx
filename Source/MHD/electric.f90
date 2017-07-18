@@ -69,7 +69,7 @@ implicit none
 		            d1 = 0.5d0*(a + b)
 		        endif
                 a = 2.d0*(flx(i+2,j,k-1,QMAGZ,1) - Ecen)
-                u_face = flx(i+2,j,k-1,QRHO,1)
+                u_face = q(i+1,j,k-1,QU)
                 if(u_face.gt. 0.d0) then
                     d2 = b
                 elseif(u_face.lt. 0.d0) then
@@ -125,7 +125,7 @@ implicit none
 		            d1 = 0.5d0*(a + b)
 		        endif
                 a = 2.d0*(flx(i,j+2,k-1,QMAGZ,2) - Ecen)
-                v_face = flx(i,j+2,k-1,QRHO,2)
+                v_face = q(i,j+1,k-1,QV)
                 if(v_face.gt. 0.d0) then
                     d2 = b
                 elseif(v_face.lt. 0.d0) then
@@ -182,7 +182,7 @@ implicit none
 		            d1 = 0.5d0*(a + b)
 		        endif
                 a = 2.d0*(flx(i+1,j,k-1,QMAGZ,1) - Ecen)
-                u_face = flx(i+1,j,k-1,QRHO,1)
+                u_face = q(i,j,k-1,QU)
                 if(u_face.gt. 0.d0) then
                     d2 = b
                 elseif(u_face.lt. 0.d0) then
@@ -238,7 +238,7 @@ implicit none
 		            d1 = 0.5d0*(a + b)
 		        endif
                 a = 2.d0*(flx(i,j+1,k-1,QMAGZ,2) - Ecen)
-                v_face = flx(i,j+1,k-1,QRHO,2)
+                v_face = q(i,j,k-1,QV)
                 if(v_face.gt. 0.d0) then
                     d2 = b
                 elseif(v_face.lt. 0.d0) then
@@ -263,7 +263,7 @@ implicit none
                     d1 = 0.5d0*(a + b)
                 endif
                 
-                w_face = flx(i,j-1,k+1,QRH0,3)
+                w_face = q(i,j-1,k,QW)
                 a = 2.d0*(Ecen - flx(i,j-1,k+1,QMAGX,3))
                 if(w_face.gt. 0.d0) then
                     d2 = b
@@ -717,14 +717,11 @@ implicit none
                 !double derivative
                 dd2 = 0.125d0*(d1 - d2)
                 !Edge centered Ey
-                E(i,j,k,2,2) = 0.25d0*(flx(i,j,k+1,QMAGZ,1) + flx(i,j,k,QMAGZ,1) &
+                E(i,j,k,2,4) = 0.25d0*(flx(i,j,k+1,QMAGZ,1) + flx(i,j,k,QMAGZ,1) &
                                 + flx(i-1,j,k+1,QMAGX,3) + flx(i,j,k+1,QMAGX,3)) + dd1 + dd2
 			enddo
 		enddo
 	enddo
-
-	
-
 end subroutine elec_interp	
 
 
