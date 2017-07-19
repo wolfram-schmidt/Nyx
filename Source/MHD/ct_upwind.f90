@@ -306,7 +306,7 @@ implicit none
 
 end subroutine corner_couple_mag
 
-!Final Conservative Corrections
+!====================================================== Final Conservative Corrections================================================================
 subroutine half_step(uL, uR, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
 					   flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 use amrex_fort_module, only : rt => amrex_real
@@ -332,20 +332,122 @@ implicit none
 !left state				
 				uL(i,j,k,:,1) = um(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,2) - flx(i,j,k,:,2,2)) &
 											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,1) - flx(i,j,k,:,3,1))
-				uL(i,j,k,:,2) = um(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
-											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
-				uL(i,j,k,:,3) = um(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
-											- 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
+				uL(i,j,k,:,2) = um(i,j,k,:) - 0.5d0*deltat/deltay*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
+											- 0.5d0*deltat/deltay*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
+				uL(i,j,k,:,3) = um(i,j,k,:) - 0.5d0*deltat/deltaz*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
+											- 0.5d0*deltat/deltaz*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
 !right state				
 				uR(i,j,k,:,1) = up(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,2) - flx(i,j,k,:,2,2)) &
 											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,1) - flx(i,j,k,:,3,1))
-				uR(i,j,k,:,2) = up(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
-											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
-				uR(i,j,k,:,3) = up(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
-											- 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
+				uR(i,j,k,:,2) = up(i,j,k,:) - 0.5d0*deltat/deltay*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
+											- 0.5d0*deltat/deltay*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
+				uR(i,j,k,:,3) = up(i,j,k,:) - 0.5d0*deltat/deltaz*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
+											- 0.5d0*deltat/deltaz*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
 
 			enddo
 		enddo
 	enddo
 end subroutine 
+
+!================================================= Final Magnetic Corrections ========================================================================
+subroutine half_step_mag(uL, uR, um, up, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, E)
+use amrex_fort_module, only : rt => amrex_real
+use meth_mhd_params_module
+
+!Correction using Faraday's Law
+implicit none
+
+	integer, intent(in)			::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	real(rt), intent(inout)		::uL(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt), intent(inout)     ::uR(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt), intent(in)    	::um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt), intent(in)    	::up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)	
+	real(rt), intent(in)		::E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,4)
+
+
+	integer					:: i ,j ,k
+
+   	do k = q_l3,q_h3
+		do j = q_l2,q_h2
+			do i = q_l1,q_h1
+		!---------------------------------------left state-----------------------------------------------------
+				!X-Direction
+				!Bx
+				uL(i,j,k,QMAGX,1) = um(i,j,k,QMAGX,1) - 0.5d0*deltat/deltax*((E(i,j,k,2,4) - E(i,j,k,2,2)) &
+								    - (E(i,j,k,3,3) - E(i,j,k,3,4)))
+				!By
+				uL(i,j,k,QMAGY,1) = um(i,j,k,QMAGY,1) - 0.5d0*deltat/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+									+ (E(i,j,k,1,3) - E(i,j,k,1,2)) - (E(i,j,k,3,2) - E(i,j,k,3,3)) &
+									- (E(i,j,k,3,1) - E(i,j,k,3,4)))
+				!Bz
+				uL(i,j,k,QMAGZ,1) = um(i,j,k,QMAGZ,1) + 0.5d0*deltat/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+									+ (E(i,j,k,1,3) - E(i,j,k,1,2)) - (E(i,j,k,2,3) - E(i,j,k,2,4)) &
+									- (E(i,j,k,2,1) - E(i,j,k,2,2)))				
+				!Y-Direction
+				!Bx
+				uL(i,j,k,QMAGX,2) = um(i,j,k,QMAGX,2) + 0.5d0*deltat/deltay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+								    + (E(i,j,k,2,4) - E(i,j,k,2,2)) - (E(i,j,k,3,2) - E(i,j,k,3,1)) &
+									- (E(i,j,k,3,3) - E(i,j,k,3,4)))
+				!By
+				uL(i,j,k,QMAGY,2) = um(i,j,k,QMAGY,2) + 0.5d0*deltat/detlay*((E(i,j,k,1,3) - E(i,j,k,1,2)) &
+								    - (E(i,j,k,3,2) - E(i,j,k,3,1))
+				!Bz
+				uL(i,j,k,QMAGZ,2) = um(i,j,k,QMAGZ,2) - 0.5d0*deltat/detlay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+								    + (E(i,j,k,2,4) - E(i,j,k,2,2)) - (E(i,j,k,1,4) - E(i,j,k,1,1)) &
+									- (E(i,j,k,1,3) - E(i,j,k,1,2)))		
+				!Z-direction
+				!Bx
+				uL(i,j,k,QMAGX,3) = um(i,j,k,QMAGX,3) - 0.5d0*deltat/deltaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
+								    +(E(i,j,k,3,3) - E(i,j,k,3,4)) - (E(i,j,k,2,3) - E(i,j,k,2,4)) &
+									- (E(i,j,k,2,1) - E(i,j,k,2,2)))
+				!By
+				uL(i,j,k,QMAGY,3) = um(i,j,k,QMAGY,3) + 0.5d0*deltat/detlaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
+								    +(E(i,j,k,3,3) - E(i,j,k,3,4)) - (E(i,j,k,1,4) - E(i,j,k,1,1)) &
+									- (E(i,j,k,1,3) - E(i,j,k,1,2)))
+				!Bz
+				uL(i,j,k,QMAGZ,3) = um(i,j,k,QMAGZ,3) - 0.5d0*deltat/detlaz*((E(i,j,k,1,1) - E(i,j,k,1,2)) &
+									- (E(i,j,k,2,1) - E(i,j,k,2,2)))
+
+	!---------------------------------------left state-----------------------------------------------------
+				!X-Direction
+				!Bx
+				uR(i,j,k,QMAGX,1) = up(i,j,k,QMAGX,1) - 0.5d0*deltat/deltax*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+								    - (E(i,j,k,3,3) - E(i,j,k,3,4)))
+				!By
+				uR(i,j,k,QMAGY,1) = up(i,j,k,QMAGY,1) - 0.5d0*deltat/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+									+ (E(i,j,k,1,3) - E(i,j,k,1,2)) - (E(i,j,k,3,2) - E(i,j,k,3,3)) &
+									- (E(i,j,k,3,1) - E(i,j,k,3,4)))
+				!Bz
+				uR(i,j,k,QMAGZ,1) = up(i,j,k,QMAGZ,1) + 0.5d0*deltat/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+									+ (E(i,j,k,1,3) - E(i,j,k,1,2)) - (E(i,j,k,2,3) - E(i,j,k,2,4)) &
+									- (E(i,j,k,2,1) - E(i,j,k,2,2)))				
+				!Y-Direction
+				!Bx
+				uR(i,j,k,QMAGX,2) = up(i,j,k,QMAGX,2) + 0.5d0*deltat/deltay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+								    + (E(i,j,k,2,4) - E(i,j,k,2,2)) - (E(i,j,k,3,2) - E(i,j,k,3,1)) &
+									- (E(i,j,k,3,3) - E(i,j,k,3,4)))
+				!By
+				uR(i,j,k,QMAGY,2) = up(i,j,k,QMAGY,2) + 0.5d0*deltat/detlay*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+								    - (E(i,j,k,3,2) - E(i,j,k,3,1))
+				!Bz
+				uR(i,j,k,QMAGZ,2) = up(i,j,k,QMAGZ,2) - 0.5d0*deltat/detlay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+								    + (E(i,j,k,2,4) - E(i,j,k,2,2)) - (E(i,j,k,1,4) - E(i,j,k,1,1)) &
+									- (E(i,j,k,1,3) - E(i,j,k,1,2)))		
+				!Z-direction
+				!Bx
+				uR(i,j,k,QMAGX,3) = up(i,j,k,QMAGX,3) - 0.5d0*deltat/deltaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
+								    +(E(i,j,k,3,3) - E(i,j,k,3,4)) - (E(i,j,k,2,3) - E(i,j,k,2,4)) &
+									- (E(i,j,k,2,1) - E(i,j,k,2,2)))
+				!By
+				uR(i,j,k,QMAGY,3) = up(i,j,k,QMAGY,3) + 0.5d0*deltat/detlaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
+								    +(E(i,j,k,3,3) - E(i,j,k,3,4)) - (E(i,j,k,1,4) - E(i,j,k,1,1)) &
+									- (E(i,j,k,1,3) - E(i,j,k,1,2)))
+				!Bz
+				uR(i,j,k,QMAGZ,3) = up(i,j,k,QMAGZ,3) - 0.5d0*deltat/detlaz*((E(i,j,k,1,1) - E(i,j,k,1,2)) &
+									- (E(i,j,k,2,3) - E(i,j,k,2,4)))								
+			enddo
+		enddo
+	enddo
+
+end subroutine half_step_mag
 end module ct_upwind
