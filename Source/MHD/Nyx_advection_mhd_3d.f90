@@ -96,34 +96,6 @@
       dy = delta(2)
       dz = delta(3)
 
-      ! 1) Translate conserved variables (u) to primitive variables (q).
-      ! 2) Compute sound speeds (c) 
-      !    Note that (q,c,csml,flatn) are all dimensioned the same
-      !    and set to correspond to coordinates of (lo:hi)
-      ! 3) Translate source terms
-      call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
-                   q,c,csml,flatn,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-                   src , src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
-                   srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
-                   grav,gv_l1,gv_l2,gv_l3,gv_h1,gv_h2,gv_h3, &
-                   courno,dx,dy,dz,dt,ngq,ngf,a_old,a_new)
-
-      ! Compute hyperbolic fluxes using unsplit Godunov
-      call umeth3d(q,c,csml,flatn,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-                   srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
-                   lo(1),lo(2),lo(3),hi(1),hi(2),hi(3),dx,dy,dz,dt, &
-                   flux1,flux1_l1,flux1_l2,flux1_l3,flux1_h1,flux1_h2,flux1_h3, &
-                   flux2,flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3, &
-                   flux3,flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3, &
-                   grav,gv_l1,gv_l2,gv_l3,gv_h1,gv_h2,gv_h3, &
-                   ugdnvx_out,ugdnvx_l1,ugdnvx_l2,ugdnvx_l3,ugdnvx_h1,ugdnvx_h2,ugdnvx_h3, &
-                   ugdnvy_out,ugdnvy_l1,ugdnvy_l2,ugdnvy_l3,ugdnvy_h1,ugdnvy_h2,ugdnvy_h3, &
-                   ugdnvz_out,ugdnvz_l1,ugdnvz_l2,ugdnvz_l3,ugdnvz_h1,ugdnvz_h2,ugdnvz_h3, &
-                   pdivu,a_old,a_new,print_fortran_warnings)
-
-      ! Compute divergence of velocity field (on surroundingNodes(lo,hi))
-      call divu(lo,hi,q,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-                dx,dy,dz,div,lo(1),lo(2),lo(3),hi(1)+1,hi(2)+1,hi(3)+1)
 
       ! Conservative update
       call consup(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
