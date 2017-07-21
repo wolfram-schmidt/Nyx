@@ -16,7 +16,7 @@ CEXE_sources += write_info.cpp
 CEXE_sources += bl_random_c.cpp
 
 ifeq ($(MHD), TRUE)
-#More
+CEXE_sources += Nyx_MHD.cpp
 else
 ifneq ($(NO_HYDRO), TRUE)
 CEXE_sources += Nyx_hydro.cpp
@@ -38,7 +38,11 @@ f90EXE_headers += dm_F.H
 
 f90EXE_sources += Nyx_nd.f90
 f90EXE_sources +=  eos_params.f90
+ifeq ($(MHD), TRUE)
+f90EXE_sources += meth_mhd_params.f90
+else
 f90EXE_sources += meth_params.f90
+endif
 f90EXE_sources += prob_params.f90
 f90EXE_sources += comoving_params.f90
 f90EXE_sources += comoving_nd.f90

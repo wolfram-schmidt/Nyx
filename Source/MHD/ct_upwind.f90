@@ -12,7 +12,7 @@ public corner_transport
 contains
 
 subroutine corner_transport( q, qm, qp, qpd_l1 , qpd_l2 , qpd_l3 , qpd_h1 , qpd_h2 , qpd_h3 &	
-							flx, elec, flx_l1 , flx_l2 , flx_l3 , flx_h1 , flx_h2 , flx_h3)
+							flx, elec, flx_l1 , flx_l2 , flx_l3 , flx_h1 , flx_h2 , flx_h3, dx,dy,dz, dt)
 
  use amrex_fort_module, only : rt => amrex_real
  use meth_mhd_params_module, only : QVAR
@@ -38,6 +38,7 @@ implicit none
 	real(rt)			  :: flx2D(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3, 2) !Flux2d for all directions 2 perpendicular directions
 	real(rt) 			  :: Etemp(qpd_l1:qpd_h1,qpd_l2:qpd_h2,qpd_l3:qpd_h3,3,4) !Temporary Electric Field
 	real(rt)			  :: q2D(qpd_l1:qpd_h1,qpd_l2:qpd_h2,qpd_l3:qpd_h3,QVAR)
+	real(rt) 			  :: dx, dy, dz, dt
 
 	
 !Prim to Cons
@@ -63,10 +64,10 @@ implicit none
 !Corner Couple
 
 	call corner_couple(cons_temp_L, cons_temp_R, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
-					   flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3) !Correct Conservative vars using Transverse Fluxes
+					   flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt) !Correct Conservative vars using Transverse Fluxes
 
 	call corner_couple_mag(cons_temp_L, cons_temp_R, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
-						Etemp) !Correct Magnetic Vars using Etemp
+						Etemp, dx, dy, dz, dt) !Correct Magnetic Vars using Etemp
 
 !Calculate Flux 2D
 do i = 1,2
@@ -89,9 +90,9 @@ enddo
 
 !Half Step conservative vars
 	call half_step(cons_half_L, cons_half_R, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
-			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 	call half_step_mag(cons_half_L, cons_half_R, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
-			   Etemp)
+			   Etemp, dx, dy, dz, dt)
 
 !Final Fluxes
 	!x-dir
@@ -105,7 +106,7 @@ enddo
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 3)
 
 !Primitive update
-	call prim_half(q2D,q,qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,flx1D,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+	call prim_half(q2D,q,qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,flx1D,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 
 !Final Electric Field Update
 	call elec_interp(elec, q2D, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
@@ -143,7 +144,7 @@ end subroutine PrimToCons
 
 !======================================= Update the Temporary Conservative Variables with Transverse 1D Fluxes ========================
 subroutine corner_couple(uL, uR, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
-					   flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+					   flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 use amrex_fort_module, only : rt => amrex_real
 use meth_mhd_params_module, only : QVAR, QRHO, QPRES
 
@@ -159,6 +160,7 @@ implicit none
 	real(rt), intent(out)	::uL(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2)
 	real(rt), intent(out)	::uR(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2)
 
+	real(rt)				:: dx, dy, dz, dt
 	integer					:: i ,j ,k
 
 	do k = q_l3,q_h3
@@ -186,7 +188,7 @@ end subroutine corner_couple
 !================================== Use 1D Electric Fields to Transverse correct the Temporary Magnetic Fields ===========================
 subroutine corner_couple_mag(uL, uR, um, up,&
                             q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
-       						Etemp)
+       						Etemp, dx, dy, dz, dt)
 use amrex_fort_module, only : rt => amrex_real
 use meth_mhd_params_module, only QVAR, QMAGX, QMAGY, QMAGZ
 
@@ -199,8 +201,10 @@ implicit none
 	real(rt), intent(in)    	::um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 	real(rt), intent(in)    	::up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)	
 	real(rt), intent(in)		::E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,4)
+
+	real(rt)					::dx, dy, dz, dt
 	
-	integer					:: i ,j ,k
+	integer						:: i ,j ,k
 
    	do k = q_l3,q_h3
 		do j = q_l2,q_h2
@@ -208,30 +212,30 @@ implicit none
 		!Left State
 				!X-direction 
 				!-> Affected by Y flux
-				uL(i,j,k,QMAGX,1,1) = um(i,j,k,QMAGX,1) + deltat/(3.d0*deltax)*&
+				uL(i,j,k,QMAGX,1,1) = um(i,j,k,QMAGX,1) + dt/(3.d0*dx)*&
 										(E(i,j,k,3,3) - E(i,j,k,3,4))
-				uL(i,j,k,QMAGZ,1,1) = um(i,j,k,QMAGZ,1) + deltat/(6.d0*deltax)*&
+				uL(i,j,k,QMAGZ,1,1) = um(i,j,k,QMAGZ,1) + dt/(6.d0*dx)*&
 										((E(i,j,k,1,4) - E(i,j,k,1,3)) + &
 										(E(i,j,k,1,1) - E(i,j,k,1,2))
 				!-> Affected by Z flux
-				uL(i,j,k,QMAGX,1,2) = um(i,j,k,QMAGX,1) - deltat/(3.d0*deltax)*&
+				uL(i,j,k,QMAGX,1,2) = um(i,j,k,QMAGX,1) - dt/(3.d0*dx)*&
 									 	(E(i,j,k,2,4) - E(i,j,k,2,2))
-				uL(i,j,k,QMAGY,1,1) = um(i,j,k,QMAGY,1) - deltat/(6.d0*deltax)*&
+				uL(i,j,k,QMAGY,1,1) = um(i,j,k,QMAGY,1) - dt/(6.d0*dx)*&
 									 	((E(i,j,k,1,4) - E(i,j,k,1,3)) + &
 										(E(i,j,k,1,1) - E(i,j,k,1,2))
 
 				uL(i,j,k,QMAGY:QMAGZ,1,2) = um(i,j,k,QMAGY:QMAGZ,1)
 				!Y-direction
 				!-> Affected by X flux
-				uL(i,j,k,QMAGY,2,1) = um(i,j,k,QMAGY,2) - deltat/(3.d0*deltay)*&
+				uL(i,j,k,QMAGY,2,1) = um(i,j,k,QMAGY,2) - dt/(3.d0*dy)*&
 										(E(i,j,k,3,1) - E(i,j,k,3,4))
-				uL(i,j,k,QMAGZ,2,1) = um(i,j,k,QMAGZ,2) - deltat/(6.d0*deltay)*&
+				uL(i,j,k,QMAGZ,2,1) = um(i,j,k,QMAGZ,2) - dt/(6.d0*dy)*&
 									((E(i,j,k,2,3) - E(i,j,k,2,4)) + &
 									(E(i,j,k,2,1) - E(i,j,k,2,2))
 				!-> Affected by Z flux
-				uL(i,j,k,QMAGY,2,2) = um(i,j,k,QMAGY,2) + deltat/(3.d0*deltay)*&
+				uL(i,j,k,QMAGY,2,2) = um(i,j,k,QMAGY,2) + dt/(3.d0*dy)*&
 										(E(i,j,k,1,3) - E(i,j,k,1,2))
-				uL(i,j,k,QMAGX,2,1) = um(i,j,k,QMAGX,2) + deltat/(6.d0*deltay)*&
+				uL(i,j,k,QMAGX,2,1) = um(i,j,k,QMAGX,2) + dt/(6.d0*dy)*&
 									((E(i,j,k,2,3) - E(i,j,k,2,3)) + &
 									(E(i,j,k,2,1) - E(i,j,k,2,2))
 
@@ -240,15 +244,15 @@ implicit none
 
 				!Z-Direction
 				!-> Affected by X flux
-				uL(i,j,k,QMAGZ,3,1) = um(i,j,k,QMAGZ,3) - deltat/(3.d0*deltaz)*&
+				uL(i,j,k,QMAGZ,3,1) = um(i,j,k,QMAGZ,3) - dt/(3.d0*dz)*&
 										(E(i,j,k,2,1) - E(i,j,k,2,2))
-				uL(i,j,k,QMAGY,3,1) = um(i,j,k,QMAGZ,3) - deltat/(6.d0*deltaz)*&
+				uL(i,j,k,QMAGY,3,1) = um(i,j,k,QMAGZ,3) - dt/(6.d0*dz)*&
 									((E(i,j,k,3,2) - E(i,j,k,3,1)) + &
 									(E(i,j,k,3,3) - E(i,j,k,3,4))
 				!-> Affected by Y flux
-				uL(i,j,k,QMAGZ,3,2) = um(i,j,k,QMAGZ,3) + deltat/(3.d0*deltaz)*&
+				uL(i,j,k,QMAGZ,3,2) = um(i,j,k,QMAGZ,3) + dt/(3.d0*dz)*&
 										(E(i,j,k,1,3) - E(i,j,k,1,2))
-				uL(i,j,k,QMAGX,3,1) = um(i,j,k,QMAGX,3) + deltat/(6.d0*deltaz)*&
+				uL(i,j,k,QMAGX,3,1) = um(i,j,k,QMAGX,3) + dt/(6.d0*dz)*&
 									((E(i,j,k,3,2) - E(i,j,k,3,1)) + &
 									(E(i,j,k,3,3) - E(i,j,k,3,4))
 
@@ -256,30 +260,30 @@ implicit none
 		!Right State
 				!X-direction 
 				!-> Affected by Y flux
-				uR(i,j,k,QMAGX,1,1) = up(i,j,k,QMAGX,1) + deltat/(3.d0*deltax)*&
+				uR(i,j,k,QMAGX,1,1) = up(i,j,k,QMAGX,1) + dt/(3.d0*dx)*&
 										(E(i,j,k,3,2) - E(i,j,k,3,1))
-				uR(i,j,k,QMAGZ,1,1) = up(i,j,k,QMAGZ,1) + deltat/(6.d0*deltax)*&
+				uR(i,j,k,QMAGZ,1,1) = up(i,j,k,QMAGZ,1) + dt/(6.d0*dx)*&
 										((E(i,j,k,1,4) - E(i,j,k,1,3)) + &
 										(E(i,j,k,1,1) - E(i,j,k,1,2))
 				!-> Affected by Z flux
-				uR(i,j,k,QMAGX,1,2) = up(i,j,k,QMAGX,1) - deltat/(3.d0*deltax)*&
+				uR(i,j,k,QMAGX,1,2) = up(i,j,k,QMAGX,1) - dt/(3.d0*dx)*&
 									 	(E(i,j,k,2,3) - E(i,j,k,2,1))
-				uR(i,j,k,QMAGY,1,1) = up(i,j,k,QMAGY,1) - deltat/(6.d0*deltax)*&
+				uR(i,j,k,QMAGY,1,1) = up(i,j,k,QMAGY,1) - dt/(6.d0*dx)*&
 									 	((E(i,j,k,1,4) - E(i,j,k,1,3)) + &
 										(E(i,j,k,1,1) - E(i,j,k,1,2))
 
 				uR(i,j,k,QMAGY:QMAGZ,1,2) = up(i,j,k,QMAGY:QMAGZ,1)
 				!Y-direction
 				!-> Affected by X flux
-				uR(i,j,k,QMAGY,2,1) = up(i,j,k,QMAGY,2) - deltat/(3.d0*deltay)*&
+				uR(i,j,k,QMAGY,2,1) = up(i,j,k,QMAGY,2) - dt/(3.d0*dy)*&
 										(E(i,j,k,3,2) - E(i,j,k,3,3))
-				uR(i,j,k,QMAGZ,2,1) = up(i,j,k,QMAGZ,2) - deltat/(6.d0*deltay)*&
+				uR(i,j,k,QMAGZ,2,1) = up(i,j,k,QMAGZ,2) - dt/(6.d0*dy)*&
 									((E(i,j,k,2,3) - E(i,j,k,2,4)) + &
 									(E(i,j,k,2,1) - E(i,j,k,2,2))
 				!-> Affected by Z flux
-				uR(i,j,k,QMAGY,2,2) = up(i,j,k,QMAGY,2) + deltat/(3.d0*deltay)*&
+				uR(i,j,k,QMAGY,2,2) = up(i,j,k,QMAGY,2) + dt/(3.d0*dy)*&
 										(E(i,j,k,1,4) - E(i,j,k,1,1))
-				uR(i,j,k,QMAGX,2,1) = up(i,j,k,QMAGX,2) + deltat/(6.d0*deltay)*&
+				uR(i,j,k,QMAGX,2,1) = up(i,j,k,QMAGX,2) + dt/(6.d0*dy)*&
 									((E(i,j,k,2,3) - E(i,j,k,2,4)) + &
 									(E(i,j,k,2,1) - E(i,j,k,2,2))
 
@@ -288,15 +292,15 @@ implicit none
 
 				!Z-Direction
 				!-> Affected by X flux
-				uR(i,j,k,QMAGZ,3,1) = up(i,j,k,QMAGZ,3) - deltat/(3.d0*deltaz)*&
+				uR(i,j,k,QMAGZ,3,1) = up(i,j,k,QMAGZ,3) - dt/(3.d0*dz)*&
 										(E(i,j,k,2,3) - E(i,j,k,2,4))
-				uR(i,j,k,QMAGY,3,1) = up(i,j,k,QMAGZ,3) - deltat/(6.d0*deltaz)*&
+				uR(i,j,k,QMAGY,3,1) = up(i,j,k,QMAGZ,3) - dt/(6.d0*dz)*&
 									((E(i,j,k,3,2) - E(i,j,k,3,1)) + &
 									(E(i,j,k,3,3) - E(i,j,k,3,4))
 				!-> Affected by Y flux
-				uR(i,j,k,QMAGZ,3,2) = up(i,j,k,QMAGZ,3) + deltat/(3.d0*deltaz)*&
+				uR(i,j,k,QMAGZ,3,2) = up(i,j,k,QMAGZ,3) + dt/(3.d0*dz)*&
 										(E(i,j,k,1,4) - E(i,j,k,1,3))
-				UR(i,j,k,QMAGX,3,1) = up(i,j,k,QMAGX,3) + deltat/(6.d0*deltaz)*&
+				UR(i,j,k,QMAGX,3,1) = up(i,j,k,QMAGX,3) + dt/(6.d0*dz)*&
 									((E(i,j,k,3,2) - E(i,j,k,3,1)) + &
 									(E(i,j,k,3,3) - E(i,j,k,3,4))
 
@@ -309,7 +313,7 @@ end subroutine corner_couple_mag
 
 !====================================================== Final Conservative Corrections================================================================
 subroutine half_step(uL, uR, um, up, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,&
-					   flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+					   flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 use amrex_fort_module, only : rt => amrex_real
 use meth_mhd_params_module, only : QVAR
 
@@ -325,25 +329,26 @@ implicit none
 	real(rt), intent(out)	::uL(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 	real(rt), intent(out)	::uR(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 
+	real(rt)				:: dx, dy, dz, dt
 	integer					:: i ,j ,k
 
    	do k = q_l3,q_h3
 		do j = q_l2,q_h2
 			do i = q_l1,q_h1	
 !left state				
-				uL(i,j,k,:,1) = um(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,2) - flx(i,j,k,:,2,2)) &
-											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,1) - flx(i,j,k,:,3,1))
-				uL(i,j,k,:,2) = um(i,j,k,:) - 0.5d0*deltat/deltay*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
-											- 0.5d0*deltat/deltay*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
-				uL(i,j,k,:,3) = um(i,j,k,:) - 0.5d0*deltat/deltaz*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
-											- 0.5d0*deltat/deltaz*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
+				uL(i,j,k,:,1) = um(i,j,k,:) - 0.5d0*dt/dx*(flx(i,j+1,k,:,2,2) - flx(i,j,k,:,2,2)) &
+											- 0.5d0*dt/dx*(flx(i,j,k+1,:,3,1) - flx(i,j,k,:,3,1))
+				uL(i,j,k,:,2) = um(i,j,k,:) - 0.5d0*dt/dy*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
+											- 0.5d0*dt/dy*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
+				uL(i,j,k,:,3) = um(i,j,k,:) - 0.5d0*dt/dz*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
+											- 0.5d0*dt/dz*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
 !right state				
-				uR(i,j,k,:,1) = up(i,j,k,:) - 0.5d0*deltat/deltax*(flx(i,j+1,k,:,2,2) - flx(i,j,k,:,2,2)) &
-											- 0.5d0*deltat/deltax*(flx(i,j,k+1,:,3,1) - flx(i,j,k,:,3,1))
-				uR(i,j,k,:,2) = up(i,j,k,:) - 0.5d0*deltat/deltay*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
-											- 0.5d0*deltat/deltay*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
-				uR(i,j,k,:,3) = up(i,j,k,:) - 0.5d0*deltat/deltaz*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
-											- 0.5d0*deltat/deltaz*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
+				uR(i,j,k,:,1) = up(i,j,k,:) - 0.5d0*dt/dx*(flx(i,j+1,k,:,2,2) - flx(i,j,k,:,2,2)) &
+											- 0.5d0*dt/dx*(flx(i,j,k+1,:,3,1) - flx(i,j,k,:,3,1))
+				uR(i,j,k,:,2) = up(i,j,k,:) - 0.5d0*dt/dy*(flx(i+1,j,k,:,1,1) - flx(i,j,k,:,1,1)) &
+											- 0.5d0*dt/dy*(flx(i,j,k+1,:,3,2) - flx(i,j,k,:,3,2))
+				uR(i,j,k,:,3) = up(i,j,k,:) - 0.5d0*dt/dz*(flx(i+1,j,k,:,1,2) - flx(i,j,k,:,1,2)) &
+											- 0.5d0*dt/dz*(flx(i,j+1,k,:,2,1) - flx(i,j,k,:,2,1))
 
 			enddo
 		enddo
@@ -351,7 +356,7 @@ implicit none
 end subroutine 
 
 !================================================= Final Magnetic Corrections ========================================================================
-subroutine half_step_mag(uL, uR, um, up, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, E)
+subroutine half_step_mag(uL, uR, um, up, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, E, dx, dy, dz, dt)
 use amrex_fort_module, only : rt => amrex_real
 use meth_mhd_params_module, only : QVAR, QMAGX,QMAGY,QMAGZ
 
@@ -364,9 +369,8 @@ implicit none
 	real(rt), intent(in)    	::um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 	real(rt), intent(in)    	::up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)	
 	real(rt), intent(in)		::E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,4)
-
-
-	integer					:: i ,j ,k
+	real(rt)					:: dx, dy, dz, dt
+	integer						:: i ,j ,k
 
    	do k = q_l3,q_h3
 		do j = q_l2,q_h2
@@ -374,77 +378,77 @@ implicit none
 		!---------------------------------------left state-----------------------------------------------------
 				!X-Direction
 				!Bx
-				uL(i,j,k,QMAGX,1) = um(i,j,k,QMAGX,1) - 0.5d0*deltat/deltax*((E(i,j,k,2,4) - E(i,j,k,2,2)) &
+				uL(i,j,k,QMAGX,1) = um(i,j,k,QMAGX,1) - 0.5d0*dt/dx*((E(i,j,k,2,4) - E(i,j,k,2,2)) &
 								    - (E(i,j,k,3,3) - E(i,j,k,3,4)))
 				!By
-				uL(i,j,k,QMAGY,1) = um(i,j,k,QMAGY,1) - 0.5d0*deltat/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+				uL(i,j,k,QMAGY,1) = um(i,j,k,QMAGY,1) - 0.5d0*dt/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
 									+ (E(i,j,k,1,3) - E(i,j,k,1,2)) - (E(i,j,k,3,2) - E(i,j,k,3,3)) &
 									- (E(i,j,k,3,1) - E(i,j,k,3,4)))
 				!Bz
-				uL(i,j,k,QMAGZ,1) = um(i,j,k,QMAGZ,1) + 0.5d0*deltat/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+				uL(i,j,k,QMAGZ,1) = um(i,j,k,QMAGZ,1) + 0.5d0*dt/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
 									+ (E(i,j,k,1,3) - E(i,j,k,1,2)) - (E(i,j,k,2,3) - E(i,j,k,2,4)) &
 									- (E(i,j,k,2,1) - E(i,j,k,2,2)))				
 				!Y-Direction
 				!Bx
-				uL(i,j,k,QMAGX,2) = um(i,j,k,QMAGX,2) + 0.5d0*deltat/deltay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+				uL(i,j,k,QMAGX,2) = um(i,j,k,QMAGX,2) + 0.5d0*dt/dy*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
 								    + (E(i,j,k,2,4) - E(i,j,k,2,2)) - (E(i,j,k,3,2) - E(i,j,k,3,1)) &
 									- (E(i,j,k,3,3) - E(i,j,k,3,4)))
 				!By
-				uL(i,j,k,QMAGY,2) = um(i,j,k,QMAGY,2) + 0.5d0*deltat/detlay*((E(i,j,k,1,3) - E(i,j,k,1,2)) &
+				uL(i,j,k,QMAGY,2) = um(i,j,k,QMAGY,2) + 0.5d0*dt/detlay*((E(i,j,k,1,3) - E(i,j,k,1,2)) &
 								    - (E(i,j,k,3,2) - E(i,j,k,3,1))
 				!Bz
-				uL(i,j,k,QMAGZ,2) = um(i,j,k,QMAGZ,2) - 0.5d0*deltat/detlay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+				uL(i,j,k,QMAGZ,2) = um(i,j,k,QMAGZ,2) - 0.5d0*dt/detlay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
 								    + (E(i,j,k,2,4) - E(i,j,k,2,2)) - (E(i,j,k,1,4) - E(i,j,k,1,1)) &
 									- (E(i,j,k,1,3) - E(i,j,k,1,2)))		
 				!Z-direction
 				!Bx
-				uL(i,j,k,QMAGX,3) = um(i,j,k,QMAGX,3) - 0.5d0*deltat/deltaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
+				uL(i,j,k,QMAGX,3) = um(i,j,k,QMAGX,3) - 0.5d0*dt/dz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
 								    +(E(i,j,k,3,3) - E(i,j,k,3,4)) - (E(i,j,k,2,3) - E(i,j,k,2,4)) &
 									- (E(i,j,k,2,1) - E(i,j,k,2,2)))
 				!By
-				uL(i,j,k,QMAGY,3) = um(i,j,k,QMAGY,3) + 0.5d0*deltat/detlaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
+				uL(i,j,k,QMAGY,3) = um(i,j,k,QMAGY,3) + 0.5d0*dt/detlaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
 								    +(E(i,j,k,3,3) - E(i,j,k,3,4)) - (E(i,j,k,1,4) - E(i,j,k,1,1)) &
 									- (E(i,j,k,1,3) - E(i,j,k,1,2)))
 				!Bz
-				uL(i,j,k,QMAGZ,3) = um(i,j,k,QMAGZ,3) - 0.5d0*deltat/detlaz*((E(i,j,k,1,1) - E(i,j,k,1,2)) &
+				uL(i,j,k,QMAGZ,3) = um(i,j,k,QMAGZ,3) - 0.5d0*dt/detlaz*((E(i,j,k,1,1) - E(i,j,k,1,2)) &
 									- (E(i,j,k,2,1) - E(i,j,k,2,2)))
 
 	!---------------------------------------right state-----------------------------------------------------
 				!X-Direction
 				!Bx
-				uR(i,j,k,QMAGX,1) = up(i,j,k,QMAGX,1) - 0.5d0*deltat/deltax*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+				uR(i,j,k,QMAGX,1) = up(i,j,k,QMAGX,1) - 0.5d0*dt/dx*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
 								    - (E(i,j,k,3,3) - E(i,j,k,3,4)))
 				!By
-				uR(i,j,k,QMAGY,1) = up(i,j,k,QMAGY,1) - 0.5d0*deltat/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+				uR(i,j,k,QMAGY,1) = up(i,j,k,QMAGY,1) - 0.5d0*dt/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
 									+ (E(i,j,k,1,3) - E(i,j,k,1,2)) - (E(i,j,k,3,2) - E(i,j,k,3,3)) &
 									- (E(i,j,k,3,1) - E(i,j,k,3,4)))
 				!Bz
-				uR(i,j,k,QMAGZ,1) = up(i,j,k,QMAGZ,1) + 0.5d0*deltat/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+				uR(i,j,k,QMAGZ,1) = up(i,j,k,QMAGZ,1) + 0.5d0*dt/detlax*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
 									+ (E(i,j,k,1,3) - E(i,j,k,1,2)) - (E(i,j,k,2,3) - E(i,j,k,2,4)) &
 									- (E(i,j,k,2,1) - E(i,j,k,2,2)))				
 				!Y-Direction
 				!Bx
-				uR(i,j,k,QMAGX,2) = up(i,j,k,QMAGX,2) + 0.5d0*deltat/deltay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+				uR(i,j,k,QMAGX,2) = up(i,j,k,QMAGX,2) + 0.5d0*dt/dy*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
 								    + (E(i,j,k,2,4) - E(i,j,k,2,2)) - (E(i,j,k,3,2) - E(i,j,k,3,1)) &
 									- (E(i,j,k,3,3) - E(i,j,k,3,4)))
 				!By
-				uR(i,j,k,QMAGY,2) = up(i,j,k,QMAGY,2) + 0.5d0*deltat/detlay*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
+				uR(i,j,k,QMAGY,2) = up(i,j,k,QMAGY,2) + 0.5d0*dt/detlay*((E(i,j,k,1,4) - E(i,j,k,1,1)) &
 								    - (E(i,j,k,3,2) - E(i,j,k,3,1))
 				!Bz
-				uR(i,j,k,QMAGZ,2) = up(i,j,k,QMAGZ,2) - 0.5d0*deltat/detlay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
+				uR(i,j,k,QMAGZ,2) = up(i,j,k,QMAGZ,2) - 0.5d0*dt/detlay*((E(i,j,k,2,3) - E(i,j,k,2,1)) &
 								    + (E(i,j,k,2,4) - E(i,j,k,2,2)) - (E(i,j,k,1,4) - E(i,j,k,1,1)) &
 									- (E(i,j,k,1,3) - E(i,j,k,1,2)))		
 				!Z-direction
 				!Bx
-				uR(i,j,k,QMAGX,3) = up(i,j,k,QMAGX,3) - 0.5d0*deltat/deltaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
+				uR(i,j,k,QMAGX,3) = up(i,j,k,QMAGX,3) - 0.5d0*dt/dz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
 								    +(E(i,j,k,3,3) - E(i,j,k,3,4)) - (E(i,j,k,2,3) - E(i,j,k,2,4)) &
 									- (E(i,j,k,2,1) - E(i,j,k,2,2)))
 				!By
-				uR(i,j,k,QMAGY,3) = up(i,j,k,QMAGY,3) + 0.5d0*deltat/detlaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
+				uR(i,j,k,QMAGY,3) = up(i,j,k,QMAGY,3) + 0.5d0*dt/detlaz*((E(i,j,k,3,2) - E(i,j,k,3,1)) &
 								    +(E(i,j,k,3,3) - E(i,j,k,3,4)) - (E(i,j,k,1,4) - E(i,j,k,1,1)) &
 									- (E(i,j,k,1,3) - E(i,j,k,1,2)))
 				!Bz
-				uR(i,j,k,QMAGZ,3) = up(i,j,k,QMAGZ,3) - 0.5d0*deltat/detlaz*((E(i,j,k,1,1) - E(i,j,k,1,2)) &
+				uR(i,j,k,QMAGZ,3) = up(i,j,k,QMAGZ,3) - 0.5d0*dt/detlaz*((E(i,j,k,1,1) - E(i,j,k,1,2)) &
 									- (E(i,j,k,2,3) - E(i,j,k,2,4)))								
 			enddo
 		enddo
@@ -454,7 +458,8 @@ end subroutine half_step_mag
 
 !================================== Find the 2D corrected primitive variables =======================================
 
-subroutine prim_half(q2D,q,qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+subroutine prim_half(q2D,q,qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3,flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3 &
+					, dx, dy, dz, dt)
 
  use amrex_fort_module, only : rt => amrex_real
  use meth_mhd_params_module, only : QVAR
@@ -469,14 +474,14 @@ implicit none
 
 	real(rt)				::flx_sum(QVAR)
 	real(rt)				::qflx(QVAR)
-	
+	real(rt)				:: dx, dy, dz, dt	
 	integer					::i, j, k
 	do k = q_l3,q_h3
 		do j = q_l2,q_h2
 			do i = q_l1,q_h1
-				flx_sum = (flx(i+1,j,k,:,1) - flx(i,j,k,:,1)) + (flx(i,j+1,k,:,2) - flx(i,j,k,:,2)) + (flx(i,j,k+1,:,3) - flx(i,j,k,:,3))  
+				flx_sum = (flx(i+1,j,k,:,1) - flx(i,j,k,:,1))/dx + (flx(i,j+1,k,:,2) - flx(i,j,k,:,2))/dy + (flx(i,j,k+1,:,3) - flx(i,j,k,:,3))/dz  
 				call qflux(qflx,flx_sum,q(i,j,k,:))
-				q2D(i,j,k,:) = q(i,j,k,:) - 0.5d0*deltat/deltax*qflx !note this is assuming dx = dy = dz
+				q2D(i,j,k,:) = q(i,j,k,:) - 0.5d0*dt*qflx
 			enddo
 		enddo
 	enddo

@@ -19,7 +19,7 @@ module meth_mhd_params_module
   ! NTHERM: number of thermodynamic variables
   ! NMAG:   number of magnetic variables
   integer         , save :: NTHERM, NVAR, NMAG
-  integer         , save :: URHO, UMX, UMY, UMZ, UEDEN, UEINT, UBX, UBY, UBZ UFA, UFS, UFX
+  integer         , save :: URHO, UMX, UMY, UMZ, UEDEN, UEINT, UFA, UFS, UFX
   integer         , save :: TEMP_COMP, NE_COMP
 
   ! QTHERM: number of primitive hydrodynamic variables
