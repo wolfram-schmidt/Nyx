@@ -77,7 +77,7 @@ endif
 
 #These are the directories in Nyx 
 
-Bdirs 	:= Source Source/Src_3d Source/HydroFortran Source/Tagging Source/Initialization
+Bdirs 	:= Source Source/Src_3d Source/Tagging Source/Initialization
 Bdirs 	+= Source/EOS Source/Network Source/HeatCool
 Bdirs 	+= Source/SourceTerms Source/DerivedQuantities
 ifeq ($(USE_MPI), TRUE)
@@ -94,7 +94,9 @@ ifeq ($(USE_AGN), TRUE)
    Bdirs 	+= Source/AGN
 endif
 ifeq ($(USE_MHD), TRUE)
- #  Bdirs	+= Source/MHD
+   Bdirs	+= Source/MHD
+else
+   Bdire    += Source/HydroFortran
 endif
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
