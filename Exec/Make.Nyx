@@ -96,7 +96,7 @@ endif
 ifeq ($(USE_MHD), TRUE)
    Bdirs	+= Source/MHD
 else
-   Bdire    += Source/HydroFortran
+   Bdirs    += Source/HydroFortran
 endif
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))

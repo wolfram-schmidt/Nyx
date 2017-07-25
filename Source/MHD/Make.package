@@ -1,10 +1,11 @@
+f90EXE_sources += hlld.f90
+f90EXE_sources += mhd_plm_3d.f90
+f90EXE_sources += electric.f90
 f90EXE_sources += ct_upwind.f90
 f90EXE_sources += mhd_enforce_minimum_density_3d.f90
 #f90EXE_sources += mhd_flatten_3d.f90
 f90EXE_sources += mhd_normalize_species_3d.f90
-f90EXE_sources += electric.f90
 f90EXE_sources += Nyx_advection_mhd_3d.f90
-f90EXE_sources += mhd_plm_3d.f90
 #f90EXE_sources += mhd_slope_3d.f90
 #f90EXE_sources += mhd_trace_ppm_3d.f90
 #f90EXE_sources += mhd_trace_src_3d.f90

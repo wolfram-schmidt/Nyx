@@ -181,7 +181,7 @@ contains
 !========================================= VanLeer TVD slope limiter =======================================
 	subroutine vanleer(dW, WR, WL) 
 	
-	use amrex_fort_mudle, only : rt => amrex_real
+	use amrex_fort_module, only : rt => amrex_real
 	
 	implicit none
 	
@@ -200,7 +200,7 @@ contains
 
 	subroutine evals(lam, Q, dir)
 
-	use amrex_fort_mudle, only : rt => amrex_real
+	use amrex_fort_module, only : rt => amrex_real
 
 	implicit none
 	
@@ -261,7 +261,7 @@ contains
 
 !x direction
 	subroutine lvecx(leig, Q) 
-	use amrex_fort_mudle, only : rt => amrex_real
+	use amrex_fort_module, only : rt => amrex_real
 	
 	implicit none
 	
@@ -309,7 +309,7 @@ contains
 
 !y direction
 	subroutine lvecy(leig, Q) 
-	use amrex_fort_mudle, only : rt => amrex_real
+	use amrex_fort_module, only : rt => amrex_real
 	
 	implicit none
 	
@@ -358,7 +358,7 @@ contains
 
 !z direction
 	subroutine lvecz(leig, Q) 
-	use amrex_fort_mudle, only : rt => amrex_real
+	use amrex_fort_module, only : rt => amrex_real
 	
 	implicit none
 	
@@ -406,7 +406,7 @@ contains
 !====================================== Right Eigenvectors ===============================================
 !x direction
 	subroutine rvecx(reig, Q) 
-	use amrex_fort_mudle, only : rt => amrex_real
+	use amrex_fort_module, only : rt => amrex_real
 	
 	implicit none
 	
@@ -454,7 +454,7 @@ contains
 
 !y direction
 	subroutine rvecy(reig, Q) 
-	use amrex_fort_mudle, only : rt => amrex_real
+	use amrex_fort_module, only : rt => amrex_real
 	
 	implicit none
 	
@@ -502,7 +502,7 @@ contains
 
 !z direction
 	subroutine rvecz(reig, Q) 
-	use amrex_fort_mudle, only : rt => amrex_real
+	use amrex_fort_module, only : rt => amrex_real
 	
 	implicit none
 	

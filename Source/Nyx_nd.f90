@@ -406,7 +406,7 @@
 
         use amrex_fort_module, only : rt => amrex_real
         use meth_mhd_params_module
-        use  eos_params_module
+        use eos_params_module
         use atomic_rates_module
         use comoving_module, only : comoving_type
         use network, only : nspec, naux

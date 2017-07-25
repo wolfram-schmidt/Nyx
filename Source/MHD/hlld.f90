@@ -5,6 +5,7 @@ implicit none
 private hlldx, hlldy, hlldz, primtofluxx, primtofluxy, primtofluxz
 public hlld
 
+contains
 
 subroutine hlld(qm,qp,qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
                 flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
