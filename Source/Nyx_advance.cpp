@@ -46,7 +46,11 @@ Nyx::advance (Real time,
         }
         else
         {
+#ifdef MHD
+	   return advance_mhd(time, dt, iteration, ncycle);
+#else
            return advance_hydro(time, dt, iteration, ncycle);
+#endif
         }
     }
 #endif
@@ -478,6 +482,12 @@ Nyx::advance_hydro_plus_particles (Real time,
     return dt;
 }
 
+#ifndef MHD
+
+std::cout<< "MHD not defined!" << std::endl;
+
+#endif
+
 #ifdef MHD
 Real
 Nyx::advance_mhd (Real time,
@@ -535,7 +545,7 @@ Nyx::advance_mhd (Real time,
     MultiFab& S_new = get_new_data(State_Type); 
 	MultiFab& Bx_new = get_new_data(Mag_Type_x); // Note that the magnetic variables are not in S 
 	MultiFab& By_new = get_new_data(Mag_Type_y);
-	MuttiFab& Bz_new = get_new_data(Mag_Type_z);
+	MultiFab& Bz_new = get_new_data(Mag_Type_z);
     MultiFab& D_new = get_new_data(DiagEOS_Type);
 
 //    reset_internal_energy(S_new,D_new);

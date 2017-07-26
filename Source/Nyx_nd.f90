@@ -471,7 +471,7 @@
            else
               NVAR = NTHERM + nspec + naux + numadv
            end if
-
+		Write(*,*) "NVAR = ", NVAR
            nadv = numadv
 
            ! We use these to index into the state "U"
@@ -555,7 +555,7 @@
            corner_coupling              = corner_coupling_in
            normalize_species            = normalize_species_in
 
-           heat_cool_type               = heat_cool_in
+ !          heat_cool_type               = heat_cool_in
 
         if (heat_cool_type .eq. 1 .or. heat_cool_type .eq. 3 .or. heat_cool_type .eq. 5) then
            call tabulate_rates()

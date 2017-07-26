@@ -93,6 +93,7 @@ endif
 ifeq ($(USE_AGN), TRUE)
    Bdirs 	+= Source/AGN
 endif
+
 ifeq ($(USE_MHD), TRUE)
    Bdirs	+= Source/MHD
 else

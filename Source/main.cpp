@@ -371,6 +371,7 @@ main (int argc, char* argv[])
 
     if (max_step < 0 && stop_time < 0.0)
     {
+	std::cout<< "max step = " <<max_step << "stop_time = " << stop_time << std::endl;
         amrex::Abort("Exiting because neither max_step nor stop_time is non-negative.");
     }
 

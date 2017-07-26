@@ -25,8 +25,14 @@ Nyx::just_the_mhd (Real time,
     const int  finest_level = parent->finestLevel();
     MultiFab&  S_old        = get_old_data(State_Type);
     MultiFab&  D_old        = get_old_data(DiagEOS_Type);
+    MultiFab&  Bx_old 	    = get_old_data(Mag_Type_x);
+    MultiFab&  By_old       = get_old_data(Mag_Type_y);
+    MultiFab&  Bz_old       = get_old_data(Mag_Type_z);
     MultiFab&  S_new        = get_new_data(State_Type);
     MultiFab&  D_new        = get_new_data(DiagEOS_Type);
+    MultiFab&  Bx_new	    = get_new_data(Mag_Type_x);
+    MultiFab&  By_new	    = get_new_data(Mag_Type_y);
+    MultiFab&  Bz_new	    = get_new_data(Mag_Type_z);
 
     if (std::abs(time-prev_time) > (1.e-10*cur_time) )
     {
@@ -143,6 +149,12 @@ Nyx::just_the_mhd (Real time,
         FArrayBox& state     = S_old_tmp[mfi];
         FArrayBox& dstate    = D_old_tmp[mfi];
         FArrayBox& stateout  = S_new[mfi];
+		FArrayBox& Bx		 = Bx_old[mfi];
+		FArrayBox& By		 = By_old[mfi];
+		FArrayBox& Bz		 = Bz_old[mfi];
+		FArrayBox& Bxout	 = Bx_new[mfi];
+		FArrayBox& Byout	 = By_new[mfi];
+		FArrayBox& Bzout	 = Bz_new[mfi];		
 
 #ifdef SHEAR_IMPROVED
         FArrayBox& am_tmp = AveMom_tmp[mfi];
@@ -163,12 +175,12 @@ Nyx::just_the_mhd (Real time,
             (&time, bx.loVect(), bx.hiVect(), 
              BL_TO_FORTRAN(state),
              BL_TO_FORTRAN(stateout),
-	     BL_TO_FORTRAN(Bx),
-	     BL_TO_FORTRAN(By),
-	     BL_TO_FORTRAN(Bz),
-	     BL_TO_FORTRAN(Bxout),
-	     BL_TO_FORTRAN(Byout),
-	     BL_TO_FORTRAN(Bzout),
+	       	 BL_TO_FORTRAN(Bx),
+	     	 BL_TO_FORTRAN(By),
+	    	 BL_TO_FORTRAN(Bz),
+	    	 BL_TO_FORTRAN(Bxout),
+	   	 	 BL_TO_FORTRAN(Byout),
+	   		 BL_TO_FORTRAN(Bzout),
              BL_TO_FORTRAN(u_gdnv[0]),
              BL_TO_FORTRAN(u_gdnv[1]),
              BL_TO_FORTRAN(u_gdnv[2]),

@@ -21,16 +21,17 @@ f90EXE_sources += meth_mhd_params.f90
 
 f90EXE_sources += meth_params.f90
 
+ifneq ($(NO_HYDRO), TRUE)
 ifeq ($(USE_MHD), TRUE)
 CEXE_sources += Nyx_MHD.cpp
 else
-ifneq ($(NO_HYDRO), TRUE)
 CEXE_sources += Nyx_hydro.cpp
+endif
 CEXE_sources += sum_integrated_quantities.cpp
 CEXE_sources += sum_utils.cpp
 CEXE_sources += strang_splitting.cpp
-endif
 endif 
+
 
 CEXE_headers += Nyx.H
 CEXE_headers += Nyx_output.H

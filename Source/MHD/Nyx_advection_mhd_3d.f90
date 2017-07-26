@@ -12,9 +12,9 @@
 		   bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
 		   byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
 		   bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
-           ugdnvx_out,ugdnvx_l1,ugdnvx_l2,ugdnvx_l3,ugdnvx_h1,ugdnvx_h2,ugdnvx_h3, &
-           ugdnvy_out,ugdnvy_l1,ugdnvy_l2,ugdnvy_l3,ugdnvy_h1,ugdnvy_h2,ugdnvy_h3, &
-           ugdnvz_out,ugdnvz_l1,ugdnvz_l2,ugdnvz_l3,ugdnvz_h1,ugdnvz_h2,ugdnvz_h3, &
+           ugdnvx,ugdnvx_l1,ugdnvx_l2,ugdnvx_l3,ugdnvx_h1,ugdnvx_h2,ugdnvx_h3, &
+           ugdnvy,ugdnvy_l1,ugdnvy_l2,ugdnvy_l3,ugdnvy_h1,ugdnvy_h2,ugdnvy_h3, &
+           ugdnvz,ugdnvz_l1,ugdnvz_l2,ugdnvz_l3,ugdnvz_h1,ugdnvz_h2,ugdnvz_h3, &
            src ,src_l1,src_l2,src_l3,src_h1,src_h2,src_h3, &
            grav,gv_l1,gv_l2,gv_l3,gv_h1,gv_h2,gv_h3, &
            delta,dt, &
@@ -42,14 +42,16 @@
       integer uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
 	  integer bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3
 	  integer byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3
-	  integer bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
-	  integer bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
-	  integer byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
-	  integer bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
+	  integer bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
+	  integer bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
+	  integer byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
+	  integer bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
       integer ugdnvx_l1,ugdnvx_l2,ugdnvx_l3,ugdnvx_h1,ugdnvx_h2,ugdnvx_h3
       integer ugdnvy_l1,ugdnvy_l2,ugdnvy_l3,ugdnvy_h1,ugdnvy_h2,ugdnvy_h3
       integer ugdnvz_l1,ugdnvz_l2,ugdnvz_l3,ugdnvz_h1,ugdnvz_h2,ugdnvz_h3
       integer flux1_l1,flux1_l2,flux1_l3,flux1_h1,flux1_h2,flux1_h3
+	  integer flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3
+	  integer flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3
       integer src_l1,src_l2,src_l3,src_h1,src_h2,src_h3
       integer gv_l1,gv_l2,gv_l3,gv_h1,gv_h2,gv_h3
       real(rt)  uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3,  NVAR)
@@ -61,8 +63,13 @@
       real(rt)  bzin(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
       real(rt)  bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
       real(rt)  src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, NVAR)
+	  real(rt) ugdnvx(ugdnvx_l1:ugdnvx_h1,ugdnvx_l2:ugdnvx_h2,ugdnvx_l3:ugdnvx_h3)
+      real(rt) ugdnvy(ugdnvy_l1:ugdnvy_h1,ugdnvy_l2:ugdnvy_h2,ugdnvy_l3:ugdnvy_h3)
+      real(rt) ugdnvz(ugdnvz_l1:ugdnvz_h1,ugdnvz_l2:ugdnvz_h2,ugdnvz_l3:ugdnvz_h3)
       real(rt)  grav( gv_l1:gv_h1, gv_l2:gv_h2, gv_l3:gv_h3, 3)
-      real(rt)  flux1(flux_l1:flux_h1,flux_l2:flux_h2, flux_l3:flux_h3,QVAR,3)
+      real(rt)  flux1(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,QVAR)
+	  real(rt)  flux2(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,QVAR)
+	  real(rt)  flux3(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,QVAR)
       real(rt)  delta(3),dt,time,courno
       real(rt)  a_old, a_new
       real(rt)  e_added,ke_added
@@ -71,11 +78,14 @@
       real(rt), pointer :: q(:,:,:,:)
       real(rt), pointer :: c(:,:,:)
       real(rt), pointer :: csml(:,:,:)
+	  real(rt), pointer :: flatn(:,:,:)
       real(rt), pointer :: div(:,:,:)
       real(rt), pointer :: pdivu(:,:,:)
       real(rt), pointer :: srcQ(:,:,:,:)
-	  real(rt), pointer :: E(:,:,:,:,:)
-	  real(rt), pointer :: flx(:,:,:,:,:)
+	  real(rt), allocatable :: E(:,:,:,:,:)
+	  real(rt), allocatable :: flx(:,:,:,:,:)
+	  real(rt), allocatable :: qp(:,:,:,:,:)
+	  real(rt), allocatable :: qm(:,:,:,:,:)
 
       real(rt) dx,dy,dz
       integer ngq,ngf
@@ -103,8 +113,10 @@
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
       call bl_allocate(     c, lo-NHYP, hi+NHYP      )
       call bl_allocate(  csml, lo-NHYP, hi+NHYP      )
-	  call bl_allocate(		E, lo-NHYP, hi+NHYP, 3, 4)
-	  call bl_allocate(   flx, lo-NHYP, hi+NHYP, QVAR, 3)
+	  allocate(	E(lo(1)-NHYP:hi(1)+NHYP,lo(2)-NHYP:hi(2)+NHYP,lo(3)-NHYP:hi(3)+NHYP, 3, 4))
+	  allocate( flx(lo(1)-NHYP:hi(1)+NHYP,lo(2)-NHYP:hi(2)+NHYP,lo(3)-NHYP:hi(3)+NHYP,QVAR , 3))
+	  allocate( qp(lo(1)-NHYP:hi(1)+NHYP,lo(2)-NHYP:hi(2)+NHYP,lo(3)-NHYP:hi(3)+NHYP,QVAR , 3))
+	  allocate( qm(lo(1)-NHYP:hi(1)+NHYP,lo(2)-NHYP:hi(2)+NHYP,lo(3)-NHYP:hi(3)+NHYP,QVAR , 3))
 
       call bl_allocate(  srcQ, lo-1, hi+1, QVAR)
 
@@ -112,27 +124,28 @@
       dy = delta(2)
       dz = delta(3)
 
-		flx(:,:,:,:,1) = flux1
-		flx(:,:,:,:,2) = flux2
-		flx(:,:,:,:,3) = flux3
+		flx(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,:,1) = flux1
+		flx(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,:,2) = flux2
+		flx(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,:,3) = flux3
 	  
 !Step One, Calculate Primitives based on conservatives
-	  call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, bx, by, bz &
-                         q,c,csml,flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
+	 write(*,*) "C to Prim!"
+	  call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, bxin, byin, bzin, &
+                         q , c ,csml,flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
                          src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                          srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
                          grav,gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
-                         courno,dx,dy,dz,dt,ngp,ngf,a_old,a_new)
+                         courno,dx,dy,dz,dt,ngq,ngf,a_old,a_new)
 
 !Step Two, Interpolate Cell centered values to faces
 	  call plm(q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
-				   bx, bxl1, bxl2, bxl3, bxh1, bxh2, bxh3, &
-				   by, byl1, byl2, byl3, byh1, byh2, byh3, &
-				   bz, bzl1, bzl2, bzl3, bzh1, bzh2, bzh3, &
-                   qp, qm, ilo1, ilo2, ilo3, ihi1, ihi2, ihi3, dx, dy, dz, dt ,a_old)
+				 bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+		 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+		 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
+                   qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
 
 !Step Three, Corner Couple and find the correct fluxes + electric fields
-	  call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3 &	
+	  call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &	
 							flx, E, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, dx , dy, dz, dt)
 
 !Step Four, Conservative update
@@ -150,7 +163,7 @@
 		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-		 E,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3)
+		 E,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, dx, dy, dz, dt, a_old, a_new)
 
       ! We are done with these here so can go ahead and free up the space.
       call bl_deallocate(q)
@@ -160,27 +173,32 @@
       call bl_deallocate(div)
       call bl_deallocate(srcQ)
       call bl_deallocate(pdivu)
+	  deallocate(qm)
+	  deallocate(qp)
+	  deallocate(flx)
+	  deallocate(E)
+
 
       ! Enforce the density >= small_dens.  Make sure we do this immediately after consup.
-      call enforce_minimum_density(uin, uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
-                                        uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-                                        lo,hi,print_fortran_warnings)
+!      call enforce_minimum_density(uin, uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
+!                                        uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
+!                                        lo,hi,print_fortran_warnings)
       
-      if (do_grav .gt. 0)  then
-          call add_grav_source(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
-                               uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-                               grav, gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
-                               lo,hi,dx,dy,dz,dt,a_old,a_new,e_added,ke_added)
-      endif
+!      if (do_grav .gt. 0)  then
+!          call add_grav_source(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
+!                               uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
+!                               grav, gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
+!                               lo,hi,dx,dy,dz,dt,a_old,a_new,e_added,ke_added)
+!      endif
       ! Enforce species >= 0
-      call enforce_nonnegative_species(uout,uout_l1,uout_l2,uout_l3, &
-                                       uout_h1,uout_h2,uout_h3,lo,hi,0)
+!      call enforce_nonnegative_species(uout,uout_l1,uout_l2,uout_l3, &
+!                                       uout_h1,uout_h2,uout_h3,lo,hi,0)
 
       ! Re-normalize the species
-      if (normalize_species .eq. 1) then
-         call normalize_new_species(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-                                    lo,hi)
-      end if
+!      if (normalize_species .eq. 1) then
+!         call normalize_new_species(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
+!                                    lo,hi)
+!      end if
 
 end subroutine fort_advance_mhd
 
@@ -190,7 +208,7 @@ end subroutine fort_advance_mhd
 ! ::: ------------------------------------------------------------------
 ! :::
 
-      subroutine ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, bx, by, bz &
+      subroutine ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, bx, by, bz, &
                          q,c,csml,flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
                          src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                          srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
@@ -213,6 +231,7 @@ end subroutine fort_advance_mhd
                                      UEDEN, UEINT, UFA, UFS, &
                                      QVAR, QRHO, QU, QV, QW, &
                                      QREINT, QPRES, QFA, QFS, &
+									 QMAGX,  QMAGY, QMAGZ, &
                                      nadv, small_dens, small_pres, &
                                      gamma_const, gamma_minus_1, use_flattening
 
@@ -248,10 +267,11 @@ end subroutine fort_advance_mhd
       real(rt) :: courx, coury, courz, courmx, courmy, courmz
       real(rt) :: a_half, a_dot, rhoInv
       real(rt) :: dtdxaold, dtdyaold, dtdzaold, small_pres_over_dens
-
+	
+	Write(*,*) "NVAR = ", NVAR
       do i=1,3
-         loq(i) = lo(i)-ngp
-         hiq(i) = hi(i)+ngp
+         loq(i) = lo(i)!-ngp
+         hiq(i) = hi(i)!+ngp
       enddo
       !
       ! Make q (all but p), except put e in slot for rho.e, fix after eos call.
@@ -260,7 +280,7 @@ end subroutine fort_advance_mhd
       do k = loq(3),hiq(3)
          do j = loq(2),hiq(2)
             do i = loq(1),hiq(1)
-
+		write(*,*) "rho in = " , uin(i,j,k,URHO)
                if (uin(i,j,k,URHO) .le. ZERO) then
                   !
                   ! A critical region since we usually can't write from threads.
@@ -316,17 +336,17 @@ end subroutine fort_advance_mhd
       small_pres_over_dens = small_pres / small_dens
 
 	  !Calculate Cell Centered Magnetic Field 
-	 q(:,:,:,QBX) = bx 
-	 q(:,:,:,QBY) = by 
-	 q(:,:,;,QBZ) = bz 
+	 q(:,:,:,QMAGX) = bx 
+	 q(:,:,:,QMAGY) = by 
+	 q(:,:,:,QMAGZ) = bz 
 		do i = loq(1) + 1, hiq(1)
-			q(i,:,:,QBX) = 0.5d0*(bx(i,:,:) + bx(i-1,:,:))
+			q(i,:,:,QMAGX) = 0.5d0*(bx(i,:,:) + bx(i-1,:,:))
 		end do
 		do j = loq(2) + 1, hiq(2)
-			q(:,j,:,QBY) = 0.5d0*(bx(:,j,:) + bx(:,j-1,:))
+			q(:,j,:,QMAGY) = 0.5d0*(bx(:,j,:) + bx(:,j-1,:))
 		end do
 		do k = loq(3) + 1, hiq(3)
-			q(:,:,k,QBZ) = 0.5d0*(bx(:,:,k) + bx(:,:,k-1))
+			q(:,:,k,QMAGZ) = 0.5d0*(bx(:,:,k) + bx(:,:,k-1))
 		end do
 
       ! Get p, T, c, csml using q state
@@ -354,8 +374,8 @@ end subroutine fort_advance_mhd
                end if
 
                ! Define the soundspeed from the EOS
-               call nyx_eos_soundspeed_mhd(c(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT) &
-					   q(i,j,k,QBX), q(i,j,k,QBY), q(i,j,k,QBZ))
+               call nyx_eos_soundspeed(c(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT), &
+					   q(i,j,k,QMAGX), q(i,j,k,QMAGY), q(i,j,k,QMAGZ))
 
                ! Set csmal based on small_pres and small_dens
                csml(i,j,k) = sqrt(gamma_const * small_pres_over_dens)
@@ -365,7 +385,7 @@ end subroutine fort_advance_mhd
 
                ! Pressure = (gamma - 1) * rho * e + 0.5 B dot B
                q(i,j,k,QPRES) = gamma_minus_1 * q(i,j,k,QREINT) &
-				+ 0.5d0*(q(i,j,k,QBX)**2 + q(i,j,k,QBY)**2 + q(i,j,k,QBZ)**2)
+				+ 0.5d0*(q(i,j,k,QMAGX)**2 + q(i,j,k,QMAGY)**2 + q(i,j,k,QMAGZ)**2)
 
             end do
          end do
@@ -500,14 +520,15 @@ end subroutine fort_advance_mhd
  	  integer,  intent(in)  :: uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3
 	  integer,  intent(in)  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
       integer,  intent(in)  :: flux_l1,flux_l2,flux_l3,flux_h1,flux_h2,flux_h3
-	  integer,  intent(in)  :: uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3,
 	  integer,  intent(in)  :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
+	  integer, intent(in) 	:: lo(3), hi(3)
 
 	  real(rt), intent(in)  :: uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3, NVAR)
 	  real(rt), intent(in)  :: src(src_l1:src_h1,src_l2:src_h2,src_l3:src_h3, NVAR)
 	  real(rt), intent(in)  :: flux(flux_l1:flux_h1,flux_l2:flux_h2,flux_l3:flux_h3,QVAR,3)
-	  real(rt), intent(in) 	:: lo(3),hi(3),dx,dy,dz,dt,a_old, a_new 
+	  real(rt), intent(in) 	:: dx,dy,dz,dt,a_old, a_new 
 	  real(rt), intent(out) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
+
 
 	  integer 				:: i, j, k		
 
@@ -536,7 +557,7 @@ end subroutine fort_advance_mhd
 		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-		 E,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, dx, dy, dx, dt, a_old, a_new)
+		 E,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, dx, dy, dz, dt, a_old, a_new)
 
      use amrex_fort_module, only : rt => amrex_real
      use meth_mhd_params_module, only : QVAR
@@ -545,10 +566,10 @@ end subroutine fort_advance_mhd
 	
 		integer, intent(in)   :: bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3
 		integer, intent(in)   :: byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3
-		integer, intent(in)   :: bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
-		integer, intent(in)   :: bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
-		integer, intent(in)   :: byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
-		integer, intent(in)   :: bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
+		integer, intent(in)   :: bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
+		integer, intent(in)   :: bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
+		integer, intent(in)   :: byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
+		integer, intent(in)   :: bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
 		integer, intent(in)   :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
 		integer, intent(in)   :: q_l1, q_l2,q_l3 ,q_h1,q_h2, q_h3
 
@@ -557,11 +578,11 @@ end subroutine fort_advance_mhd
 		real(rt), intent(in)  :: bzin(bzin_l1:bzin_h2, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
 		real(rt), intent(in)  :: src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, QVAR)
 		real(rt), intent(in)  :: E(q_l1:q_h1, q_l2:q_h2, q_l3:q_h3, 3, 4) 
-		real(rt), intent(in)  :: dx, dy, dx, dt, a_old, a_new
+		real(rt), intent(in)  :: dx, dy, dz, dt, a_old, a_new
 
 		real(rt), intent(out) :: bxout(bxout_l1:bxout_h1, bxout_l2:bxout_h2, bxout_l3:bxout_h3)
 		real(rt), intent(out) :: byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
-		real(rt), intent(out) :: byout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
+		real(rt), intent(out) :: bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
 
 		integer				  :: i, j, k
 	

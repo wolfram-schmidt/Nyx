@@ -95,11 +95,6 @@ int Nyx::Eint = -1;
 int Nyx::Xmom = -1;
 int Nyx::Ymom = -1;
 int Nyx::Zmom = -1;
-#ifdef MHD
-int Nyx::B_x  = -1;
-int Nyx::B_y  = -1;
-int Nyx::B_z  = -1;
-#endif
 
 int Nyx::Temp_comp = -1;
 int Nyx::  Ne_comp = -1;
@@ -322,6 +317,7 @@ Nyx::read_params ()
         }
     }
 
+#ifndef MHD
     pp.get("comoving_OmB", comoving_OmB);
     pp.get("comoving_OmM", comoving_OmM);
     pp.get("comoving_h", comoving_h);
@@ -329,7 +325,7 @@ Nyx::read_params ()
     fort_set_omb(comoving_OmB);
     fort_set_omm(comoving_OmM);
     fort_set_hubble(comoving_h);
-
+#endif
     pp.get("do_hydro", do_hydro);
 #ifdef NO_HYDRO
     if (do_hydro == 1)

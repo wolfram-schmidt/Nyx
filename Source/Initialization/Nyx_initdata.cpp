@@ -202,6 +202,11 @@ Nyx::initData ()
                     (level, cur_time, bx.loVect(), bx.hiVect(), 
                      ns, BL_TO_FORTRAN(S_new[mfi]), 
                      ns, BL_TO_FORTRAN(S_new[mfi]),
+#ifdef MHD
+		     nbx, BL_TO_FORTRAN(Bx_new[mfi]),
+		     nby, BL_TO_FORTRAN(By_new[mfi]),
+		     nbz, BL_TO_FORTRAN(Bz_new[mfi]),
+#endif
                      dx, gridloc.lo(), gridloc.hi());
             }
         }

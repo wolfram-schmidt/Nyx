@@ -26,7 +26,6 @@ contains
 
 	implicit none
 	integer	, intent(in   ) ::  	s_l1, s_l2, s_l3, s_h1, s_h2, s_h3
-    integer	, intent(in   ) ::  	qd_l1,qd_l2,qd_l3,qd_h1,qd_h2,qd_h3
     integer , intent(in   ) ::  	ilo1,ilo2,ilo3,ihi1,ihi2,ihi3
     integer , intent(in   ) ::  	bxl1, bxl2, bxl3, bxh1, bxh2, bxh3	
     integer , intent(in   ) ::  	byl1, byl2, byl3, byh1, byh2, byh3
@@ -45,7 +44,7 @@ contains
 	real(rt) 				:: 		dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7)
 	real(rt)				:: 		temp(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,8), smhd(7)
     real(rt)				:: 		dt_over_a
-    integer          		:: 		ii,ibx,iby,ibz
+    integer          		:: 		ii,ibx,iby,ibz, i , j, k
 
     dt_over_a = dt / a_old
 	Ip = 0.d0
@@ -78,7 +77,7 @@ contains
 				call rvecx(reig,dW)    !!right eigenvectors
 				!!Using HLLD so sum over all eigenvalues
 				do ii = 1,7
-					summ = summ + lam(ii)*dot_product(leig(ii,:),dW)*rieg(:,ii)
+					summ(:) = summ(:) + lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -89,12 +88,12 @@ contains
 				smhd(7) = temp(i,j,k,4)
 				smhd 	= smhd*(bx(i,j,k) - bx(i-1,j,k))/dx !cross-talk of normal magnetic field direction
 	!Interpolate
-				Ip(i,j,k,QRHO:QPRES,1) 	 = temp(i,j,k,1:ibx-1) +HALF*(1.d0 - dt_over_a/dx*summ(1:5)) + HALF*dt_over_a*smhd(1:5)
+				Ip(i,j,k,QRHO:QPRES,1) 	 = temp(i,j,k,1:ibx-1) +0.5d0*(1.d0 - dt_over_a/dx*summ(1:5)) + 0.5d0*dt_over_a*smhd(1:5)
 				Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
-				Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +HALF*(1.d0 - dt_over_a/dx*summ(6:7)) + HALF*dt_over_a*smhd(6:7)
-				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) -HALF*(1.d0 - dt_over_a/dx*summ(1:5)) - HALF*dt_over_a*smhd(1:5)
+				Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*(1.d0 - dt_over_a/dx*summ(6:7)) + 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) -0.5d0*(1.d0 - dt_over_a/dx*summ(1:5)) - 0.5d0*dt_over_a*smhd(1:5)
 				Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
-				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) -HALF*(1.d0 - dt_over_a/dx*summ(6:7)) - HALF*dt_over_a*smhd(6:7)
+				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) -0.5d0*(1.d0 - dt_over_a/dx*summ(6:7)) - 0.5d0*dt_over_a*smhd(6:7)
 				
 	!========================================= Y Direction ================================================				
 				summ = 0.d0
@@ -104,7 +103,7 @@ contains
 				dW = 0.d0
 				!Skip By
 				dQL(1:6) = 	temp(i,j,k,1:ibx) - temp(i,j-1,k,1:ibx) !gas + bx
-				dQL(7) = 	temp(i,j,k,8) - temp(i,j-1,k,iby+1:8)		!bz			
+				dQL(7) = 	temp(i,j,k,8) - temp(i,j-1,k,iby+1)		!bz			
 				dQR(1:6) = 	temp(i,j+1,k,1:ibx) - temp(i,j,k,1:ibx)
 				dQR(7) = 	temp(i,j+1,k,ibz) - temp(i,j,k,ibz)				
 				do ii = 1,7
@@ -115,7 +114,7 @@ contains
 				call rvecy(reig,dW)    !!right eigenvectors
 				!!Using HLLD so sum over all eigenvalues
 				do ii = 1,7
-					summ = summ + lam(ii)*dot_product(leig(ii,:),dW)*rieg(:,ii)
+					summ(:) = summ(:) + lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -126,14 +125,14 @@ contains
 				smhd(7) = temp(i,j,k,4)
 				smhd 	= smhd*(by(i,j,k) - by(i-1,j,k))/dy !cross-talk of normal magnetic field direction
 	!Interpolate
-				Ip(i,j,k,QRHO:QPRES,2) 	= temp(i,j,k,1:ibx-1) +HALF*(1.d0 - dt_over_a/dy*summ(1:5)) + HALF*dt_over_a*smhd(1:5) !!GAS
-				Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + HALF*(1.d0 - dt_over_a/dy*summ(6)) + HALF*dt_over_a*smhd(6)
+				Ip(i,j,k,QRHO:QPRES,2) 	= temp(i,j,k,1:ibx-1) +0.5d0*(1.d0 - dt_over_a/dy*summ(1:5)) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*(1.d0 - dt_over_a/dy*summ(6)) + 0.5d0*dt_over_a*smhd(6)
 				Ip(i,j,k,QMAGY,2) 		= temp(i,j+1,k,iby) !! By stuff
-				Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + HALF*(1.d0 - dt_over_a/dy*summ(7)) + HALF*dt_over_a*smhd(7)
-				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) - HALF*(1.d0 - dt_over_a/dy*summ(1:5)) - HALF*dt_over_a*smhd(1:5) !!GAS
-				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) - HALF*(1.d0 - dt_over_a/dy*summ(6)) + HALF*dt_over_a*smhd(6)
+				Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + 0.5d0*(1.d0 - dt_over_a/dy*summ(7)) + 0.5d0*dt_over_a*smhd(7)
+				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) - 0.5d0*(1.d0 - dt_over_a/dy*summ(1:5)) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) - 0.5d0*(1.d0 - dt_over_a/dy*summ(6)) + 0.5d0*dt_over_a*smhd(6)
 				Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
-				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) -HALF*(1.d0 - dt_over_a/dy*summ(7)) - HALF*dt_over_a*smhd(7)
+				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) -0.5d0*(1.d0 - dt_over_a/dy*summ(7)) - 0.5d0*dt_over_a*smhd(7)
 				
 	!========================================= Z Direction ================================================				
 				summ = 0.d0
@@ -152,7 +151,7 @@ contains
 				call rvecz(reig,dW)    !!right eigenvectors
 				!!Using HLLD so sum over all eigenvalues
 				do ii = 1,7
-					summ = summ + lam(ii)*dot_product(leig(ii,:),dW)*rieg(:,ii)
+					summ(:) = summ(:) + lam(ii)*dot_product(leig(ii,:),dW(:))*reig(:,ii)
 				enddo
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -163,11 +162,11 @@ contains
 				smhd(7) = temp(i,j,k,3)
 				smhd 	= smhd*(bz(i,j,k) - bz(i-1,j,k))/dz !cross-talk of normal magnetic field direction
 	!Interpolate
-				Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + HALF*(1.d0 - dt_over_a/dz*summ(1:5)) + HALF*dt_over_a*smhd(1:5) !!GAS
-				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + HALF*(1.d0 - dt_over_a/dz*summ(6:7)) + HALF*dt_over_a*smhd(6:7)
+				Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*(1.d0 - dt_over_a/dz*summ(1:5)) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*(1.d0 - dt_over_a/dz*summ(6:7)) + 0.5d0*dt_over_a*smhd(6:7)
 				Ip(i,j,k,QMAGZ,3) 		= temp(i,j,k+1,ibz) !! Bz stuff
-				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) - HALF*(1.d0 - dt_over_a/dz*summ(1:5)) - HALF*dt_over_a*smhd(1:5) !!GAS
-				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) - HALF*(1.d0 - dt_over_a/dz*summ(6:7)) + HALF*dt_over_a*smhd(6:7)
+				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) - 0.5d0*(1.d0 - dt_over_a/dz*summ(1:5)) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) - 0.5d0*(1.d0 - dt_over_a/dz*summ(6:7)) + 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 			enddo
 		enddo
@@ -215,9 +214,9 @@ contains
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca  = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
-	cax = (Q(QMAGX)**2)/Q(RHO)
-	cay = (Q(QMAGY)**2)/Q(RHO)
-	caz = (Q(QMAGZ)**2)/Q(RHO)
+	cax = (Q(QMAGX)**2)/Q(QRHO)
+	cay = (Q(QMAGY)**2)/Q(QRHO)
+	caz = (Q(QMAGZ)**2)/Q(QRHO)
 	!Sloooooooooow
 	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cax))
 	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay))
@@ -277,7 +276,7 @@ contains
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
-	cax = (Q(QMAGX)**2)/Q(RHO)
+	cax = (Q(QMAGX)**2)/Q(QRHO)
 	!Sloooooooooow
 	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cax))
 	!Fassssst
@@ -301,7 +300,7 @@ contains
 	leig(3,:) = (/0.d0, -N*Css	, -N*Qf*bety	, -N*Qf*betz	, N*als/Q(QRHO)	, -N*AAf*bety/Q(QRHO)			, -N*AAf*betz/Q(QRHO)			/) !u - cs
 	leig(4,:) = (/1.d0,  0.d0	,  0.d0			, 0.d0			, -1.d0/as		, 0.d0							, 0.d0							/) !u 
 	leig(5,:) = (/0.d0,  N*Css	, N*Qf*bety		, N*Qf*betz		, N*als/Q(QRHO)	, -N*AAf*bety/Q(QRHO)			, -N*AAf*betz/Q(QRHO)			/) !u + cs
-	leig(6,:) = (/0.d0,  0.d0	, 0.5d0 betz	, -0.5d0*bety	, 0.d0			, -0.5d0*betz*S/(sqrt(Q(QRHO)))	, 0.5d0*bety*S/(sqrt(Q(QRHO)))	/) !u + cAx
+	leig(6,:) = (/0.d0,  0.d0	, 0.5d0*betz	, -0.5d0*bety	, 0.d0			, -0.5d0*betz*S/(sqrt(Q(QRHO)))	, 0.5d0*bety*S/(sqrt(Q(QRHO)))	/) !u + cAx
 	leig(7,:) = (/0.d0, N*Cff	, -N*Qs*bety	, -N*Qs*betz	, N*alf/Q(QRHO)	, N*AAs*bety/Q(QRHO)			, N*AAs*betz/Q(QRHO)			/) !u + cf
 	
 	
@@ -325,7 +324,7 @@ contains
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
-	cay = (Q(QMAGY)**2)/Q(RHO)
+	cay = (Q(QMAGY)**2)/Q(QRHO)
 	!Sloooooooooow
 	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!Fassssst
@@ -350,7 +349,7 @@ contains
 	leig(3,:) = (/0.d0, -N*Css , -N*Qf*betx		, -N*Qf*betz	, N*als/Q(QRHO)	, -N*AAf*betx/Q(QRHO)			, -N*AAf*betz/Q(QRHO)			/) ! v - cs
 	leig(4,:) = (/1.d0,  0.d0  ,  0.d0			, 0.d0			, -1.d0/as		, 0.d0							, 0.d0							/) ! v 
 	leig(5,:) = (/0.d0,  N*Css , N*Qf*betx		, N*Qf*betz		, N*als/Q(QRHO)	, -N*AAf*betx/Q(QRHO)			, -N*AAf*betz/Q(QRHO)			/) ! v + cs
-	leig(6,:) = (/0.d0,  0.d0  , 0.5d0 betz		, -0.5d0*betx	, 0.d0			, -0.5d0*betz*S/(sqrt(Q(QRHO)))	, 0.5d0*betx*S/(sqrt(Q(QRHO)))	/) ! v + cAy
+	leig(6,:) = (/0.d0,  0.d0  , 0.5d0*betz		, -0.5d0*betx	, 0.d0			, -0.5d0*betz*S/(sqrt(Q(QRHO)))	, 0.5d0*betx*S/(sqrt(Q(QRHO)))	/) ! v + cAy
 	leig(7,:) = (/0.d0, N*Cff  , -N*Qs*betx		, -N*Qs*betz	, N*alf/Q(QRHO)	, N*AAs*betx/Q(QRHO)			, N*AAs*betz/Q(QRHO)			/) ! v + cf
 	
 	
@@ -368,13 +367,13 @@ contains
 
 	!The characteristic speeds of the system 
 	real(rt)				:: cfz, caz, csz, ca, as, S, N
-	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, betz
+	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, bety, betz
 
 	!Speeeeeeeedssssss
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
-	caz = (Q(QMAGZ)**2)/Q(RHO)
+	caz = (Q(QMAGZ)**2)/Q(QRHO)
 	!Sloooooooooow
 	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz))
 	!Fassssst
@@ -422,11 +421,11 @@ contains
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
-	cax = (Q(QMAGX)**2)/Q(RHO)
+	cax = (Q(QMAGX)**2)/Q(QRHO)
 	!Sloooooooooow
-	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*a*casx))
+	csx = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cax))
 	!Fassssst
-	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*a*casx))
+	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax))
 	!useful constants
 	alf = (as - csx)/(cfx - csx)
 	als = (cfx - as)/(cfx - csx)
@@ -446,8 +445,8 @@ contains
 	reig(3,:) = (/	Qs*bety			, -betz					, -Qf*bety		, 0.d0  , Qf*bety		, betz 					, -Qs*bety		/)
 	reig(4,:) = (/	Qs*betz			, bety 					, -Qf*betz		, 0.d0  , Qf*betz		, -bety 				, -Qs*betz		/)
 	reig(5,:) = (/	Q(QRHO)*as*alf	, 0.d0	 				, Q(QRHO)*as*als, 0.d0  , Q(QRHO)*as*als, 0.d0  				, Q(QRHO)*as*alf/)
-	reig(6,:) = (/	AAs*bety		, -betz*S*sqrt(Q(RHO))	, -AAf*bety		, 0.d0  , -AAf*bety		, -betz*S*sqrt(Q(QRHO)) , AAs*bety		/)
-	reig(7,:) = (/	AAs*betz		, bety*S*sqrt(Q(RHO))	, -AAf*betz		, 0.d0	, -AAf*betz		, bety*S*sqrt(Q(QRHO))	, AAs*betz		/)
+	reig(6,:) = (/	AAs*bety		, -betz*S*sqrt(Q(QRHO))	, -AAf*bety		, 0.d0  , -AAf*bety		, -betz*S*sqrt(Q(QRHO)) , AAs*bety		/)
+	reig(7,:) = (/	AAs*betz		, bety*S*sqrt(Q(QRHO))	, -AAf*betz		, 0.d0	, -AAf*betz		, bety*S*sqrt(Q(QRHO))	, AAs*betz		/)
 	
 	
 	end subroutine rvecx
@@ -470,7 +469,7 @@ contains
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
-	cay = (Q(QMAGY)**2)/Q(RHO)
+	cay = (Q(QMAGY)**2)/Q(QRHO)
 	!Sloooooooooow
 	csy = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!Fassssst
@@ -494,8 +493,8 @@ contains
 	reig(3,:) = (/	Qs*betx			, -betz					, -Qf*betx		, 0.d0  , Qf*betx		, betz 					, -Qs*betx		/)
 	reig(4,:) = (/	Qs*betz			, betx 					, -Qf*betz		, 0.d0  , Qf*betz		, -betx 				, -Qs*betz		/)
 	reig(5,:) = (/	Q(QRHO)*as*alf	, 0.d0	 				, Q(QRHO)*as*als, 0.d0  , Q(QRHO)*as*als, 0.d0  				, Q(QRHO)*as*alf/)
-	reig(6,:) = (/	AAs*betx		, -betz*S*sqrt(Q(RHO))	, -AAf*betx		, 0.d0  , -AAf*betx		, -betz*S*sqrt(Q(QRHO)) , AAs*betx		/)
-	reig(7,:) = (/	AAs*betz		, betx*S*sqrt(Q(RHO))	, -AAf*betz		, 0.d0	, -AAf*betz		, betx*S*sqrt(Q(QRHO))	, AAs*betz		/)
+	reig(6,:) = (/	AAs*betx		, -betz*S*sqrt(Q(QRHO))	, -AAf*betx		, 0.d0  , -AAf*betx		, -betz*S*sqrt(Q(QRHO)) , AAs*betx		/)
+	reig(7,:) = (/	AAs*betz		, betx*S*sqrt(Q(QRHO))	, -AAf*betz		, 0.d0	, -AAf*betz		, betx*S*sqrt(Q(QRHO))	, AAs*betz		/)
 	
 	
 	end subroutine rvecy
@@ -518,7 +517,7 @@ contains
 	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
-	caz = (Q(QMAGZ)**2)/Q(RHO)
+	caz = (Q(QMAGZ)**2)/Q(QRHO)
 	!Sloooooooooow
 	csz = 0.5d0*((as + ca) - sqrt((as + ca)**2 - 4.0d0*as*caz))
 	!Fassssst
@@ -541,8 +540,8 @@ contains
 	reig(3,:) = (/	Qs*betx			, -bety					, -Qf*betx		, 0.d0  , Qf*betx		, bety 					, -Qs*betx		/)
 	reig(4,:) = (/	Qs*bety			, betx 					, -Qf*bety		, 0.d0  , Qf*bety		, -betx 				, -Qs*bety		/)
 	reig(5,:) = (/	Q(QRHO)*as*alf	, 0.d0	 				, Q(QRHO)*as*als, 0.d0  , Q(QRHO)*as*als, 0.d0  				, Q(QRHO)*as*alf/)
-	reig(6,:) = (/	AAs*betx		, -bety*S*sqrt(Q(RHO))	, -AAf*betx		, 0.d0  , -AAf*betx		, -bety*S*sqrt(Q(QRHO)) , AAs*betx		/)
-	reig(7,:) = (/	AAs*bety		, betx*S*sqrt(Q(RHO))	, -AAf*bety		, 0.d0	, -AAf*bety		, betx*S*sqrt(Q(QRHO))	, AAs*bety		/)
+	reig(6,:) = (/	AAs*betx		, -bety*S*sqrt(Q(QRHO))	, -AAf*betx		, 0.d0  , -AAf*betx		, -bety*S*sqrt(Q(QRHO)) , AAs*betx		/)
+	reig(7,:) = (/	AAs*bety		, betx*S*sqrt(Q(QRHO))	, -AAf*bety		, 0.d0	, -AAf*bety		, betx*S*sqrt(Q(QRHO))	, AAs*bety		/)
 	
 	
 	end subroutine rvecz

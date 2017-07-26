@@ -1,6 +1,6 @@
 # ------------------  INPUTS TO MAIN PROGRAM  -------------------
 max_step = 10000
-stop_time =  0.0
+stop_time =  2.0
 
 amr.checkpoint_files_output = 0
 
@@ -18,7 +18,7 @@ geometry.prob_lo     =  0      0     0
 geometry.prob_hi     =  0.125  1.    0.125
 
 amr.n_cell           = 4     32      4
-amr.max_level        = 2       # maximum level number allowed
+amr.max_level        = 0       # maximum level number allowed
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
 # 0 = Interior           3 = Symmetry
@@ -29,7 +29,7 @@ nyx.lo_bc       =  4   2   4
 nyx.hi_bc       =  4   2   4
 
 # WHICH PHYSICS
-nyx.do_hydro = 1
+nyx.do_hydro = 1 #with MHD = TRUE, does MHD
 
 nyx.ppm_type    = 0
 nyx.use_colglaz = 0
@@ -61,8 +61,8 @@ amr.check_int       = 1000    # number of timesteps between checkpoints
 # PLOTFILES
 amr.plot_file       = plt_y_  # root name of plotfile
 amr.plot_int        = 200     # number of timesteps between plotfiles
-amr.plot_vars        = density 
-amr.derive_plot_vars = pressure eint_E E_x # these variables appear in the plotfile
+amr.plot_vars        = density, Bx 
+amr.derive_plot_vars = pressure eint_E # these variables appear in the plotfile
 
 #PROBIN FILENAME
 amr.probin_file = probin-bwu-y

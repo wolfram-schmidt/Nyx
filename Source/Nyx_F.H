@@ -33,6 +33,17 @@ extern "C"
 
   void fort_get_method_params(int* HYP_GROW);
 
+#ifdef MHD
+  void fort_set_mhd_method_params
+    (const int& dm, const int& NumAdv, const int& do_hydro,
+     const int& ppm_type, const int& ppm_ref,
+     const int& ppm_flatten_before_integrals,
+     const int& use_colglaz, const int& use_flattening,
+     const int& corner_coupling,
+     const int& version_2, const int& use_const_species,
+     const amrex::Real& gamma_in, const int& normalize_species,
+     const int& heat_cool_type, const MPI_Comm& comm);
+#else
   void fort_set_method_params
     (const int& dm, const int& NumAdv, const int& do_hydro,
      const int& ppm_type, const int& ppm_ref,
@@ -42,7 +53,7 @@ extern "C"
      const int& version_2, const int& use_const_species,
      const amrex::Real& gamma_in, const int& normalize_species,
      const int& heat_cool_type, const MPI_Comm& comm);
-
+#endif
   void filcc
     (const amrex::Real * q, ARLIM_P(q_lo), ARLIM_P(q_hi),
      const int * domlo, const int * domhi,
@@ -131,6 +142,32 @@ extern "C"
      const amrex::Real dx[], const amrex::Real glo[],
      const amrex::Real* time, const int bc[]);
 
+#if MHD
+  void fort_advance_mhd
+    (const amrex::Real* time,
+     const int lo[], const int hi[],
+     const BL_FORT_FAB_ARG(state), BL_FORT_FAB_ARG(stateout),
+     const BL_FORT_FAB_ARG(Bx),
+     const BL_FORT_FAB_ARG(By),
+     const BL_FORT_FAB_ARG(Bz),
+     const BL_FORT_FAB_ARG(Bxout),
+     const BL_FORT_FAB_ARG(Byout),
+     const BL_FORT_FAB_ARG(Bzout),
+     const BL_FORT_FAB_ARG(ugdnvx),
+     const BL_FORT_FAB_ARG(ugdnvy),
+     const BL_FORT_FAB_ARG(ugdnvz),
+     const BL_FORT_FAB_ARG(src),
+     const BL_FORT_FAB_ARG(grav),
+     const amrex::Real dx[], const amrex::Real* dt,
+     D_DECL(const BL_FORT_FAB_ARG(xflux),
+            const BL_FORT_FAB_ARG(yflux),
+            const BL_FORT_FAB_ARG(zflux)),
+     const amrex::Real* cflLoc,
+     const amrex::Real* a_old, const amrex::Real* a_new,
+     const amrex::Real* e_added, const amrex::Real* ke_added,
+     const int* print_fortran_warnings,
+     const int* do_gas);
+#else
   void fort_advance_gas
     (const amrex::Real* time,
      const int lo[], const int hi[],
@@ -149,6 +186,7 @@ extern "C"
      const amrex::Real* e_added, const amrex::Real* ke_added,
      const int* print_fortran_warnings,
      const int* do_gas);
+#endif
 
   void time_center_sources
     (const int lo[], const int hi[], BL_FORT_FAB_ARG(S_new),

@@ -29,7 +29,7 @@ end subroutine electric
 
 !=============== Interpolate the Cell Centered/Face Centered Magnetic Field Vars to Get Edge Centered Electric Field Variables ==================
 
-subroutine elec_interp(E, q, qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
+subroutine elec_interp(E, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 use amrex_fort_module, only : rt => amrex_real

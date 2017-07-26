@@ -134,7 +134,7 @@ contains
      use meth_params_module, only: gamma_const, gamma_minus_1
 
      ! In/out variables
-     real(rt), intent(in   ) :: R, e
+     real(rt), intent(in   ) :: R, e, bx , by, bz
      real(rt), intent(  out) :: c
 
      ! Pressure
