@@ -11,7 +11,7 @@ subroutine hlld(qm,qp,qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3, &
                 flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 				dir)
  use amrex_fort_module, only : rt => amrex_real
- use meth_mhd_params_module, only: QVAR
+ use meth_params_module, only: QVAR
 implicit none 
 
 	integer, intent(in)   :: qpd_l1,qpd_l2,qpd_l3,qpd_h1,qpd_h2,qpd_h3
@@ -25,25 +25,25 @@ implicit none
 	integer				  :: i, j, k
 
  if(dir.eq.1) then
-	do k = qpd_l3, qpd_h3
-		do j = qpd_l2, qpd_h2
-			do i = qpd_l1, qpd_h1
+	do k = flx_l3, flx_h3
+		do j = flx_l2, flx_h2
+			do i = flx_l1, flx_h1
 				call hlldx(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
 			enddo
 		enddo
 	enddo
  elseif(dir.eq.2) then
-	do k = qpd_l3, qpd_h3
-		do j = qpd_l2, qpd_h2
-			do i = qpd_l1, qpd_h1
+	do k = flx_l3, flx_h3
+		do j = flx_l2, flx_h2
+			do i = flx_l1, flx_h1
 				call hlldy(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
 			enddo
 		enddo
 	enddo
  else 
-	do k = qpd_l3, qpd_h3
-		do j = qpd_l2, qpd_h2
-			do i = qpd_l1, qpd_h1
+	do k = flx_l3, flx_h3
+		do j = flx_l2, flx_h2
+			do i = flx_l1, flx_h1
 				call hlldz(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
 			enddo
 		enddo
@@ -58,7 +58,7 @@ subroutine hlldx(qm,qp,flx)
 !Total Pressure is constant throughout the Riemann fan, pst!
 
  use amrex_fort_module, only : rt => amrex_real
- use meth_mhd_params_module
+ use meth_params_module
 
 implicit none
 	real(rt), intent(in)  :: qm(QVAR)
@@ -75,8 +75,18 @@ implicit none
 
 !Riemann solve
 	call primtofluxx(qm, FL)
-	call primtofluxx(qp, FR)
 	flx = 0.d0
+	FL  = 0.d0
+	FR  = 0.d0
+	QsL = 0.d0
+	QsR = 0.d0
+	FsL = 0.d0
+	FsR = 0.d0
+	QssL = 0.d0
+	QssR = 0.d0
+	FssL = 0.d0
+	FssR = 0.d0
+	
 	
 	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
 	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
@@ -194,7 +204,7 @@ subroutine hlldy(qp,qm,flx)
 !Total Pressure is constant throughout the Riemann fan, pst!
 
  use amrex_fort_module, only : rt => amrex_real
- use meth_mhd_params_module
+ use meth_params_module
 
 implicit none
 	real(rt), intent(in)  :: qm(QVAR)
@@ -214,7 +224,16 @@ implicit none
 	call primtofluxy(qp, FR)
 
 	flx = 0.d0
-	
+	FL  = 0.d0
+	FR  = 0.d0
+	QsL = 0.d0
+	QsR = 0.d0
+	FsL = 0.d0
+	FsR = 0.d0
+	QssL = 0.d0
+	QssR = 0.d0
+	FssL = 0.d0
+	FssR = 0.d0
 	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
 	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
 	asL  = gamma_const * qm(QPRES)/qm(QRHO)
@@ -331,7 +350,7 @@ subroutine hlldz(qp,qm,flx)
 !Total Pressure is constant throughout the Riemann fan, pst!
 
  use amrex_fort_module, only : rt => amrex_real
- use meth_mhd_params_module
+ use meth_params_module
 
 implicit none
 	real(rt), intent(in)  :: qm(QVAR)
@@ -348,6 +367,16 @@ implicit none
 
 !Riemann solve
 	flx = 0.d0
+	FL  = 0.d0
+	FR  = 0.d0
+	QsL = 0.d0
+	QsR = 0.d0
+	FsL = 0.d0
+	FsR = 0.d0
+	QssL = 0.d0
+	QssR = 0.d0
+	FssL = 0.d0
+	FssR = 0.d0
 	call primtofluxz(qm, FL)
 	call primtofluxz(qp, FR)
 	
@@ -465,14 +494,14 @@ end subroutine hlldz
 
 subroutine primtofluxx(Q, F)
  use amrex_fort_module, only : rt => amrex_real
- use meth_mhd_params_module
+ use meth_params_module
 implicit none
 
 	real(rt), intent(in)  :: Q(QVAR)
 	real(rt), intent(out) :: F(QVAR)
 	real(rt)			  :: e
 
-
+	F = 0.d0
 	e 		 = Q(QPRES)/(Q(QRHO)*gamma_minus_1)
 	F(QRHO)  = Q(QRHO)*Q(QU)
 	F(QU)	 = Q(QRHO)*Q(QU)**2 + Q(QPRES) - Q(QMAGX)**2
@@ -489,14 +518,14 @@ end subroutine primtofluxx
 
 subroutine primtofluxy(Q, F)
  use amrex_fort_module, only : rt => amrex_real
- use meth_mhd_params_module
+ use meth_params_module
 implicit none
 
 	real(rt), intent(in)  :: Q(QVAR)
 	real(rt), intent(out) :: F(QVAR)
 	real(rt)			  :: e
 
-
+	F = 0.d0
 	e 		 = Q(QPRES)/(Q(QRHO)*gamma_minus_1)
 	F(QRHO)  = Q(QRHO)*Q(QV)
 	F(QU)	 = Q(QRHO)*Q(QU)*Q(QV) - Q(QMAGX)*Q(QMAGY)
@@ -513,14 +542,14 @@ end subroutine primtofluxy
 
 subroutine primtofluxz(Q, F)
  use amrex_fort_module, only : rt => amrex_real
- use meth_mhd_params_module
+ use meth_params_module
 implicit none
 
 	real(rt), intent(in)  :: Q(QVAR)
 	real(rt), intent(out) :: F(QVAR)
 	real(rt)			  :: e
 
-
+	F = 0.d0
 	e 		 = Q(QPRES)/(Q(QRHO)*gamma_minus_1)
 	F(QRHO)  = Q(QRHO)*Q(QW)
 	F(QU)	 = Q(QRHO)*Q(QW)*Q(QU) - Q(QMAGX)*Q(QMAGZ)

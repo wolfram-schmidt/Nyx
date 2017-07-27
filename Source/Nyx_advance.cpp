@@ -466,6 +466,7 @@ Nyx::advance_hydro_plus_particles (Real time,
     }
 #endif
 
+
     //
     // Synchronize Energies
     //
@@ -482,11 +483,6 @@ Nyx::advance_hydro_plus_particles (Real time,
     return dt;
 }
 
-#ifndef MHD
-
-std::cout<< "MHD not defined!" << std::endl;
-
-#endif
 
 #ifdef MHD
 Real

@@ -2,7 +2,7 @@ module mhd_plm_module
 !Module that gives a piecewise linear interpolation for the primitive variables 
 !They are projected onto the characteristic variables for tracing. 
 
-use meth_mhd_params_module
+use meth_params_module
 implicit none
 
   private vanleer, lvecx, lvecy, lvecz, rvecx, rvecy, rvecz, evals
@@ -31,39 +31,48 @@ contains
     integer , intent(in   ) ::  	byl1, byl2, byl3, byh1, byh2, byh3
     integer , intent(in   ) ::  	bzl1, bzl2, bzl3, bzh1, bzh2, bzh3
  
-    real(rt), intent(in   ) ::      s( s_l1: s_h1, s_l2: s_h2, s_l3: s_h3, 1:QVAR) !Primitive Vars
+    real(rt), intent(in   ) ::      s( s_l1: s_h1, s_l2: s_h2, s_l3: s_h3, QVAR) !Primitive Vars
     real(rt), intent(in   ) ::      bx(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3)	!Face Centered Magnetic Fields
-    real(rt), intent(in   ) ::      by(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3)
-    real(rt), intent(in   ) ::      bz(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3)
+    real(rt), intent(in   ) ::      by(byl1:byh1, byl2:byh2, byl3:byh3)
+    real(rt), intent(in   ) ::      bz(bzl1:bxh1, bzl2:bxh2, bzl3:bzh3)
 
-    real(rt), intent(inout) :: 		Ip(ilo1-1:ihi1+1,ilo2-1:ihi2+1,ilo3-1:ihi3+1,1:QVAR,1:3)
-    real(rt), intent(inout) :: 		Im(ilo1-1:ihi1+1,ilo2-1:ihi2+1,ilo3-1:ihi3+1,1:QVAR,1:3)
+    real(rt), intent(out) :: 		Ip(ilo1:ihi1,ilo2:ihi2,ilo3:ihi3,QVAR,3)
+    real(rt), intent(out) :: 		Im(ilo1:ihi1,ilo2:ihi2,ilo3:ihi3,QVAR,3)
 
     real(rt), intent(in   ) :: 		dx,dy,dz,dt,a_old
 
-	real(rt) 				:: 		dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7)
-	real(rt)				:: 		temp(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,8), smhd(7)
+	real(rt) 				:: 		dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7), temp1(7)
+	real(rt)				:: 		temp(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1,8), smhd(7)
     real(rt)				:: 		dt_over_a
     integer          		:: 		ii,ibx,iby,ibz, i , j, k
 
     dt_over_a = dt / a_old
-	Ip = 0.d0
-	Im = 0.d0
-	temp(:,:,:,1:5) = s(:,:,:,QRHO:QPRES) !Gas vars
-	temp(:,:,:,6:8) = s(:,:,:,QMAGX:QMAGZ) !Mag vars
+	temp(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3,1:5) = s(:,:,:,QRHO:QPRES) !Gas vars
+	temp(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3,6:8) = s(:,:,:,QMAGX:QMAGZ) !Mag vars
+	do i = 1,3
+		Ip(:,:,:,QRHO,i) = s(:,:,:,QRHO)
+		Im(:,:,:,QRHO,i) = s(:,:,:,QRHO)
+		Ip(:,:,:,QPRES,i) = s(:,:,:,QPRES)
+		Im(:,:,:,QPRES,i) = s(:,:,:,QPRES)
+	enddo
 	ibx = 6
 	iby = 7
 	ibz = 8
 	!PLM
-	do k = ilo3, ihi3
-		do j = ilo2, ihi2
-			do i = ilo1, ihi1
+	do k = ilo3+NHYP, ihi3-NHYP
+		do j = ilo2+NHYP, ihi2-NHYP
+			do i = ilo1+NHYP, ihi1-NHYP
 	!============================================ X Direction ==============================================
 				summ = 0.d0
 				smhd = 0.d0
 				dQL = 0.d0
 				dQR = 0.d0
 				dW = 0.d0
+				reig = 0.d0
+				leig = 0.d0
+				lam = 0.d0
+				temp1(1:5) = temp(i,j,k,1:ibx-1)
+				temp1(6:7) = temp(i,j,k,ibx+1:8)
 				!Skip Bx
 				dQL(1:5) = 	temp(i,j,k,1:ibx-1) - temp(i-1,j,k,1:ibx-1) !gas
 				dQL(6:7) = 	temp(i,j,k,ibx+1:8) - temp(i-1,j,k,ibx+1:8)	!mag			
@@ -72,13 +81,14 @@ contains
 				do ii = 1,7
 					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
 				enddo
-				call evals(lam, dW, 1) !!X dir eigenvalues
-				call lvecx(leig,dW)    !! left eigenvectors
-				call rvecx(reig,dW)    !!right eigenvectors
+				call evals(lam, temp1, 1) !!X dir eigenvalues
+				call lvecx(leig,temp1)    !! left eigenvectors
+				call rvecx(reig,temp1)    !!right eigenvectors
 				!!Using HLLD so sum over all eigenvalues
 				do ii = 1,7
 					summ(:) = summ(:) + lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
+
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
 				smhd(3) = temp(i,j,k,iby)/temp(i,j,k,1)
@@ -102,6 +112,8 @@ contains
 				dQR = 0.d0
 				dW = 0.d0
 				!Skip By
+				temp1(1:6) = temp(i,j,k,1:ibx)
+				temp1(7) = temp(i,j,k,8)
 				dQL(1:6) = 	temp(i,j,k,1:ibx) - temp(i,j-1,k,1:ibx) !gas + bx
 				dQL(7) = 	temp(i,j,k,8) - temp(i,j-1,k,iby+1)		!bz			
 				dQR(1:6) = 	temp(i,j+1,k,1:ibx) - temp(i,j,k,1:ibx)
@@ -109,9 +121,9 @@ contains
 				do ii = 1,7
 					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
 				enddo
-				call evals(lam, dW, 2) !!Y dir eigenvalues
-				call lvecy(leig,dW)    !!left eigenvectors
-				call rvecy(reig,dW)    !!right eigenvectors
+				call evals(lam, temp1, 2) !!Y dir eigenvalues
+				call lvecy(leig,temp1)    !!left eigenvectors
+				call rvecy(reig,temp1)    !!right eigenvectors
 				!!Using HLLD so sum over all eigenvalues
 				do ii = 1,7
 					summ(:) = summ(:) + lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
@@ -130,7 +142,7 @@ contains
 				Ip(i,j,k,QMAGY,2) 		= temp(i,j+1,k,iby) !! By stuff
 				Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + 0.5d0*(1.d0 - dt_over_a/dy*summ(7)) + 0.5d0*dt_over_a*smhd(7)
 				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) - 0.5d0*(1.d0 - dt_over_a/dy*summ(1:5)) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) - 0.5d0*(1.d0 - dt_over_a/dy*summ(6)) + 0.5d0*dt_over_a*smhd(6)
+				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) - 0.5d0*(1.d0 - dt_over_a/dy*summ(6)) - 0.5d0*dt_over_a*smhd(6)
 				Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
 				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) -0.5d0*(1.d0 - dt_over_a/dy*summ(7)) - 0.5d0*dt_over_a*smhd(7)
 				
@@ -141,14 +153,15 @@ contains
 				dQR = 0.d0
 				dW = 0.d0
 				!Skip Bz
+				temp1(1:7) = temp(i,j,k,1:iby)
 				dQL(1:7) = 	temp(i,j,k,1:iby) - temp(i,j,k-1,1:iby) 
 				dQR(1:7) = 	temp(i,j,k+1,1:iby) - temp(i,j,k,1:iby)
 				do ii = 1,7
 					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
 				enddo
-				call evals(lam, dW, 3) !!Z dir eigenvalues
-				call lvecz(leig,dW)    !!left eigenvectors
-				call rvecz(reig,dW)    !!right eigenvectors
+				call evals(lam, temp1, 3) !!Z dir eigenvalues
+				call lvecz(leig,temp1)    !!left eigenvectors
+				call rvecz(reig,temp1)    !!right eigenvectors
 				!!Using HLLD so sum over all eigenvalues
 				do ii = 1,7
 					summ(:) = summ(:) + lam(ii)*dot_product(leig(ii,:),dW(:))*reig(:,ii)
@@ -166,7 +179,7 @@ contains
 				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*(1.d0 - dt_over_a/dz*summ(6:7)) + 0.5d0*dt_over_a*smhd(6:7)
 				Ip(i,j,k,QMAGZ,3) 		= temp(i,j,k+1,ibz) !! Bz stuff
 				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) - 0.5d0*(1.d0 - dt_over_a/dz*summ(1:5)) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) - 0.5d0*(1.d0 - dt_over_a/dz*summ(6:7)) + 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) - 0.5d0*(1.d0 - dt_over_a/dz*summ(6:7)) - 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 			enddo
 		enddo
@@ -284,8 +297,13 @@ contains
 	!useful constants
 	alf = (as - csx)/(cfx - csx)
 	als = (cfx - as)/(cfx - csx)
-	bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
-	betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
+	if(abs(Q(QMAGY)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
+		bety = 1.d0/sqrt(2.d0)
+		betz = bety
+	else
+		bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
+		betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
+	endif
 	cff = cfx*alf
 	css = csx*als
 	S = sign(1.0d0, Q(QMAGX))
@@ -332,8 +350,13 @@ contains
 	!useful constants
 	alf = (as - csy)/(cfy - csy)
 	als = (cfy - as)/(cfy - csy)
-	betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
-	betz = Q(QMAGZ)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
+	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
+		betx = 1.d0/sqrt(2.d0)
+		betz = betx
+	else
+		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
+		betz = Q(QMAGZ)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
+	endif
 	cff = cfy*alf
 	css = csy*als
 	S = sign(1.0d0, Q(QMAGY))
@@ -367,7 +390,7 @@ contains
 
 	!The characteristic speeds of the system 
 	real(rt)				:: cfz, caz, csz, ca, as, S, N
-	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, bety, betz
+	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, bety
 
 	!Speeeeeeeedssssss
 	as = gamma_const * Q(QPRES)/Q(QRHO)
@@ -381,8 +404,13 @@ contains
 	!useful constants
 	alf = (as - csz)/(cfz - csz)
 	als = (cfz - as)/(cfz - csz)
-	betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
-	bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
+	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGY)).le. 1.d-14) then
+		betx = 1.d0/sqrt(2.d0)
+		bety = betx
+	else
+		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
+		bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
+	endif
 	cff = cfz*alf
 	css = csz*als
 	S = sign(1.0d0, Q(QMAGZ))
@@ -398,8 +426,8 @@ contains
 	leig(3,:) = (/0.d0, -N*Css, -N*Qf*betx  , -N*Qf*bety	, N*als/Q(QRHO) , -N*AAf*betx/Q(QRHO)		    , -N*AAf*bety/Q(QRHO)			/) !w - cs
 	leig(4,:) = (/1.d0,  0.d0 ,  0.d0	    , 0.d0			, -1.d0/as		, 0.d0						    , 0.d0							/) !w
  	leig(5,:) = (/0.d0,  N*Css, N*Qf*betx   , N*Qf*bety		, N*als/Q(QRHO) , -N*AAf*betx/Q(QRHO)		    , -N*AAf*bety/Q(QRHO)			/) !w + cs
-	leig(6,:) = (/0.d0,  0.d0 , 0.5d0*bety  , -0.5d0*betx	, 0.d0			, -0.5d0*betz*S/(sqrt(Q(QRHO))) , 0.5d0*betx*S/(sqrt(Q(QRHO)))  /) !w + cAz
-	leig(7,:) = (/0.d0, N*Cff, -N*Qs*betx   , -N*Qs*bety	, N*alf/Q(QRHO) , N*AAs*bety/Q(QRHO)			, N*AAs*bety/Q(QRHO)			/) !w + cf
+	leig(6,:) = (/0.d0,  0.d0 , 0.5d0*bety  , -0.5d0*betx	, 0.d0			, -0.5d0*bety*S/(sqrt(Q(QRHO))) , 0.5d0*betx*S/(sqrt(Q(QRHO)))  /) !w + cAz
+	leig(7,:) = (/0.d0, N*Cff, -N*Qs*betx   , -N*Qs*bety	, N*alf/Q(QRHO) , N*AAs*betx/Q(QRHO)			, N*AAs*bety/Q(QRHO)			/) !w + cf
 	end subroutine lvecz
 
 !====================================== Right Eigenvectors ===============================================
@@ -429,8 +457,13 @@ contains
 	!useful constants
 	alf = (as - csx)/(cfx - csx)
 	als = (cfx - as)/(cfx - csx)
-	bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
-	betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
+	if(abs(Q(QMAGY)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
+		bety = 1.d0/sqrt(2.d0)
+		betz = bety
+	else
+		bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
+		betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
+	endif
 	cff = cfx*alf
 	css = csx*als
 	S = sign(1.0d0, Q(QMAGX))
@@ -477,8 +510,13 @@ contains
 	!useful constants
 	alf = (as - csy)/(cfy - csy)
 	als = (cfy - as)/(cfy - csy)
-	betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
-	betz = Q(QMAGZ)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
+	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
+		betx = 1.d0/sqrt(2.d0)
+		betz = betx
+	else
+		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
+		betz = Q(QMAGZ)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
+	endif
 	cff = cfy*alf
 	css = csy*als
 	S = sign(1.0d0, Q(QMAGY))
@@ -525,8 +563,13 @@ contains
 	!useful constants
 	alf = (as - csz)/(cfz - csz)
 	als = (cfz - as)/(cfz - csz)
-	betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
-	bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
+	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGY)).le. 1.d-14) then
+		betx = 1.d0/sqrt(2.d0)
+		bety = betx
+	else
+		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
+		bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
+	endif
 	cff = cfz*alf
 	css = csz*als
 	S = sign(1.0d0, Q(QMAGZ))

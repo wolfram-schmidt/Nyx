@@ -15,11 +15,11 @@ CEXE_sources += comoving.cpp
 CEXE_sources += write_info.cpp
 CEXE_sources += bl_random_c.cpp
 
-#ifeq ($(USE_MHD), TRUE)
+ifeq ($(USE_MHD), TRUE)
 f90EXE_sources += meth_mhd_params.f90
-#endif
-
+else
 f90EXE_sources += meth_params.f90
+endif
 
 ifneq ($(NO_HYDRO), TRUE)
 ifeq ($(USE_MHD), TRUE)

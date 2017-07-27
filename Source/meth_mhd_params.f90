@@ -2,7 +2,7 @@
 ! This module stores the runtime parameters.  
 ! These parameter are initialized in set_mhd_method_params().
 
-module meth_mhd_params_module
+module meth_params_module
 
   use amrex_fort_module, only : rt => amrex_real
 
@@ -15,16 +15,17 @@ module meth_mhd_params_module
 
   integer, parameter     :: NHYP    = 4
   integer, parameter     :: MAXADV  = 5
+  integer, parameter     :: NMAG    = 3
 
   ! NTHERM: number of thermodynamic variables
   ! NMAG:   number of magnetic variables
-  integer         , save :: NTHERM, NVAR, NMAG
+  integer         , save :: NTHERM, NVAR
   integer         , save :: URHO, UMX, UMY, UMZ, UEDEN, UEINT, UFA, UFS, UFX
   integer         , save :: TEMP_COMP, NE_COMP
 
   ! QTHERM: number of primitive hydrodynamic variables
   ! QMAG:   number of primitive magnetic variables (Cell Centered Mag Vars)
-  integer         , save :: QTHERM, QVAR, QMAG
+  integer         , save :: QTHERM, QVAR
   integer         , save :: QRHO, QU, QV, QW, QPRES, QREINT, QMAGX, QMAGY, QMAGZ, QFA, QFS
   
   integer         , save :: nadv
@@ -46,4 +47,4 @@ module meth_mhd_params_module
   integer, save :: npassive
   integer, save, allocatable :: qpass_map(:), upass_map(:)
 
-end module meth_mhd_params_module
+end module meth_params_module

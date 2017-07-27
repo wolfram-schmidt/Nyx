@@ -191,7 +191,6 @@ Nyx::just_the_mhd (Real time,
              BL_TO_FORTRAN(flux[1]),
              BL_TO_FORTRAN(flux[2]),
              &cflLoc, &a_old, &a_new, &se, &ske, &print_fortran_warnings, &do_grav);
-
         for (int i = 0; i < BL_SPACEDIM; ++i) {
           fluxes[i][mfi].copy(flux[i], mfi.nodaltilebox(i));
         }

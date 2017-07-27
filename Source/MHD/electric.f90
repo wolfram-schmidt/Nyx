@@ -6,7 +6,7 @@ contains
 
 subroutine electric(Q, E, comp) !Use ideal Ohm's Law
 use amrex_fort_module, only : rt => amrex_real
-use meth_mhd_params_module, only : QVAR, QU,QV, QW, QMAGX, QMAGY, QMAGZ
+use meth_params_module, only : QVAR, QU,QV, QW, QMAGX, QMAGY, QMAGZ
 
 implicit none
 
@@ -33,7 +33,7 @@ subroutine elec_interp(E, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 use amrex_fort_module, only : rt => amrex_real
-use meth_mhd_params_module
+use meth_params_module
 
 implicit none
 	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
@@ -41,7 +41,7 @@ implicit none
 	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
 	real(rt), intent(in) 	::flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)
 
-	real(rt), intent(out)	::E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3,4) !12 Edges total
+	real(rt), intent(out)	::E(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,3,4) !12 Edges total
 	
 	real(rt)				::Ecen
 	real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
@@ -50,9 +50,9 @@ implicit none
 	integer					::i ,j ,k	
 
 !Interpolate Electric Fields to edges
-	do k = q_l3,q_h3
-		do j = q_l2, q_h2
-			do i = q_l1, q_h1
+	do k = flx_l3+1,flx_h3-2
+		do j = flx_l2+1,flx_h2-2
+			do i = flx_l1+1,flx_h1-2
 !-----------------------------------Calculate Edge 1 := i + 1/2, j, k - 1/2 -------------------------------------------
 		!Ey 	
 		        !x-derivative

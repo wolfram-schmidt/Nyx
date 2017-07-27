@@ -11,8 +11,8 @@ USE_MPI = FALSE
 USE_OMP = FALSE
 
 PRECISION = DOUBLE
-DEBUG     = TRUE
-#DEBUG     = FALSE
+#DEBUG     = TRUE
+DEBUG     = FALSE
 
 # physics
 DIM      = 3

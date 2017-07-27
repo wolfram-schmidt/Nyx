@@ -405,7 +405,7 @@
         ! Passing data from C++ into f90
 
         use amrex_fort_module, only : rt => amrex_real
-        use meth_mhd_params_module
+        use meth_params_module
         use eos_params_module
         use atomic_rates_module
         use comoving_module, only : comoving_type
@@ -471,7 +471,6 @@
            else
               NVAR = NTHERM + nspec + naux + numadv
            end if
-		Write(*,*) "NVAR = ", NVAR
            nadv = numadv
 
            ! We use these to index into the state "U"
@@ -506,16 +505,17 @@
    
            ! QTHERM: number of primitive variables, which includes pressure (+1) 
            !         but not big E (-1) 
-		   ! QMAG  : number of magnetic vars
+		   ! NMAG  : number of magnetic vars
            ! QVAR  : number of total variables in primitive form
+	    QTHERM = NTHERM
 
-           QTHERM = NTHERM + QMAG
            if (use_const_species .eq. 1) then
               QVAR = QTHERM + numadv
            else
               QVAR = QTHERM + nspec + naux + numadv
            end if
-
+		QVAR = QVAR + NMAG	
+		
            ! We use these to index into the state "Q"
            QRHO   = 1   ! rho
            QU     = 2   ! u
