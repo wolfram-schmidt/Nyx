@@ -48,7 +48,7 @@ implicit none
 	real(rt)				::u_face ,v_face ,w_face
 	
 	integer					::i ,j ,k	
-
+	E = 0.d0
 !Interpolate Electric Fields to edges
 	do k = flx_l3+1,flx_h3-2
 		do j = flx_l2+1,flx_h2-2

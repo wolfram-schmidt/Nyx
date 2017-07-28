@@ -29,7 +29,7 @@
       use mempool_module, only : bl_allocate, bl_deallocate
 	  use ct_upwind, only : corner_transport
 	  use mhd_plm_module, only : plm
-      use meth_params_module, only : QVAR, NVAR, NHYP, normalize_species
+      use meth_params_module, only : QVAR, NTHERM, NHYP, normalize_species
       use enforce_module, only : enforce_nonnegative_species
       use bl_constants_module
 
@@ -54,15 +54,15 @@
 	  integer flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3
       integer src_l1,src_l2,src_l3,src_h1,src_h2,src_h3
       integer gv_l1,gv_l2,gv_l3,gv_h1,gv_h2,gv_h3
-      real(rt)  uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3,  NVAR)
-      real(rt)  uout(uout_l1:uout_h1, uout_l2:uout_h2, uout_l3:uout_h3, NVAR)
+      real(rt)  uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3,  NTHERM)
+      real(rt)  uout(uout_l1:uout_h1, uout_l2:uout_h2, uout_l3:uout_h3, NTHERM)
       real(rt)  bxin(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
       real(rt)  bxout(bxout_l1:bxout_h1, bxout_l2:bxout_h2, bxout_l3:bxout_h3)
       real(rt)  byin(byin_l1:byin_h1, byin_l2:byin_h2, byin_l3:byin_h3)
       real(rt)  byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
       real(rt)  bzin(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
       real(rt)  bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
-      real(rt)  src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, NVAR)
+      real(rt)  src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, NTHERM)
 	  real(rt) ugdnvx(ugdnvx_l1:ugdnvx_h1,ugdnvx_l2:ugdnvx_h2,ugdnvx_l3:ugdnvx_h3)
       real(rt) ugdnvy(ugdnvy_l1:ugdnvy_h1,ugdnvy_l2:ugdnvy_h2,ugdnvy_l3:ugdnvy_h3)
       real(rt) ugdnvz(ugdnvz_l1:ugdnvz_h1,ugdnvz_l2:ugdnvz_h2,ugdnvz_l3:ugdnvz_h3)
@@ -91,6 +91,7 @@
       integer ngq,ngf
       integer q_l1, q_l2, q_l3, q_h1, q_h2, q_h3
       integer srcq_l1, srcq_l2, srcq_l3, srcq_h1, srcq_h2, srcq_h3
+      integer 	:: i, j, k
 
       ngq = NHYP
       ngf = 1
@@ -145,18 +146,32 @@
 				 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
 				 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
                    qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
-
-
+	  
+flx = 0.d0
 !Step Three, Corner Couple and find the correct fluxes + electric fields
 	  call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &	
-							flx, E, flux1_l1 , flux1_l2 , flux1_l3 , flux1_h1 , flux1_h2 , flux1_h3, dx , dy, dz, dt)
-	  
+							flx, E, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, dx , dy, dz, dt)
+write(*,*) "Checking Flux 1" 
+  call checkisnan(flx(:,:,:,:,1), q_l1 , q_l2 , q_l3 , q_h1 , q_h2, q_h3, QVAR)	  
+write(*,*) "Checking Flux 2" 
+  call checkisnan(flx(:,:,:,:,2), q_l1 , q_l2 , q_l3 , q_h1 , q_h2, q_h3, QVAR)	  
+write(*,*) "Checking Flux 3" 
+  call checkisnan(flx(:,:,:,:,3), q_l1 , q_l2 , q_l3 , q_h1 , q_h2, q_h3, QVAR)	  
+write(*,*) "Checking Electric in x"
+  call checkisnan(E(:,:,:,1,:), q_l1 , q_l2 , q_l3 , q_h1 , q_h2, q_h3, 4)	  
+write(*,*) "Checking Electric in y"
+  call checkisnan(E(:,:,:,2,:), q_l1 , q_l2 , q_l3 , q_h1 , q_h2, q_h3, 4)	  
+write(*,*) "Checking Electric in z"
+  call checkisnan(E(:,:,:,3,:), q_l1 , q_l2 , q_l3 , q_h1 , q_h2, q_h3, 4)	  	  
 !Step Four, Conservative update
       call consup(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
                   uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
                   src ,src_l1 ,src_l2 ,src_l3 ,src_h1 ,src_h2 ,src_h3, &
-                  flx ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3, &
+                  flx ,uout_l1,uout_l2,uout_l3,uout_h1+1,uout_h2+1,uout_h3+1, &
                   lo ,hi ,dx ,dy ,dz ,dt ,a_old ,a_new)
+
+write(*,*) "Checking Conservative Vars"
+  call checkisnan(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, NTHERM)
 
 !Step Five Magnetic Update
       call magup(bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
@@ -166,10 +181,21 @@
 		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-		 E,flux1_l1 , flux1_l2 , flux1_l3 , flux1_h1 , flux1_h2 , flux1_h3, dx, dy, dz, dt, a_old, a_new)
+		 E,q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, dx, dy, dz, dt, a_old, a_new)
 
+Write(*,*) "Checking Bx"
+	 call checkisnan(bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, 1)
+Write(*,*) "Checking By"
+	 call checkisnan(byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, 1)
+Write(*,*) "Checking Bz"
+	 call checkisnan(bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, 1) 
 
+	  flux1(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,:) = flx(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,:,1)
+	  flux2(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,:) = flx(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,:,2)
+	  flux3(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,:) = flx(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,:,3)
 
+write(*,*) "Done with step"
+pause
       ! We are done with these here so can go ahead and free up the space.
       call bl_deallocate(q)
       call bl_deallocate(flatn)
@@ -235,7 +261,7 @@ end subroutine fort_advance_mhd
       use eos_module
 !      use flatten_module
       use bl_constants_module
-      use meth_params_module, only : NVAR, URHO, UMX, UMY, UMZ, &
+      use meth_params_module, only : NTHERM, URHO, UMX, UMY, UMZ, &
                                      UEDEN, UEINT, UFA, UFS, &
                                      QVAR, QRHO, QU, QV, QW, &
                                      QREINT, QPRES, QFA, QFS, &
@@ -257,7 +283,7 @@ end subroutine fort_advance_mhd
       integer  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3
       integer srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3
 
-      real(rt) :: uin(uin_l1:uin_h1,uin_l2:uin_h2,uin_l3:uin_h3,NVAR)
+      real(rt) :: uin(uin_l1:uin_h1,uin_l2:uin_h2,uin_l3:uin_h3,NTHERM)
 	  real(rt) :: bx(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
       real(rt) :: by(byin_l1:byin_h1, byin_l2:byin_h2, byin_l3:byin_h3)
       real(rt) :: bz(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
@@ -265,7 +291,7 @@ end subroutine fort_advance_mhd
       real(rt) :: c(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) :: csml(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) :: flatn(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
-      real(rt) :: src( src_l1: src_h1, src_l2: src_h2, src_l3: src_h3,NVAR)
+      real(rt) :: src( src_l1: src_h1, src_l2: src_h2, src_l3: src_h3,NTHERM)
       real(rt) :: srcQ(srcq_l1:srcq_h1,srcq_l2:srcq_h2,srcq_l3:srcq_h3,QVAR)
       real(rt) :: grav( gv_l1: gv_h1, gv_l2: gv_h2, gv_l3: gv_h3,3)
       real(rt) :: dx, dy, dz, dt, courno, a_old, a_new
@@ -328,19 +354,19 @@ end subroutine fort_advance_mhd
       enddo
 
       ! Load chemical species and aux. variables, c, into q, assuming they arrived in uin as rho.c
-      if (UFS .gt. 0) then
-         do ispec = 1, nspec+naux
-            n  = UFS + ispec - 1
-            nq = QFS + ispec - 1
-            do k = loq(3),hiq(3)
-               do j = loq(2),hiq(2)
-                  do i = loq(1),hiq(1)
-                     q(i,j,k,nq) = uin(i,j,k,n)/q(i,j,k,QRHO)
-                  enddo
-               enddo
-            enddo
-         enddo
-      end if ! UFS > 0
+!      if (UFS .gt. 0) then
+!         do ispec = 1, nspec+naux
+!            n  = UFS + ispec - 1
+!            nq = QFS + ispec - 1
+!            do k = loq(3),hiq(3)
+!               do j = loq(2),hiq(2)
+!                  do i = loq(1),hiq(1)
+!                     q(i,j,k,nq) = uin(i,j,k,n)/q(i,j,k,QRHO)
+!                  enddo
+!               enddo
+!            enddo
+!         enddo
+!      end if ! UFS > 0
 
       small_pres_over_dens = small_pres / small_dens
 
@@ -519,7 +545,7 @@ end subroutine fort_advance_mhd
                   lo,hi,dx,dy,dz,dt,a_old,a_new)
 
      use amrex_fort_module, only : rt => amrex_real
-     use meth_params_module, only : QVAR, QRHO, QU, QV, QW, QPRES, NVAR, URHO, UEDEN
+     use meth_params_module, only : QVAR, QRHO, UMX,UMY,UMZ, QPRES, NTHERM, URHO, UEDEN, UEINT
 
 	implicit none
 
@@ -529,23 +555,24 @@ end subroutine fort_advance_mhd
 	  integer,  intent(in)  :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
 	  integer, intent(in) 	:: lo(3), hi(3)
 
-	  real(rt), intent(in)  :: uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3, NVAR)
-	  real(rt), intent(in)  :: src(src_l1:src_h1,src_l2:src_h2,src_l3:src_h3, NVAR)
+	  real(rt), intent(in)  :: uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3, NTHERM)
+	  real(rt), intent(in)  :: src(src_l1:src_h1,src_l2:src_h2,src_l3:src_h3, NTHERM)
 	  real(rt), intent(in)  :: flux(flux_l1:flux_h1,flux_l2:flux_h2,flux_l3:flux_h3,QVAR,3)
 	  real(rt), intent(in) 	:: dx,dy,dz,dt,a_old, a_new 
-	  real(rt), intent(out) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
+	  real(rt), intent(out) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NTHERM)
 
 
 	  integer 				:: i, j, k		
 
 	  !****TO DO ******* SOURCES
-		uout = 0.d0
-		do k = uout_l3+2, uout_h3
-			do j = uout_l2+2, uout_h2
-				do i = uout_l1+2, uout_h1
+		do k = uout_l3, uout_h3
+			do j = uout_l2, uout_h2
+				do i = uout_l1, uout_h1
 					uout(i,j,k,URHO:UEDEN) = uin(i,j,k,QRHO:QPRES) - dt/dx*(flux(i+1,j,k,QRHO:QPRES,1) - flux(i,j,k,QRHO:QPRES,1)) &
 											 -dt/dy*(flux(i,j+1,k,QRHO:QPRES,2) - flux(i,j,k,QRHO:QPRES,2)) &
 											 -dt/dz*(flux(i,j,k+1,QRHO:QPRES,3) - flux(i,j,k,QRHO:QPRES,3)) !Add source terms later
+					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*(uout(i,j,k,UMX)**2/uout(i,j,k,QRHO) + &
+						 uout(i,j,k,UMY)**2/uout(i,j,k,QRHO) + uout(i,j,k,UMZ)**2/uout(i,j,k,QRHO)) !Internal Energy Hack
 				enddo
 			enddo
 		enddo
@@ -599,27 +626,30 @@ end subroutine fort_advance_mhd
 		bzout = 0.d0
 
 		!-------------------------------- bx --------------------------------------------------
-			do k = q_l3,q_h3
-				do j = q_l2,q_h2
-					do i = q_l1,q_h1
+			do k = bxout_l3,bxout_h3
+				do j = bxout_l2,bxout_h2
+					do i = bxout_l1,bxout_h1
 						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k,2,1) - (E(i,j,k,3,2) - E(i,j,k,3,1)))
 					enddo
 				enddo
 			enddo
 
 		!------------------------------- by --------------------------------------------------
-			do k = q_l3,q_h3
-				do j = q_l2,q_h2
-					do i = q_l1,q_h1
+			do k = byout_l3,byout_h3
+				do j = byout_l2,byout_h2
+					do i = byout_l1,byout_h1
 						byout(i,j,k) = byin(i,j,k) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
+							if(isnan(byout(i,j,k))) then
+							write(*,*) "byout is nan", "byin = ", byin(i,j,k), "E = ",E(i,j,k,3,2),E(i,j,k,3,3),E(i,j,k,1,4),E(i,j,k,1,1)
+							endif
 					enddo
 				enddo
 			enddo
 
 		!------------------------------- bz --------------------------------------------------
-			do k = q_l3,q_h3
-				do j = q_l2,q_h2
-					do i = q_l1,q_h1
+			do k = bzout_l3,bzout_h3
+				do j = bzout_l2,bzout_h2
+					do i = bzout_l1,bzout_h1
 						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j,k,1,4) - E(i,j,k,1,3) - (E(i,j,k,2,3) - E(i,j,k,2,4)))
 					enddo
 				enddo

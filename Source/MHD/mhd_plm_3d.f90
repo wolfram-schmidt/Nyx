@@ -43,25 +43,108 @@ contains
 
 	real(rt) 				:: 		dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7), temp1(7)
 	real(rt)				:: 		temp(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1,8), smhd(7)
+	real(rt)				::      tbx(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
+	real(rt)				::      tby(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
+	real(rt)				::      tbz(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
     real(rt)				:: 		dt_over_a
     integer          		:: 		ii,ibx,iby,ibz, i , j, k
 
     dt_over_a = dt / a_old
-	temp(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3,1:5) = s(:,:,:,QRHO:QPRES) !Gas vars
-	temp(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3,6:8) = s(:,:,:,QMAGX:QMAGZ) !Mag vars
-	do i = 1,3
-		Ip(:,:,:,QRHO,i) = s(:,:,:,QRHO)
-		Im(:,:,:,QRHO,i) = s(:,:,:,QRHO)
-		Ip(:,:,:,QPRES,i) = s(:,:,:,QPRES)
-		Im(:,:,:,QPRES,i) = s(:,:,:,QPRES)
-	enddo
+	Ip = 0.d0
+	Im = 0.d0
+!------------------------workspace variables---------------------------------------------
+		tbx = 0.d0
+		tby = 0.d0
+		tbz = 0.d0
+		temp = 0.d0
+		temp(:,:,:,1) = small_dens
+		temp(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3,1:5) = s(:,:,:,QRHO:QPRES) !Gas vars Cell Centered
+		temp(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3,6:8) = s(:,:,:,QMAGX:QMAGZ) !Mag vars Cell Centered
+		tbx(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3) = bx(:,:,:) !Face Centered
+		tby(byl1:byh1, byl2:byh2, byl3:byh3) = by(:,:,:)
+		tbz(bzl1:bxh1, bzl2:bxh2, bzl3:bzh3) = bz(:,:,:)
+!-------------------- Fill Boundaries ---------------------------------------------------
+		temp(s_l1-1,s_l2-1,s_l3-1,1:5) = s(s_l1,s_l2,s_l3,QRHO:QPRES)
+		temp(s_l1-1,s_l2-1,s_l3-1,6:8) = s(s_l1,s_l2,s_l3,QMAGX:QMAGZ)
+		temp(s_l1-1, s_l2: s_h2, s_l3: s_h3,1:5) = s(s_l1,:,:,QRHO:QPRES)
+		temp(s_l1-1, s_l2: s_h2, s_l3: s_h3,6:8) = s(s_l1,:,:,QMAGX:QMAGZ)
+		temp(s_l1:s_h1, s_l2-1, s_l3: s_h3,1:5) = s(:,s_l2,:,QRHO:QPRES)
+		temp(s_l1:s_h1, s_l2-1, s_l3: s_h3,6:8) = s(:,s_l2,:,QMAGX:QMAGZ)
+		temp(s_l1:s_h1, s_l2:s_h2, s_l3-1,1:5) = s(:,:,s_l3,QRHO:QPRES)
+		temp(s_l1:s_h1, s_l2:s_h2, s_l3-1,6:8) = s(:,:,s_l3,QMAGX:QMAGZ)
+		temp(s_h1+1, s_l2: s_h2, s_l3: s_h3,1:5) = s(s_h1,:,:,QRHO:QPRES)
+		temp(s_h1+1, s_l2: s_h2, s_l3: s_h3,6:8) = s(s_h1,:,:,QMAGX:QMAGZ)
+		temp(s_l1:s_h1, s_h2+1, s_l3: s_h3,1:5) = s(:,s_h2,:,QRHO:QPRES)
+		temp(s_l1:s_h1, s_h2+1, s_l3: s_h3,6:8) = s(:,s_h2,:,QMAGX:QMAGZ)
+		temp(s_l1:s_h1, s_l2:s_h2, s_h3+1,1:5) = s(:,:,s_h3,QRHO:QPRES)
+		temp(s_l1:s_h1, s_l2:s_h2, s_h3+1,6:8) = s(:,:,s_h3,QMAGX:QMAGZ)
+		temp(s_h1+1,s_h2+1,s_h3+1,1:5) = s(s_h1,s_h2,s_h3,QRHO:QPRES)
+		temp(s_h1+1,s_h2+1,s_h3+1,6:8) = s(s_h1,s_h2,s_h3,QMAGX:QMAGZ)
+		tbx(s_l1-1:bxl1,s_l2-1:bxl2,s_l3-1:bxl3) = bx(bxl1,bxl2,bxl3)
+		tby(s_l1-1:byl1,s_l2-1:byl2,s_l3-1:byl3) = by(byl1,byl2,byl3)
+		tbz(s_l1-1:bzl1,s_l2-1:bzl2,s_l3-1:bzl3) = bz(bzl1,bzl2,bzl3)
+		tbx(bxh1:s_h1+1,bxh2:s_h2+1,bxh3:s_h3+1) = bx(bxh1,bxh2,bxh3)
+		tby(byh1:s_h1+1,byh2:s_h2+1,byh3:s_h3+1) = by(byh1,byh2,byh3)
+		tbz(bzh1:s_h1+1,bzh2:s_h2+1,bzh3:s_h3+1) = bz(bzh1,bzh2,bzh3)
+		do i = s_l1-1,s_h1+1
+			if(i.lt.bxl1) then
+				tbx(i,bxl2:bxh2, bxl3:bxh3) = bx(bxl1,bxl2:bxh2, bxl3:bxh3)
+			elseif(i.gt.bxh1) then
+				tbx(i,bxl2:bxh2, bxl3:bxh3) = bx(bxh1,bxl2:bxh2, bxl3:bxh3)
+			endif
+			if(i.lt.byl1) then
+				tby(i,byl2:byh2, byl3:byh3) = by(byl1,byl2:byh2, byl3:byh3)
+			elseif(i.gt.byh1) then
+				tby(i,byl2:byh2, byl3:byh3) = by(byh1,byl2:byh2, bxl3:byh3)
+			endif			
+			if(i.lt.bzl1) then
+				tbz(i,bzl2:bzh2, bzl3:bzh3) = bz(bzl1,bzl2:bzh2, bzl3:bzh3)
+			elseif(i.gt.bzh1) then
+				tbz(i,bzl2:bzh2, bzl3:bzh3) = bz(bzh1,bzl2:bzh2, bxl3:bzh3)
+			endif				
+		enddo
+		do j = s_l2-1,s_h2+1
+			if(j.lt.bxl2) then
+				tbx(bxl1:bxh1,j, bxl3:bxh3) = bx(bxl1:bxh1,bxl2, bxl3:bxh3)
+			elseif(j.gt.bxh2) then
+				tbx(bxl1:bxh1,j, bxl3:bxh3) = bx(bxl1:bxh1,bxh2, bxl3:bxh3)
+			endif
+			if(j.lt.byl2) then
+				tby(byl1:byh1,j, byl3:byh3) = by(byl1:byh1,byl2, byl3:byh3)
+			elseif(j.gt.byh2) then
+				tby(byl1:byh1,j, byl3:byh3) = by(byl1:byh1,byh2, byl3:byh3)
+			endif
+			if(j.lt.bzl2) then
+				tbz(bzl1:bzh1,j, bzl3:bzh3) = bz(bzl1:bzh1,bzl2, bzl3:bzh3)
+			elseif(j.gt.bzh2) then
+				tbz(bzl1:bzh1,j, bzl3:bzh3) = bz(bzl1:bzh1,bzh2, bzl3:bzh3)
+			endif
+		enddo
+
+		do k = s_l3-1,s_h3+1
+			if(k.lt.bxl3) then
+				tbx(bxl1:bxh1,bxl2:bxh2, k) = bx(bxl1:bxh1,bxl2:bxh2, bxl3)
+			elseif(k.gt.bxh3) then
+				tbx(bxl1:bxh1,bxl2:bxh2, k) = bx(bxl1:bxh1,bxl2:bxh2, bxh3)
+			endif
+			if(k.lt.byl3) then
+				tby(byl1:byh1,byl2:byh2, k) = by(byl1:byh1,byl2:byh2, byl3)
+			elseif(k.gt.byh3) then
+				tby(byl1:byh1,byl2:byh2, k) = by(byl1:byh1,byl2:byh2, byh3)
+			endif
+			if(k.lt.bzl3) then
+				tbz(bzl1:bzh1,bzl2:bzh2, k) = bz(bzl1:bzh1,bzl2:bzh2, bzl3)
+			elseif(k.gt.bzh3) then
+				tbz(bzl1:bzh1,bzl2:bzh2, k) = bz(bzl1:bzh1,bzl2:bzh2, bzh3)
+			endif
+		enddo
 	ibx = 6
 	iby = 7
 	ibz = 8
 	!PLM
-	do k = ilo3+NHYP, ihi3-NHYP
-		do j = ilo2+NHYP, ihi2-NHYP
-			do i = ilo1+NHYP, ihi1-NHYP
+	do k = s_l3, s_h3
+		do j = s_l2, s_h2
+			do i = s_l1, s_h1
 	!============================================ X Direction ==============================================
 				summ = 0.d0
 				smhd = 0.d0
@@ -84,11 +167,6 @@ contains
 				call evals(lam, temp1, 1) !!X dir eigenvalues
 				call lvecx(leig,temp1)    !! left eigenvectors
 				call rvecx(reig,temp1)    !!right eigenvectors
-				!!Using HLLD so sum over all eigenvalues
-				do ii = 1,7
-					summ(:) = summ(:) + lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
-				enddo
-
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
 				smhd(3) = temp(i,j,k,iby)/temp(i,j,k,1)
@@ -96,14 +174,28 @@ contains
 				smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
 				smhd(6) = temp(i,j,k,3)
 				smhd(7) = temp(i,j,k,4)
-				smhd 	= smhd*(bx(i,j,k) - bx(i-1,j,k))/dx !cross-talk of normal magnetic field direction
+				smhd 	= smhd*(tbx(i,j,k) - tbx(i-1,j,k))/dx !cross-talk of normal magnetic field direction
 	!Interpolate
-				Ip(i,j,k,QRHO:QPRES,1) 	 = temp(i,j,k,1:ibx-1) +0.5d0*(1.d0 - dt_over_a/dx*summ(1:5)) + 0.5d0*dt_over_a*smhd(1:5)
+		!Plus
+					!!Using HLLD so sum over all eigenvalues
+				do ii = 1,7
+					if(lam(ii).gt.0.d0) then
+						summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
+					endif
+				enddo
+				Ip(i,j,k,QRHO:QPRES,1) 	 = temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 				Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
-				Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*(1.d0 - dt_over_a/dx*summ(6:7)) + 0.5d0*dt_over_a*smhd(6:7)
-				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) -0.5d0*(1.d0 - dt_over_a/dx*summ(1:5)) - 0.5d0*dt_over_a*smhd(1:5)
+				Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
+		!Minus
+				summ = 0.d0
+				do ii = 1,7
+					if(lam(ii).lt.0.d0) then
+						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
+					endif
+				enddo
+				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 				Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
-				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) -0.5d0*(1.d0 - dt_over_a/dx*summ(6:7)) - 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				
 	!========================================= Y Direction ================================================				
 				summ = 0.d0
@@ -126,7 +218,9 @@ contains
 				call rvecy(reig,temp1)    !!right eigenvectors
 				!!Using HLLD so sum over all eigenvalues
 				do ii = 1,7
-					summ(:) = summ(:) + lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
+					if(lam(ii).gt.0.d0) then
+						summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
+					endif
 				enddo
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -135,16 +229,22 @@ contains
 				smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
 				smhd(6) = temp(i,j,k,2)
 				smhd(7) = temp(i,j,k,4)
-				smhd 	= smhd*(by(i,j,k) - by(i-1,j,k))/dy !cross-talk of normal magnetic field direction
+				smhd 	= smhd*(tby(i,j,k) - tby(i,j-1,k))/dy !cross-talk of normal magnetic field direction
 	!Interpolate
-				Ip(i,j,k,QRHO:QPRES,2) 	= temp(i,j,k,1:ibx-1) +0.5d0*(1.d0 - dt_over_a/dy*summ(1:5)) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*(1.d0 - dt_over_a/dy*summ(6)) + 0.5d0*dt_over_a*smhd(6)
+				Ip(i,j,k,QRHO:QPRES,2) 	= temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
 				Ip(i,j,k,QMAGY,2) 		= temp(i,j+1,k,iby) !! By stuff
-				Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + 0.5d0*(1.d0 - dt_over_a/dy*summ(7)) + 0.5d0*dt_over_a*smhd(7)
-				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) - 0.5d0*(1.d0 - dt_over_a/dy*summ(1:5)) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) - 0.5d0*(1.d0 - dt_over_a/dy*summ(6)) - 0.5d0*dt_over_a*smhd(6)
+				Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
+				summ = 0.d0
+				do ii = 1,7
+					if(lam(ii).lt.0.d0) then
+						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
+					endif
+				enddo
+				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
 				Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
-				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) -0.5d0*(1.d0 - dt_over_a/dy*summ(7)) - 0.5d0*dt_over_a*smhd(7)
+				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) +0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
 				
 	!========================================= Z Direction ================================================				
 				summ = 0.d0
@@ -162,9 +262,11 @@ contains
 				call evals(lam, temp1, 3) !!Z dir eigenvalues
 				call lvecz(leig,temp1)    !!left eigenvectors
 				call rvecz(reig,temp1)    !!right eigenvectors
-				!!Using HLLD so sum over all eigenvalues
+				!!Characteristic Tracing
 				do ii = 1,7
-					summ(:) = summ(:) + lam(ii)*dot_product(leig(ii,:),dW(:))*reig(:,ii)
+					if(lam(ii).gt.0.d0) then
+						summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
+					endif
 				enddo
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -173,13 +275,19 @@ contains
 				smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
 				smhd(6) = temp(i,j,k,2)
 				smhd(7) = temp(i,j,k,3)
-				smhd 	= smhd*(bz(i,j,k) - bz(i-1,j,k))/dz !cross-talk of normal magnetic field direction
+				smhd 	= smhd*(tbz(i,j,k) - tbz(i,j,k-1))/dz !cross-talk of normal magnetic field direction
 	!Interpolate
-				Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*(1.d0 - dt_over_a/dz*summ(1:5)) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*(1.d0 - dt_over_a/dz*summ(6:7)) + 0.5d0*dt_over_a*smhd(6:7)
+				Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Ip(i,j,k,QMAGZ,3) 		= temp(i,j,k+1,ibz) !! Bz stuff
-				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) - 0.5d0*(1.d0 - dt_over_a/dz*summ(1:5)) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) - 0.5d0*(1.d0 - dt_over_a/dz*summ(6:7)) - 0.5d0*dt_over_a*smhd(6:7)
+				summ = 0.d0
+				do ii = 1,7
+					if(lam(ii).lt.0.d0) then
+						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
+					endif
+				enddo
+				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 			enddo
 		enddo

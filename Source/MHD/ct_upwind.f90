@@ -34,6 +34,10 @@ implicit none
 	real(rt)			  :: cons_temp_R(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Conservative Vars
 	real(rt)			  :: cons_half_L(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !Flux Corrected Conservative Vars
 	real(rt)			  :: cons_half_R(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt)			  :: q_temp_L(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Primitive Vars
+	real(rt)			  :: q_temp_R(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Primitive Vars
+	real(rt)			  :: q_half_L(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !Flux Corrected Primitive Vars
+	real(rt)			  :: q_half_R(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !Flux Corrected Primitive Vars
 	real(rt)			  :: flx1D(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3) !Flux1d for all directions
 	real(rt)			  :: flx2D(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3, 2) !Flux2d for all directions 2 perpendicular directions
 	real(rt) 			  :: Etemp(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,3,4) !Temporary Electric Field
@@ -46,8 +50,8 @@ do i = 1,3
 	call PrimToCons(qm(:,:,:,:,i), um(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 	call PrimToCons(qp(:,:,:,:,i), up(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 enddo
-
 !Calculate Flux 1D
+write(*,*) "Do Flux 1D"
 	!x-dir
 	call hlld(qm(:,:,:,:,1),qp(:,:,:,:,1),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx1D(:,:,:,:,1),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 1)
@@ -59,43 +63,65 @@ enddo
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 3)
 
 !Use "1D" fluxes To interpolate Temporary Edge Centered Electric Fields
+write(*,*) "Do Electric Field 1D"
 	call elec_interp(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
+write(*,*) "Corner Couple Cons"
 !Corner Couple
 	call corner_couple(cons_temp_L, cons_temp_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 					   flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt) !Correct Conservative vars using Transverse Fluxes
-
+write(*,*) "Corner Couple Mag"
 	call corner_couple_mag(cons_temp_L, cons_temp_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 						Etemp, dx, dy, dz, dt) !Correct Magnetic Vars using Etemp
 
+
+!Prim to Cons
+do i = 1,3
+	call ConsToPrim(q_temp_L(:,:,:,:,i,1), cons_temp_L(:,:,:,:,i,1), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_temp_R(:,:,:,:,i,1), cons_temp_R(:,:,:,:,i,1), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_temp_L(:,:,:,:,i,2), cons_temp_L(:,:,:,:,i,2), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_temp_R(:,:,:,:,i,2), cons_temp_R(:,:,:,:,i,2), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+enddo
+
+write(*,*) "Do Flux 2D"
 !Calculate Flux 2D
 do i = 1,2
 	!x-dir
-	call hlld(cons_temp_L(:,:,:,:,1,i),cons_temp_R(:,:,:,:,1,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,1,i),&
+	write(*,*) i, "correction", "x"
+	call hlld(q_temp_L(:,:,:,:,1,i),q_temp_R(:,:,:,:,1,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,1,i),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 1)
+	write(*,*) i, "correction", "y"
 	!y-dir	
-	call hlld(cons_temp_L(:,:,:,:,2,i),cons_temp_R(:,:,:,:,2,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,2,i),&
+	call hlld(q_temp_L(:,:,:,:,2,i),q_temp_R(:,:,:,:,2,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,2,i),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 2)
+	write(*,*) i, "correction", "z"
 	!z-dir
-	call hlld(cons_temp_L(:,:,:,:,3,i),cons_temp_R(:,:,:,:,3,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,3,i),&
+	call hlld(q_temp_L(:,:,:,:,3,i),q_temp_R(:,:,:,:,3,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,3,i),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 3)
 enddo
 	
 !Use Averaged 2D fluxes to interpolate temporary Edge Centered Electric Fields, reuse "flx1D"
 	flx1D(:,:,:,:,:) = 0.5d0*(flx2D(:,:,:,:,:,1) + flx2D(:,:,:,:,:,2))
-	
+Write(*,*) "Do Electric 2D"	
 	call elec_interp(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
+write(*,*) "Do Half step cons"
 !Half Step conservative vars
 	call half_step(cons_half_L, cons_half_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
+write(*,*) "Do Half step mag"
 	call half_step_mag(cons_half_L, cons_half_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 			   Etemp, dx, dy, dz, dt)
+do i = 1,3
+	call ConsToPrim(q_half_L(:,:,:,:,i), cons_half_R(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_half_R(:,:,:,:,i), cons_half_R(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+enddo
 
 !Final Fluxes
 flx = 0.d0
+Write(*,*) "Calculate Final Fluxes"
 	!x-dir
 	call hlld(cons_half_L(:,:,:,:,1),cons_half_R(:,:,:,:,1),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,1),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 1)
@@ -141,13 +167,47 @@ implicit none
  			u(i,j,k,QU)    = q(i,j,k,QRHO)*q(i,j,k,QU)
  			u(i,j,k,QV)    = q(i,j,k,QRHO)*q(i,j,k,QV)
  			u(i,j,k,QW)    = q(i,j,k,QRHO)*q(i,j,k,QW)
-			u(i,j,k,QPRES) = q(i,j,k,QPRES)*gamma_minus_1*q(i,j,k,QRHO) &
- 							 + 0.5d0*(dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ))) !Energy
+			u(i,j,k,QPRES) = q(i,j,k,QPRES)/(gamma_minus_1*q(i,j,k,QRHO)) &
+							 + 0.5d0*(dot_product(q(i,j,k,QU:QW),q(i,j,k,QU:QW))) !Energy
+			u(i,j,k,UEINT) = q(i,j,k,QPRES)/(gamma_minus_1*q(i,j,k,QRHO))
 			u(i,j,k,QMAGX:QMAGZ) = q(i,j,k,QMAGX:QMAGZ)
 		 enddo
 	 enddo
  enddo
 end subroutine PrimToCons
+
+!================================================= Calculate the Primitve Variables ===============================================
+
+subroutine ConsToPrim(q, u, q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3)
+
+ use amrex_fort_module, only : rt => amrex_real
+ use meth_params_module, only : QVAR, QRHO, QU, QV, QW, QMAGX, QMAGZ, small_dens
+
+implicit none
+
+	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	real(rt), intent(in)	::u(q_l1:q_h2,q_l2:q_h2,q_l3:q_h3,QVAR)
+	real(rt), intent(out)	::q(q_l1:q_h2,q_l2:q_h2,q_l3:q_h3,QVAR)
+	integer					:: i ,j ,k
+
+	q = u
+ do k = q_l3,q_h3
+ 	 do j = q_l2,q_h2
+ 		 do i = q_l1, q_h1
+			if(q(i,j,k,QRHO).le.small_dens) then
+			q(i,j,k,QRHO) = small_dens
+			else
+ 			q(i,j,k,QRHO)  = u(i,j,k,QRHO)
+			endif
+ 			q(i,j,k,QU)    = u(i,j,k,QU)/q(i,j,k,QRHO)
+ 			q(i,j,k,QV)    = u(i,j,k,QV)/q(i,j,k,QRHO)
+ 			q(i,j,k,QW)    = u(i,j,k,QW)/q(i,j,k,QRHO)
+			q(i,j,k,QPRES) = u(i,j,k,UEINT)*(gamma_minus_1*q(i,j,k,QRHO)) !Gas Pressure
+			q(i,j,k,QMAGX:QMAGZ) = q(i,j,k,QMAGX:QMAGZ)
+		 enddo
+	 enddo
+ enddo
+end subroutine ConsToPrim
 
 !======================================= Update the Temporary Conservative Variables with Transverse 1D Fluxes ========================
 subroutine corner_couple(uL, uR, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
@@ -169,10 +229,15 @@ implicit none
 
 	real(rt)				:: dx, dy, dz, dt
 	integer					:: i ,j ,k
+	
 
-	do k = flx_l3,flx_h3-1
-		do j = flx_l2,flx_h2-1
-			do i = flx_l1,flx_h1-1
+	uL(:,:,:,:,:,1) = um
+	uL(:,:,:,:,:,2) = um
+	uR(:,:,:,:,:,1) = up
+	uR(:,:,:,:,:,2) = up
+	do k = flx_l3,flx_h3 -1
+		do j = flx_l2,flx_h2 -1
+			do i = flx_l1,flx_h1 -1
 	!Left Corrected States
 				uL(i,j,k,QRHO:QPRES,1,1) = um(i,j,k,QRHO:QPRES,1) - dt/(3.d0*dx)*(flx(i,j+1,k,QRHO:QPRES,2) - flx(i,j,k,QRHO:QPRES,2))
 				uL(i,j,k,QRHO:QPRES,1,2) = um(i,j,k,QRHO:QPRES,1) - dt/(3.d0*dx)*(flx(i,j,k+1,QRHO:QPRES,3) - flx(i,j,k,QRHO:QPRES,3))
@@ -212,7 +277,7 @@ implicit none
 	real(rt)					::dx, dy, dz, dt
 	
 	integer						:: i ,j ,k
-
+	
    	do k = q_l3,q_h3
 		do j = q_l2,q_h2
 			do i = q_l1,q_h1	
@@ -339,6 +404,8 @@ implicit none
 	real(rt)				:: dx, dy, dz, dt
 	integer					:: i ,j ,k
 
+	uL = um
+	uR = up
    	do k = flx_l3,flx_h3-1
 		do j = flx_l2,flx_h2-1
 			do i = flx_l1,flx_h1-1
@@ -483,6 +550,7 @@ implicit none
 	real(rt)				::qflx(QVAR)
 	real(rt)				:: dx, dy, dz, dt	
 	integer					::i, j, k
+	q2D = q
 	do k = flx_l3,flx_h3-1
 		do j = flx_l2,flx_h2-1
 			do i = flx_l1,flx_h1-1
@@ -536,7 +604,7 @@ end module ct_upwind
 		do k = uout_l3,uout_h3
 			do j = uout_l2, uout_h2
 				do i = uout_l1,uout_h1
-					if(isnan(uout(i,j,k,n))) then
+					if(isnan(uout(i,j,k,n)).or.(abs(uout(i,j,k,n)).ge. 1d16)) then
 						write(*,*) "Bad values ",  uout(i,j,k,:)
 						write(*,*) "Failure to converge ", "i, j, k, n = ", i, j, k, n
 						stop
@@ -546,3 +614,26 @@ end module ct_upwind
 		enddo
 	enddo
 	end subroutine checkisnan
+
+!====================================== Density Check ========================================
+	subroutine checknegdens(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3)
+	   use amrex_fort_module, only : rt => amrex_real
+
+	implicit none
+	integer, intent(in)  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
+	real(rt), intent(in) :: uout(uout_l1:uout_h1,uout_l2:uout_h2,uout_l3:uout_h3)
+
+	integer :: i,j,k
+
+		do k = uout_l3,uout_h3
+			do j = uout_l2, uout_h2
+				do i = uout_l1,uout_h1
+					if(uout(i,j,k).le. 0.d0) then
+						write(*,*) "Non-Positive Density ",  uout(i,j,k)
+						write(*,*) "i, j, k = ", i, j, k
+						stop
+					endif
+				enddo
+			enddo
+		enddo
+	end subroutine checknegdens

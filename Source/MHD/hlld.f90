@@ -29,6 +29,12 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldx(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
+				if(isnan(flx(i,j,k,2))) then
+					write(*,*) "Error in flux x", flx(i,j,k,:)
+					write(*,*) " i j k =", i, j, k
+					write(*,*) "qm = ", qm(i,j,k,:), "qp = ",qp(i,j,k,:)
+					pause
+				endif
 			enddo
 		enddo
 	enddo
@@ -37,6 +43,10 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldy(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
+				if(isnan(flx(i,j,k,2))) then
+					write(*,*) " i j k =", i, j, k
+					pause
+				endif
 			enddo
 		enddo
 	enddo
@@ -45,6 +55,10 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldz(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
+				if(isnan(flx(i,j,k,2))) then
+					write(*,*) " i j k =", i, j, k
+					pause
+				endif
 			enddo
 		enddo
 	enddo
@@ -72,9 +86,9 @@ implicit none
 	real(rt)			  :: QsR(QVAR), FsR(QVAR)
 	real(rt)			  :: QssL(QVAR), FssL(QVAR)
 	real(rt)			  :: QssR(QVAR), FssR(QVAR)
-
+	integer				  :: i
+	character(len=10)	  :: choice
 !Riemann solve
-	call primtofluxx(qm, FL)
 	flx = 0.d0
 	FL  = 0.d0
 	FR  = 0.d0
@@ -86,7 +100,8 @@ implicit none
 	QssR = 0.d0
 	FssL = 0.d0
 	FssR = 0.d0
-	
+	call primtofluxy(qm, FL)
+	call primtofluxy(qp, FR)	
 	
 	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
 	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
@@ -194,6 +209,22 @@ implicit none
 	else 
 	flx = FR
 	endif
+	do i = 1,QVAR
+		if(isnan(flx(i))) then
+			write(*,*) "Left flux = ", FL
+			write(*,*) "Right Flux = ", FR
+			write(*,*) "qm = ", qm
+			write(*,*) "qp = ", qp
+			write(*,*) "QsL = ", QsL
+			write(*,*) "QsR = ", QsR
+			write(*,*) "QssL = ", QssL
+			write(*,*) "QssR = ", QssR
+			write(*,*) "Flx = ", flx
+			write(*,*) "choice = ", choice
+			pause
+			return
+		endif
+	enddo
 end subroutine hlldx
 
 !============================================================= Y Direction =================================================================
@@ -218,10 +249,9 @@ implicit none
 	real(rt)			  :: QsR(QVAR), FsR(QVAR)
 	real(rt)			  :: QssL(QVAR), FssL(QVAR)
 	real(rt)			  :: QssR(QVAR), FssR(QVAR)
-
+	integer				  :: i
+	character(len=10)	  :: choice
 !Riemann solve
-	call primtofluxy(qm, FL)
-	call primtofluxy(qp, FR)
 
 	flx = 0.d0
 	FL  = 0.d0
@@ -234,6 +264,8 @@ implicit none
 	QssR = 0.d0
 	FssL = 0.d0
 	FssR = 0.d0
+	call primtofluxy(qm, FL)
+	call primtofluxy(qp, FR)
 	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
 	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
 	asL  = gamma_const * qm(QPRES)/qm(QRHO)
@@ -340,6 +372,22 @@ implicit none
 	else 
 	flx = FR
 	endif
+	do i = 1,QVAR
+		if(isnan(flx(i))) then
+			write(*,*) "Left flux = ", FL
+			write(*,*) "Right Flux = ", FR
+			write(*,*) "qm = ", qm
+			write(*,*) "qp = ", qp
+			write(*,*) "QsL = ", QsL
+			write(*,*) "QsR = ", QsR
+			write(*,*) "QssL = ", QssL
+			write(*,*) "QssR = ", QssR
+			write(*,*) "Flx = ", flx
+			write(*,*) "choice = ", choice
+			pause
+			return
+		endif
+	enddo
 end subroutine hlldy
 
 !============================================================= Z Direction =================================================================
@@ -364,6 +412,8 @@ implicit none
 	real(rt)			  :: QsR(QVAR), FsR(QVAR)
 	real(rt)			  :: QssL(QVAR), FssL(QVAR)
 	real(rt)			  :: QssR(QVAR), FssR(QVAR)
+	integer				  :: i
+	character(len=10)	  :: choice
 
 !Riemann solve
 	flx = 0.d0
@@ -377,6 +427,7 @@ implicit none
 	QssR = 0.d0
 	FssL = 0.d0
 	FssR = 0.d0
+
 	call primtofluxz(qm, FL)
 	call primtofluxz(qp, FR)
 	
@@ -475,17 +526,39 @@ implicit none
 	!Solve the RP
 	if(sL .gt. 0.d0) then
 	flx = FL
+	choice = "FL"
 	elseif(sL .le. 0.d0 .and. ssL .ge. 0.d0) then
 	flx = FsL
+	choice = "FsL"
 	elseif(ssl .le. 0.d0 .and. sM .ge. 0.d0) then
 	flx = FssL
+	choice = "FssL"
 	elseif(sM .le. 0.d0 .and. ssR .ge. 0.d0) then
 	flx = FssR
+	choice = "FssR"
 	elseif(ssR .le. 0.d0 .and. sR .ge. 0.d0) then
 	flx = FsR
+	choice = "FsR"
 	else 
 	flx = FR
+	choice = "FR"
 	endif
+	do i = 1,QVAR
+		if(isnan(flx(i))) then
+			write(*,*) "Left flux = ", FL
+			write(*,*) "Right Flux = ", FR
+			write(*,*) "qm = ", qm
+			write(*,*) "qp = ", qp
+			write(*,*) "QsL = ", QsL
+			write(*,*) "QsR = ", QsR
+			write(*,*) "QssL = ", QssL
+			write(*,*) "QssR = ", QssR
+			write(*,*) "Flx = ", flx
+			write(*,*) "choice = ", choice
+			pause
+			return
+		endif
+	enddo
 end subroutine hlldz
 
 !====================================================== Fluxes ================================================================================
