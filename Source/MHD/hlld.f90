@@ -29,12 +29,6 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldx(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
-				if(isnan(flx(i,j,k,2))) then
-					write(*,*) "Error in flux x", flx(i,j,k,:)
-					write(*,*) " i j k =", i, j, k
-					write(*,*) "qm = ", qm(i,j,k,:), "qp = ",qp(i,j,k,:)
-					pause
-				endif
 			enddo
 		enddo
 	enddo
@@ -43,10 +37,6 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldy(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
-				if(isnan(flx(i,j,k,2))) then
-					write(*,*) " i j k =", i, j, k
-					pause
-				endif
 			enddo
 		enddo
 	enddo
@@ -55,10 +45,6 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldz(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
-				if(isnan(flx(i,j,k,2))) then
-					write(*,*) " i j k =", i, j, k
-					pause
-				endif
 			enddo
 		enddo
 	enddo
@@ -103,8 +89,10 @@ implicit none
 	call primtofluxy(qm, FL)
 	call primtofluxy(qp, FR)	
 	
-	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
-	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
+	eL   = (qm(QPRES) -0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)) &
+			+ 0.5d0*dot_product(qm(QU:QW),qm(QU:QW))*qm(QRHO)
+	eR   = (qp(QPRES) -0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)) &
+			+ 0.5d0*dot_product(qp(QU:QW),qp(QU:QW))*qp(QRHO)
 	asL  = gamma_const * qm(QPRES)/qm(QRHO)
 	asR  = gamma_const * qp(QPRES)/qp(QRHO)
 	caL  = (qm(QMAGX)**2 + qm(QMAGY)**2 + qm(QMAGZ)**2)/qm(QRHO) !Magnetic Speeds
@@ -112,15 +100,15 @@ implicit none
 	caxL = (qm(QMAGX)**2)/qm(QRHO)
 	caxR = (qp(QMAGX)**2)/qp(QRHO)
 	!Catch the fastest waves, brah
-	cfL  = 0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*caxL))
-	cfR  = 0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*caxR))
+	cfL  = sqrt(0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*caxL)))
+	cfR  = sqrt(0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*caxR)))
 	!Riemann Speeds
 	sL   = min(qm(QU),qp(QU)) - max(cfL,cfR)
 	sR 	 = max(qm(QU),qp(QU)) + max(cfL,cfR)
 	sM   = ((sR - qp(QU))*qp(QRHO)*qp(QU) - (sL - qm(QU))*qm(QRHO)*qm(QU) - qp(QPRES) + qm(QPRES))/((sR - qp(QU))*qp(QRHO) - (sL - qm(QU))*qm(QRHO))
 	!Pressures in the Riemann Fan
-	ptL  = qm(QPRES) + 0.5d0*(qm(QMAGX)**2 + qm(QMAGY)**2 + qm(QMAGZ)**2)
-	ptR  = qp(QPRES) + 0.5d0*(qp(QMAGX)**2 + qp(QMAGY)**2 + qp(QMAGZ)**2)
+	ptL  = qm(QPRES)
+	ptR  = qp(QPRES)
 	pst  = (sR - qp(QU))*qp(QRHO)*ptL - (sL - qm(QU))*qm(QRHO)*ptR + qm(QRHO)*qp(QRHO)*(sR - qp(QU))*(sL - qm(QU))*(qp(QU) - qm(QU))
 	pst  = pst/((sR - qp(QU))*qp(QRHO) - (sL - qm(QU))*qm(QRHO))
 
@@ -133,11 +121,11 @@ implicit none
 	QsL(QU)    = sM
 	QsR(QU)    = sM
 	!Y dir
-	QsL(QV)    = qm(QV) - qm(QMAGX)*qm(QMAGY)*((sM - qm(QU))/(qm(QRHO)*(sL - sM) - qm(QMAGX)**2))
-	QsR(QV)    = qp(QV) - qp(QMAGX)*qp(QMAGY)*((sM - qp(QU))/(qp(QRHO)*(sR - sM) - qm(QMAGX)**2))
+	QsL(QV)    = qm(QV) - qm(QMAGX)*qm(QMAGY)*((sM - qm(QU))/(qm(QRHO)*(sL - qm(QU))*(sL - sM) - qm(QMAGX)**2))
+	QsR(QV)    = qp(QV) - qp(QMAGX)*qp(QMAGY)*((sM - qp(QU))/(qp(QRHO)*(sR - qp(QU))*(sR - sM) - qm(QMAGX)**2))
 	!Z dir
-	QsL(QW)    = qm(QW) - qm(QMAGX)*qm(QMAGZ)*((sM - qm(QU))/(qm(QRHO)*(sL - sM) - qm(QMAGX)**2))
-	QsR(QW)    = qp(QW) - qp(QMAGX)*qp(QMAGZ)*((sM - qp(QU))/(qp(QRHO)*(sR - sM) - qm(QMAGX)**2))
+	QsL(QW)    = qm(QW) - qm(QMAGX)*qm(QMAGZ)*((sM - qm(QU))/(qm(QRHO)*(sL - qm(QU))*(sL - sM) - qm(QMAGX)**2))
+	QsR(QW)    = qp(QW) - qp(QMAGX)*qp(QMAGZ)*((sM - qp(QU))/(qp(QRHO)*(sR - qp(QU))*(sR - sM) - qm(QMAGX)**2))
 	
 	!Magnetic Fields
 	!X dir
@@ -160,7 +148,7 @@ implicit none
 
 	!speeds
 	ssL = sM - abs(qm(QMAGX))/sqrt(QsL(QRHO))
-	ssR = sM - abs(qp(QMAGX))/sqrt(QsR(QRHO))
+	ssR = sM + abs(qp(QMAGX))/sqrt(QsR(QRHO))
 
 	!----------------------------------------- ** states ------------------------------------------------------------------------------
 	!Dens
@@ -198,29 +186,35 @@ implicit none
 	!Solve the RP
 	if(sL .gt. 0.d0) then
 	flx = FL
-	elseif(sL .le. 0.d0 .and. ssL .ge. 0.d0) then
+	choice = "FL"
+	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
 	flx = FsL
-	elseif(ssl .le. 0.d0 .and. sM .ge. 0.d0) then
+	choice = "FsL"
+	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
 	flx = FssL
-	elseif(sM .le. 0.d0 .and. ssR .ge. 0.d0) then
+	choice = "FssL"
+	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
 	flx = FssR
-	elseif(ssR .le. 0.d0 .and. sR .ge. 0.d0) then
+	choice = "FssR"
+	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
 	flx = FsR
+	choice = "FsR"
 	else 
 	flx = FR
+	choice = "FR"
 	endif
-	do i = 1,QVAR
+	do i = 1, QVAR
 		if(isnan(flx(i))) then
-			write(*,*) "Left flux = ", FL
-			write(*,*) "Right Flux = ", FR
-			write(*,*) "qm = ", qm
-			write(*,*) "qp = ", qp
+			write(*,*) "Flux is nan in", i, "component"
+			write(*,*) "Flux = ", choice
+			write(*,*) "FL = ", FL
+			write(*,*) "FR = ", FR
+			write(*,*) "QL = ", qm
+			write(*,*) "QR = ", qp
 			write(*,*) "QsL = ", QsL
 			write(*,*) "QsR = ", QsR
 			write(*,*) "QssL = ", QssL
 			write(*,*) "QssR = ", QssR
-			write(*,*) "Flx = ", flx
-			write(*,*) "choice = ", choice
 			pause
 			return
 		endif
@@ -266,8 +260,10 @@ implicit none
 	FssR = 0.d0
 	call primtofluxy(qm, FL)
 	call primtofluxy(qp, FR)
-	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
-	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
+	eL   = (qm(QPRES) -0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)) &
+			+ 0.5d0*dot_product(qm(QU:QW),qm(QU:QW))*qm(QRHO)
+	eR   = (qp(QPRES) -0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)) &
+			+ 0.5d0*dot_product(qp(QU:QW),qp(QU:QW))*qp(QRHO)
 	asL  = gamma_const * qm(QPRES)/qm(QRHO)
 	asR  = gamma_const * qp(QPRES)/qp(QRHO)
 	caL  = (qm(QMAGX)**2 + qm(QMAGY)**2 + qm(QMAGZ)**2)/qm(QRHO) !Magnetic Speeds
@@ -275,15 +271,15 @@ implicit none
 	cayL = (qm(QMAGY)**2)/qm(QRHO)
 	cayR = (qp(QMAGY)**2)/qp(QRHO)
 	!Catch the fastest waves, brah
-	cfL  = 0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*cayL))
-	cfR  = 0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*cayR))
+	cfL  = sqrt(0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*cayL)))
+	cfR  = sqrt(0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*cayR)))
 	!Riemann Speeds
 	sL   = min(qm(QV),qp(QV)) - max(cfL,cfR)
 	sR 	 = max(qm(QV),qp(QV)) + max(cfL,cfR)
 	sM   = ((sR - qp(QV))*qp(QRHO)*qp(QV) - (sL - qm(QV))*qm(QRHO)*qm(QV) - qp(QPRES) + qm(QPRES))/((sR - qp(QV))*qp(QRHO) - (sL - qm(QV))*qm(QRHO))
 	!Pressures in the Riemann Fan
-	ptL  = qm(QPRES) + 0.5d0*(qm(QMAGX)**2 + qm(QMAGY)**2 + qm(QMAGZ)**2)
-	ptR  = qp(QPRES) + 0.5d0*(qp(QMAGX)**2 + qp(QMAGY)**2 + qp(QMAGZ)**2)
+	ptL  = qm(QPRES)
+	ptR  = qp(QPRES)
 	pst  = (sR - qp(QV))*qp(QRHO)*ptL - (sL - qm(QV))*qm(QRHO)*ptR + qm(QRHO)*qp(QRHO)*(sR - qp(QV))*(sL - qm(QV))*(qp(QV) - qm(QV))
 	pst  = pst/((sR - qp(QV))*qp(QRHO) - (sL - qm(QV))*qm(QRHO))
 
@@ -293,14 +289,14 @@ implicit none
 	QsR(QRHO) = qp(QRHO)*((sR - qp(QV))/(sR - sM))
 	!velocities
 	!X dir
-	QsL(QU)    = qm(QU) - qm(QMAGY)*qm(QMAGX)*((sM - qm(QV))/(qm(QRHO)*(sL - sM) - qm(QMAGY)**2))
-	QsR(QU)    = qp(QU) - qp(QMAGY)*qp(QMAGX)*((sM - qp(QV))/(qp(QRHO)*(sR - sM) - qm(QMAGY)**2))
+	QsL(QU)    = qm(QU) - qm(QMAGY)*qm(QMAGX)*((sM - qm(QV))/(qm(QRHO)*(sL - qm(QV))*(sL - sM) - qm(QMAGY)**2))
+	QsR(QU)    = qp(QU) - qp(QMAGY)*qp(QMAGX)*((sM - qp(QV))/(qp(QRHO)*(sR - qp(QV))*(sR - sM) - qm(QMAGY)**2))
 	!Y dir
 	QsL(QV)    = sM
 	QsR(QV)    = sM
 	!Z dir
-	QsL(QW)    = qm(QW) - qm(QMAGY)*qm(QMAGZ)*((sM - qm(QV))/(qm(QRHO)*(sL - sM) - qm(QMAGY)**2))
-	QsR(QW)    = qp(QW) - qp(QMAGY)*qp(QMAGZ)*((sM - qp(QV))/(qp(QRHO)*(sR - sM) - qm(QMAGY)**2))
+	QsL(QW)    = qm(QW) - qm(QMAGY)*qm(QMAGZ)*((sM - qm(QV))/(qm(QRHO)*(sL - qm(QV))*(sL - sM) - qm(QMAGY)**2))
+	QsR(QW)    = qp(QW) - qp(QMAGY)*qp(QMAGZ)*((sM - qp(QV))/(qp(QRHO)*(sR - qp(QV))*(sR - sM) - qm(QMAGY)**2))
 	
 	!Magnetic Fields
 	!X dir
@@ -323,7 +319,7 @@ implicit none
 
 	!speeds
 	ssL = sM - abs(qm(QMAGY))/sqrt(QsL(QRHO))
-	ssR = sM - abs(qp(QMAGY))/sqrt(QsR(QRHO))
+	ssR = sM + abs(qp(QMAGY))/sqrt(QsR(QRHO))
 
 	!----------------------------------------- ** states ------------------------------------------------------------------------------
 	!Dens
@@ -361,29 +357,35 @@ implicit none
 	!Solve the RP
 	if(sL .gt. 0.d0) then
 	flx = FL
-	elseif(sL .le. 0.d0 .and. ssL .ge. 0.d0) then
+	choice = "FL"
+	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
 	flx = FsL
-	elseif(ssl .le. 0.d0 .and. sM .ge. 0.d0) then
+	choice = "FsL"
+	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
 	flx = FssL
-	elseif(sM .le. 0.d0 .and. ssR .ge. 0.d0) then
+	choice = "FssL"
+	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
 	flx = FssR
-	elseif(ssR .le. 0.d0 .and. sR .ge. 0.d0) then
+	choice = "FssR"
+	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
 	flx = FsR
+	choice = "FsR"
 	else 
 	flx = FR
+	choice = "FR"
 	endif
-	do i = 1,QVAR
+	do i = 1, QVAR
 		if(isnan(flx(i))) then
-			write(*,*) "Left flux = ", FL
-			write(*,*) "Right Flux = ", FR
-			write(*,*) "qm = ", qm
-			write(*,*) "qp = ", qp
+			write(*,*) "Flux is nan in", i, "component"
+			write(*,*) "Flux = ", choice
+			write(*,*) "FL = ", FL
+			write(*,*) "FR = ", FR
+			write(*,*) "QL = ", qm
+			write(*,*) "QR = ", qp
 			write(*,*) "QsL = ", QsL
 			write(*,*) "QsR = ", QsR
 			write(*,*) "QssL = ", QssL
 			write(*,*) "QssR = ", QssR
-			write(*,*) "Flx = ", flx
-			write(*,*) "choice = ", choice
 			pause
 			return
 		endif
@@ -431,8 +433,10 @@ implicit none
 	call primtofluxz(qm, FL)
 	call primtofluxz(qp, FR)
 	
-	eL   = qm(QPRES)/(qm(QRHO)*gamma_minus_1)
-	eR   = qp(QPRES)/(qp(QRHO)*gamma_minus_1)
+	eL   = (qm(QPRES) -0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)) &
+			+ 0.5d0*dot_product(qm(QU:QW),qm(QU:QW))*qm(QRHO)
+	eR   = (qp(QPRES) -0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)) &
+			+ 0.5d0*dot_product(qp(QU:QW),qp(QU:QW))*qp(QRHO)
 	asL  = gamma_const * qm(QPRES)/qm(QRHO)
 	asR  = gamma_const * qp(QPRES)/qp(QRHO)
 	caL  = (qm(QMAGX)**2 + qm(QMAGY)**2 + qm(QMAGZ)**2)/qm(QRHO) !Magnetic Speeds
@@ -440,15 +444,15 @@ implicit none
 	cazL = (qm(QMAGZ)**2)/qm(QRHO)
 	cazR = (qp(QMAGZ)**2)/qp(QRHO)
 	!Catch the fastest waves, brah
-	cfL  = 0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*cazL))
-	cfR  = 0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*cazR))
+	cfL  = sqrt(0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*cazL)))
+	cfR  = sqrt(0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*cazR)))
 	!Riemann Speeds
 	sL   = min(qm(QW),qp(QW)) - max(cfL,cfR)
 	sR 	 = max(qm(QW),qp(QW)) + max(cfL,cfR)
 	sM   = ((sR - qp(QW))*qp(QRHO)*qp(QW) - (sL - qm(QW))*qm(QRHO)*qm(QW) - qp(QPRES) + qm(QPRES))/((sR - qp(QW))*qp(QRHO) - (sL - qm(QW))*qm(QRHO))
 	!Pressures in the Riemann Fan
-	ptL  = qm(QPRES) + 0.5d0*(qm(QMAGX)**2 + qm(QMAGY)**2 + qm(QMAGZ)**2)
-	ptR  = qp(QPRES) + 0.5d0*(qp(QMAGX)**2 + qp(QMAGY)**2 + qp(QMAGZ)**2)
+	ptL  = qm(QPRES)
+	ptR  = qp(QPRES)
 	pst  = (sR - qp(QW))*qp(QRHO)*ptL - (sL - qm(QW))*qm(QRHO)*ptR + qm(QRHO)*qp(QRHO)*(sR - qp(QW))*(sL - qm(QW))*(qp(QW) - qm(QW))
 	pst  = pst/((sR - qp(QW))*qp(QRHO) - (sL - qm(QW))*qm(QRHO))
 
@@ -458,11 +462,11 @@ implicit none
 	QsR(QRHO) = qp(QRHO)*((sR - qp(QW))/(sR - sM))
 	!velocities
 	!X dir
-	QsL(QU)    = qm(QU) - qm(QMAGZ)*qm(QMAGX)*((sM - qm(QU))/(qm(QRHO)*(sL - sM) - qm(QMAGZ)**2))
-	QsR(QU)    = qp(QU) - qp(QMAGZ)*qp(QMAGX)*((sM - qp(QU))/(qp(QRHO)*(sR - sM) - qm(QMAGZ)**2))
+	QsL(QU)    = qm(QU) - qm(QMAGZ)*qm(QMAGX)*((sM - qm(QU))/(qm(QRHO)*(sL - qm(QW))*(sL - sM) - qm(QMAGZ)**2))
+	QsR(QU)    = qp(QU) - qp(QMAGZ)*qp(QMAGX)*((sM - qp(QU))/(qp(QRHO)*(sR - qp(QW))*(sR - sM) - qm(QMAGZ)**2))
 	!Y dir
-	QsL(QV)    = qm(QV) - qm(QMAGZ)*qm(QMAGY)*((sM - qm(QV))/(qm(QRHO)*(sL - sM) - qm(QMAGZ)**2))
-	QsR(QV)    = qp(QV) - qp(QMAGZ)*qp(QMAGY)*((sM - qp(QV))/(qp(QRHO)*(sR - sM) - qm(QMAGZ)**2))
+	QsL(QV)    = qm(QV) - qm(QMAGZ)*qm(QMAGY)*((sM - qm(QV))/(qm(QRHO)*(sL - qm(QW))*(sL - sM) - qm(QMAGZ)**2))
+	QsR(QV)    = qp(QV) - qp(QMAGZ)*qp(QMAGY)*((sM - qp(QV))/(qp(QRHO)*(sR - qp(QW))*(sR - sM) - qm(QMAGZ)**2))
 	!Z dir
 	QsL(QW)    = sM
 	QsR(QW)    = sM
@@ -488,7 +492,7 @@ implicit none
 
 	!speeds
 	ssL = sM - abs(qm(QMAGZ))/sqrt(QsL(QRHO))
-	ssR = sM - abs(qp(QMAGZ))/sqrt(QsR(QRHO))
+	ssR = sM + abs(qp(QMAGZ))/sqrt(QsR(QRHO))
 
 	!----------------------------------------- ** states ------------------------------------------------------------------------------
 	!Dens
@@ -527,34 +531,34 @@ implicit none
 	if(sL .gt. 0.d0) then
 	flx = FL
 	choice = "FL"
-	elseif(sL .le. 0.d0 .and. ssL .ge. 0.d0) then
+	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
 	flx = FsL
 	choice = "FsL"
-	elseif(ssl .le. 0.d0 .and. sM .ge. 0.d0) then
+	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
 	flx = FssL
 	choice = "FssL"
-	elseif(sM .le. 0.d0 .and. ssR .ge. 0.d0) then
+	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
 	flx = FssR
 	choice = "FssR"
-	elseif(ssR .le. 0.d0 .and. sR .ge. 0.d0) then
+	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
 	flx = FsR
 	choice = "FsR"
 	else 
 	flx = FR
 	choice = "FR"
 	endif
-	do i = 1,QVAR
+	do i = 1, QVAR
 		if(isnan(flx(i))) then
-			write(*,*) "Left flux = ", FL
-			write(*,*) "Right Flux = ", FR
-			write(*,*) "qm = ", qm
-			write(*,*) "qp = ", qp
+			write(*,*) "Flux is nan in", i, "component"
+			write(*,*) "Flux = ", choice
+			write(*,*) "FL = ", FL
+			write(*,*) "FR = ", FR
+			write(*,*) "QL = ", qm
+			write(*,*) "QR = ", qp
 			write(*,*) "QsL = ", QsL
 			write(*,*) "QsR = ", QsR
 			write(*,*) "QssL = ", QssL
 			write(*,*) "QssR = ", QssR
-			write(*,*) "Flx = ", flx
-			write(*,*) "choice = ", choice
 			pause
 			return
 		endif
@@ -575,15 +579,16 @@ implicit none
 	real(rt)			  :: e
 
 	F = 0.d0
-	e 		 = Q(QPRES)/(Q(QRHO)*gamma_minus_1)
-	F(QRHO)  = Q(QRHO)*Q(QU)
-	F(QU)	 = Q(QRHO)*Q(QU)**2 + Q(QPRES) - Q(QMAGX)**2
-	F(QV)    = Q(QRHO)*Q(QU)*Q(QV) - Q(QMAGX)*Q(QMAGY)
-	F(QW)    = Q(QRHO)*Q(QU)*Q(QW) - Q(QMAGX)*Q(QMAGZ)
-	F(QPRES) = Q(QU)*(Q(QRHO)*e + Q(QPRES)) -Q(QMAGX)*dot_product(Q(QMAGX:QMAGZ),Q(QU:QW))
+	e 		 = (Q(QPRES)-0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/(gamma_minus_1)& 
+			   + 0.5d0*Q(QRHO)*dot_product(Q(QU:QW),Q(QU:QW)) + 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ))
+	F(URHO)  = Q(QRHO)*Q(QU)
+	F(UMX)	 = Q(QRHO)*Q(QU)**2 + Q(QPRES) - Q(QMAGX)**2
+	F(UMY)   = Q(QRHO)*Q(QU)*Q(QV) - Q(QMAGX)*Q(QMAGY)
+	F(UMZ)   = Q(QRHO)*Q(QU)*Q(QW) - Q(QMAGX)*Q(QMAGZ)
+	F(UEDEN) = Q(QU)*(e + Q(QPRES)) -Q(QMAGX)*dot_product(Q(QMAGX:QMAGZ),Q(QU:QW))
 	F(QMAGX) = 0.d0
-	F(QMAGY) = Q(QV)*Q(QMAGX) - Q(QMAGY)*Q(QU)
-	F(QMAGZ) = Q(QW)*Q(QMAGX) - Q(QMAGZ)*Q(QU)
+	F(QMAGY) = Q(QU)*Q(QMAGY) - Q(QMAGX)*Q(QV)
+	F(QMAGZ) = Q(QU)*Q(QMAGZ) - Q(QMAGX)*Q(QW)
 
 end subroutine primtofluxx
 
@@ -599,15 +604,16 @@ implicit none
 	real(rt)			  :: e
 
 	F = 0.d0
-	e 		 = Q(QPRES)/(Q(QRHO)*gamma_minus_1)
-	F(QRHO)  = Q(QRHO)*Q(QV)
-	F(QU)	 = Q(QRHO)*Q(QU)*Q(QV) - Q(QMAGX)*Q(QMAGY)
-	F(QV)    = Q(QRHO)*Q(QV)**2 + Q(QPRES) - Q(QMAGY)**2
-	F(QW)    = Q(QRHO)*Q(QV)*Q(QW) - Q(QMAGY)*Q(QMAGZ)
-	F(QPRES) = Q(QV)*(Q(QRHO)*e + Q(QPRES)) -Q(QMAGY)*dot_product(Q(QMAGX:QMAGZ),Q(QU:QW))
-	F(QMAGX) = Q(QU)*Q(QMAGY) - Q(QMAGX)*Q(QV)
+	e 		 = (Q(QPRES)-0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/(gamma_minus_1)& 
+			   + 0.5d0*Q(QRHO)*dot_product(Q(QU:QW),Q(QU:QW)) + 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ))
+	F(URHO)  = Q(QRHO)*Q(QV)
+	F(UMX)	 = Q(QRHO)*Q(QU)*Q(QV) - Q(QMAGX)*Q(QMAGY)
+	F(UMY)   = Q(QRHO)*Q(QV)**2 + Q(QPRES) - Q(QMAGY)**2
+	F(UMZ)   = Q(QRHO)*Q(QV)*Q(QW) - Q(QMAGY)*Q(QMAGZ)
+	F(UEDEN) = Q(QV)*(e + Q(QPRES)) -Q(QMAGY)*dot_product(Q(QMAGX:QMAGZ),Q(QU:QW))
+	F(QMAGX) = Q(QV)*Q(QMAGX) - Q(QMAGY)*Q(QU)
 	F(QMAGY) = 0.d0
-	F(QMAGZ) = Q(QW)*Q(QMAGY) - Q(QMAGZ)*Q(QV)
+	F(QMAGZ) = Q(QV)*Q(QMAGZ) - Q(QMAGY)*Q(QW)
 
 end subroutine primtofluxy
 
@@ -623,14 +629,15 @@ implicit none
 	real(rt)			  :: e
 
 	F = 0.d0
-	e 		 = Q(QPRES)/(Q(QRHO)*gamma_minus_1)
-	F(QRHO)  = Q(QRHO)*Q(QW)
-	F(QU)	 = Q(QRHO)*Q(QW)*Q(QU) - Q(QMAGX)*Q(QMAGZ)
-	F(QV)    = Q(QRHO)*Q(QW)*Q(QV) - Q(QMAGY)*Q(QMAGZ)
-	F(QW)    = Q(QRHO)*Q(QW)**2 + Q(QPRES) - Q(QMAGZ)**2
-	F(QPRES) = Q(QW)*(Q(QRHO)*e + Q(QPRES)) -Q(QMAGZ)*dot_product(Q(QMAGX:QMAGZ),Q(QU:QW))
-	F(QMAGX) = Q(QU)*Q(QMAGZ) - Q(QMAGX)*Q(QW)
-	F(QMAGY) = Q(QV)*Q(QMAGZ) - Q(QMAGY)*Q(QW)
+	e 		 = (Q(QPRES)-0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/(gamma_minus_1)& 
+			   + 0.5d0*Q(QRHO)*dot_product(Q(QU:QW),Q(QU:QW)) + 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ))
+	F(URHO)  = Q(QRHO)*Q(QW)
+	F(UMX)	 = Q(QRHO)*Q(QW)*Q(QU) - Q(QMAGX)*Q(QMAGZ)
+	F(UMY)   = Q(QRHO)*Q(QW)*Q(QV) - Q(QMAGY)*Q(QMAGZ)
+	F(UMZ)   = Q(QRHO)*Q(QW)**2 + Q(QPRES) - Q(QMAGZ)**2
+	F(UEDEN) = Q(QW)*(e + Q(QPRES)) -Q(QMAGZ)*dot_product(Q(QMAGX:QMAGZ),Q(QU:QW))
+	F(QMAGX) = Q(QW)*Q(QMAGX) - Q(QMAGZ)*Q(QU)
+	F(QMAGY) = Q(QW)*Q(QMAGY) - Q(QMAGZ)*Q(QV)
 	F(QMAGZ) = 0.d0
 
 end subroutine primtofluxz

@@ -26,7 +26,7 @@ implicit none
 	real(rt), intent(in)  :: qm(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 	real(rt), intent(in)  :: qp(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 	real(rt), intent(out) :: flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)	!Half Step Fluxes
-	real(rt), intent(out) :: elec(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3,4) !Half Step Electric Fields
+	real(rt), intent(out) :: elec(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,3,4) !Half Step Electric Fields
  
 	real(rt)			  :: um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !PtoC Vars
 	real(rt)			  :: up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
@@ -61,11 +61,24 @@ write(*,*) "Do Flux 1D"
 	!z-dir
 	call hlld(qm(:,:,:,:,3),qp(:,:,:,:,3),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx1D(:,:,:,:,3),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 3)
+write(*,*) "Check Flx1D x"
+call checkisnan(flx1D(:,:,:,:,1), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,QVAR)
+write(*,*) "Check Flx1D y"
+call checkisnan(flx1D(:,:,:,:,2), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,QVAR)
+write(*,*) "Check Flx1D z"
+call checkisnan(flx1D(:,:,:,:,3), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,QVAR)
+
 
 !Use "1D" fluxes To interpolate Temporary Edge Centered Electric Fields
 write(*,*) "Do Electric Field 1D"
 	call elec_interp(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+write(*,*) "Check E1D x"
+call checkisnan(Etemp(:,:,:,1,:), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,4)
+write(*,*) "Check E1D y"
+call checkisnan(Etemp(:,:,:,2,:), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,4)
+write(*,*) "Check E1D z"
+call checkisnan(Etemp(:,:,:,3,:), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,4)
 
 write(*,*) "Corner Couple Cons"
 !Corner Couple
@@ -76,7 +89,7 @@ write(*,*) "Corner Couple Mag"
 						Etemp, dx, dy, dz, dt) !Correct Magnetic Vars using Etemp
 
 
-!Prim to Cons
+!Cons To Prim
 do i = 1,3
 	call ConsToPrim(q_temp_L(:,:,:,:,i,1), cons_temp_L(:,:,:,:,i,1), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 	call ConsToPrim(q_temp_R(:,:,:,:,i,1), cons_temp_R(:,:,:,:,i,1), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
@@ -84,44 +97,57 @@ do i = 1,3
 	call ConsToPrim(q_temp_R(:,:,:,:,i,2), cons_temp_R(:,:,:,:,i,2), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 enddo
 
-write(*,*) "Do Flux 2D"
 !Calculate Flux 2D
 do i = 1,2
 	!x-dir
-	write(*,*) i, "correction", "x"
 	call hlld(q_temp_L(:,:,:,:,1,i),q_temp_R(:,:,:,:,1,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,1,i),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 1)
-	write(*,*) i, "correction", "y"
+	write(*,*) "Check Flux 2D x", i
+	call checkisnan(flx2D(:,:,:,:,1,i), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, QVAR)
 	!y-dir	
 	call hlld(q_temp_L(:,:,:,:,2,i),q_temp_R(:,:,:,:,2,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,2,i),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 2)
-	write(*,*) i, "correction", "z"
+	write(*,*) "Check Flux 2D y", i
+	call checkisnan(flx2D(:,:,:,:,2,i), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, QVAR)
 	!z-dir
 	call hlld(q_temp_L(:,:,:,:,3,i),q_temp_R(:,:,:,:,3,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,3,i),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 3)
+	write(*,*) "Check Flux 2D z", i
+	call checkisnan(flx2D(:,:,:,:,3,i), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, QVAR)
 enddo
 	
 !Use Averaged 2D fluxes to interpolate temporary Edge Centered Electric Fields, reuse "flx1D"
 	flx1D(:,:,:,:,:) = 0.5d0*(flx2D(:,:,:,:,:,1) + flx2D(:,:,:,:,:,2))
-Write(*,*) "Do Electric 2D"	
+do i = 1, 3
+	write(*,*) "Checking average flux, direction ", i
+	call checkisnan(flx1D(:,:,:,:,i),  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, QVAR)
+enddo
 	call elec_interp(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+write(*,*) "Check E2D x"
+call checkisnan(Etemp(:,:,:,1,:), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,4)
+write(*,*) "Check E2D y"
+call checkisnan(Etemp(:,:,:,2,:), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,4)
+write(*,*) "Check E2D z"
+call checkisnan(Etemp(:,:,:,3,:), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,4)
 
-write(*,*) "Do Half step cons"
 !Half Step conservative vars
 	call half_step(cons_half_L, cons_half_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
-			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
+			flx2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 write(*,*) "Do Half step mag"
 	call half_step_mag(cons_half_L, cons_half_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 			   Etemp, dx, dy, dz, dt)
 do i = 1,3
-	call ConsToPrim(q_half_L(:,:,:,:,i), cons_half_R(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	write(*,*) "Check Half Step UL", i
+	call checkisnan(cons_half_L(:,:,:,:,i),  q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, QVAR)
+	write(*,*) "Check Half Step UR", i
+	call checkisnan(cons_half_R(:,:,:,:,i),  q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, QVAR)
+	call ConsToPrim(q_half_L(:,:,:,:,i), cons_half_L(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 	call ConsToPrim(q_half_R(:,:,:,:,i), cons_half_R(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 enddo
 
 !Final Fluxes
 flx = 0.d0
-Write(*,*) "Calculate Final Fluxes"
 	!x-dir
 	call hlld(cons_half_L(:,:,:,:,1),cons_half_R(:,:,:,:,1),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,1),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 1)
@@ -138,6 +164,12 @@ Write(*,*) "Calculate Final Fluxes"
 !Final Electric Field Update
 	call elec_interp(elec, q2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+write(*,*) "Check E x"
+call checkisnan(elec(:,:,:,1,:), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,4)
+write(*,*) "Check E y"
+call checkisnan(elec(:,:,:,2,:), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,4)
+write(*,*) "Check E z"
+call checkisnan(elec(:,:,:,3,:), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,4)
 
 end subroutine corner_transport
 
@@ -146,7 +178,7 @@ end subroutine corner_transport
 subroutine PrimToCons(q, u, q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3)
 
  use amrex_fort_module, only : rt => amrex_real
- use meth_params_module, only : QVAR, QRHO, QU, QV, QW, QMAGX, QMAGZ, small_dens
+ use meth_params_module
 
 implicit none
 
@@ -160,16 +192,17 @@ implicit none
  	 do j = q_l2,q_h2
  		 do i = q_l1, q_h1
 			if(q(i,j,k,QRHO).le.small_dens) then
-			u(i,j,k,QRHO) = small_dens
+			u(i,j,k,URHO) = small_dens
 			else
- 			u(i,j,k,QRHO)  = q(i,j,k,QRHO)
+ 			u(i,j,k,URHO)  = q(i,j,k,QRHO)
 			endif
- 			u(i,j,k,QU)    = q(i,j,k,QRHO)*q(i,j,k,QU)
- 			u(i,j,k,QV)    = q(i,j,k,QRHO)*q(i,j,k,QV)
- 			u(i,j,k,QW)    = q(i,j,k,QRHO)*q(i,j,k,QW)
-			u(i,j,k,QPRES) = q(i,j,k,QPRES)/(gamma_minus_1*q(i,j,k,QRHO)) &
-							 + 0.5d0*(dot_product(q(i,j,k,QU:QW),q(i,j,k,QU:QW))) !Energy
-			u(i,j,k,UEINT) = q(i,j,k,QPRES)/(gamma_minus_1*q(i,j,k,QRHO))
+ 			u(i,j,k,UMX)    = q(i,j,k,QRHO)*q(i,j,k,QU)
+ 			u(i,j,k,UMY)    = q(i,j,k,QRHO)*q(i,j,k,QV)
+ 			u(i,j,k,UMZ)    = q(i,j,k,QRHO)*q(i,j,k,QW)
+			u(i,j,k,UEDEN) = (q(i,j,k,QPRES)-0.5d0*(dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ))))/(gamma_minus_1) &
+							  + 0.5d0*q(i,j,k,QRHO)*dot_product(q(i,j,k,QU:QW),q(i,j,k,QU:QW)) &
+							  + 0.5d0*(dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ)))
+			u(i,j,k,UEINT) = (q(i,j,k,QPRES) - 0.5d0*dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ)))/(gamma_minus_1)
 			u(i,j,k,QMAGX:QMAGZ) = q(i,j,k,QMAGX:QMAGZ)
 		 enddo
 	 enddo
@@ -197,13 +230,16 @@ implicit none
 			if(q(i,j,k,QRHO).le.small_dens) then
 			q(i,j,k,QRHO) = small_dens
 			else
- 			q(i,j,k,QRHO)  = u(i,j,k,QRHO)
+ 			q(i,j,k,QRHO)  = u(i,j,k,URHO)
 			endif
- 			q(i,j,k,QU)    = u(i,j,k,QU)/q(i,j,k,QRHO)
- 			q(i,j,k,QV)    = u(i,j,k,QV)/q(i,j,k,QRHO)
- 			q(i,j,k,QW)    = u(i,j,k,QW)/q(i,j,k,QRHO)
-			q(i,j,k,QPRES) = u(i,j,k,UEINT)*(gamma_minus_1*q(i,j,k,QRHO)) !Gas Pressure
-			q(i,j,k,QMAGX:QMAGZ) = q(i,j,k,QMAGX:QMAGZ)
+ 			q(i,j,k,QU)    = u(i,j,k,UMX)/q(i,j,k,QRHO)
+ 			q(i,j,k,QV)    = u(i,j,k,UMY)/q(i,j,k,QRHO)
+ 			q(i,j,k,QW)    = u(i,j,k,UMZ)/q(i,j,k,QRHO)
+			q(i,j,k,QPRES) = (u(i,j,k,UEDEN) - 0.5d0*q(i,j,k,QRHO)*dot_product(q(i,j,k,QU:QW),q(i,j,k,QU:QW))& 
+							 - 0.5d0*dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ)))*gamma_minus_1 !Thermo Pres
+			q(i,j,k,QPRES) = q(i,j,k,QPRES) + 0.5d0*dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ)) !Total Pressure
+			q(i,j,k,UEINT) = u(i,j,k,UEINT)
+			q(i,j,k,QMAGX:QMAGZ) = u(i,j,k,QMAGX:QMAGZ)
 		 enddo
 	 enddo
  enddo
@@ -412,6 +448,11 @@ implicit none
 !left state				
 				uL(i,j,k,QRHO:QPRES,1) = um(i,j,k,QRHO:QPRES,1) - 0.5d0*dt/dx*(flx(i,j+1,k,QRHO:QPRES,2,2) - flx(i,j,k,QRHO:QPRES,2,2)) &
 											- 0.5d0*dt/dx*(flx(i,j,k+1,QRHO:QPRES,3,1) - flx(i,j,k,QRHO:QPRES,3,1))
+				if(isnan(uL(i,j,k,QRHO,1))) then
+					write(*,*) "Nans ", uL(i,j,k,QRHO,1), "um = ", um(i,j,k,QRHO,1), "flux", flx(i, j+1, k, QRHO, 2, 2), flx(i,j,k,QRHO, 2,2), &
+						flx(i,j,k+1,QRHO,3,1), flx(i,j,k,QRHO,3, 1), i, j, k
+					pause
+				endif
 				uL(i,j,k,QRHO:QPRES,2) = um(i,j,k,QRHO:QPRES,2) - 0.5d0*dt/dy*(flx(i+1,j,k,QRHO:QPRES,1,1) - flx(i,j,k,QRHO:QPRES,1,1)) &
 											- 0.5d0*dt/dy*(flx(i,j,k+1,QRHO:QPRES,3,2) - flx(i,j,k,QRHO:QPRES,3,2))
 				uL(i,j,k,QRHO:QPRES,3) = um(i,j,k,QRHO:QPRES,3) - 0.5d0*dt/dz*(flx(i+1,j,k,QRHO:QPRES,1,2) - flx(i,j,k,QRHO:QPRES,1,2)) &

@@ -43,9 +43,9 @@ contains
 
 	real(rt) 				:: 		dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7), temp1(7)
 	real(rt)				:: 		temp(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1,8), smhd(7)
-	real(rt)				::      tbx(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
-	real(rt)				::      tby(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
-	real(rt)				::      tbz(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
+	real(rt)				::      tbx(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
+	real(rt)				::      tby(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
+	real(rt)				::      tbz(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
     real(rt)				:: 		dt_over_a
     integer          		:: 		ii,ibx,iby,ibz, i , j, k
 
@@ -63,6 +63,8 @@ contains
 		tbx(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3) = bx(:,:,:) !Face Centered
 		tby(byl1:byh1, byl2:byh2, byl3:byh3) = by(:,:,:)
 		tbz(bzl1:bxh1, bzl2:bxh2, bzl3:bzh3) = bz(:,:,:)
+		write(*,*) bz
+		pause
 !-------------------- Fill Boundaries ---------------------------------------------------
 		temp(s_l1-1,s_l2-1,s_l3-1,1:5) = s(s_l1,s_l2,s_l3,QRHO:QPRES)
 		temp(s_l1-1,s_l2-1,s_l3-1,6:8) = s(s_l1,s_l2,s_l3,QMAGX:QMAGZ)
@@ -174,7 +176,7 @@ contains
 				smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
 				smhd(6) = temp(i,j,k,3)
 				smhd(7) = temp(i,j,k,4)
-				smhd 	= smhd*(tbx(i,j,k) - tbx(i-1,j,k))/dx !cross-talk of normal magnetic field direction
+				smhd 	= smhd*(tbx(i+1,j,k) - tbx(i,j,k))/dx !cross-talk of normal magnetic field direction
 	!Interpolate
 		!Plus
 					!!Using HLLD so sum over all eigenvalues
@@ -229,7 +231,7 @@ contains
 				smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
 				smhd(6) = temp(i,j,k,2)
 				smhd(7) = temp(i,j,k,4)
-				smhd 	= smhd*(tby(i,j,k) - tby(i,j-1,k))/dy !cross-talk of normal magnetic field direction
+				smhd 	= smhd*(tby(i,j+1,k) - tby(i,j,k))/dy !cross-talk of normal magnetic field direction
 	!Interpolate
 				Ip(i,j,k,QRHO:QPRES,2) 	= temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
@@ -275,7 +277,8 @@ contains
 				smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
 				smhd(6) = temp(i,j,k,2)
 				smhd(7) = temp(i,j,k,3)
-				smhd 	= smhd*(tbz(i,j,k) - tbz(i,j,k-1))/dz !cross-talk of normal magnetic field direction
+				smhd 	= smhd*(tbz(i,j,k+1) - tbz(i,j,k))/dz !cross-talk of normal magnetic field direction
+				write(*,*) smhd
 	!Interpolate
 				Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
@@ -289,10 +292,18 @@ contains
 				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
+				if(isnan(Im(i,j,k,QRHO,3))) then
+					write(*,*) "rho is nan z ", temp(i,j,k,1), summ(1), smhd(1), tbz(i,j,k+1), tbz(i,j,k)
+					write(*,*) "iterator", i, j, k
+					write(*,*) "limits ", "x ", s_l1,s_h1, "y ", s_l2,s_h2, "z ", s_l3, s_h3
+					do ii =1, 7
+						write(*,*) "lam", lam(ii)
+					enddo
+					pause
+				endif
 			enddo
 		enddo
 	enddo
-
 !Need to add source terms, heating cooling, gravity, etc.
 
 	end subroutine plm
@@ -332,7 +343,7 @@ contains
 	real(rt)				:: cfx, cfy, cfz, cax, cay, caz, csx, csy, csz, ca, as
 
 	!Speeeeeeeedssssss
-	as = gamma_const * Q(QPRES)/Q(QRHO)
+	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
 	!Alfven
 	ca  = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cax = (Q(QMAGX)**2)/Q(QRHO)
@@ -349,31 +360,31 @@ contains
 
 	if(dir.eq.1) then	
 		!Ax eigenvalues
-		lam(1) = Q(QU) - cfx
-		lam(2) = Q(QU) - cax
-		lam(3) = Q(QU) - csx
+		lam(1) = Q(QU) - sqrt(cfx)
+		lam(2) = Q(QU) - sqrt(cax)
+		lam(3) = Q(QU) - sqrt(csx)
 		lam(4) = Q(QU)
-		lam(5) = Q(QU) + csx 
-		lam(6) = Q(QU) + cax
-		lam(7) = Q(QU) + cfx
+		lam(5) = Q(QU) + sqrt(csx)
+		lam(6) = Q(QU) + sqrt(cax)
+		lam(7) = Q(QU) + sqrt(cfx)
 	elseif(dir.eq.2) then
 		!Ay eigenvalues
-		lam(1) = Q(QV) - cfy
-		lam(2) = Q(QV) - cay
-		lam(3) = Q(QV) - csy
+		lam(1) = Q(QV) - sqrt(cfy)
+		lam(2) = Q(QV) - sqrt(cay)
+		lam(3) = Q(QV) - sqrt(csy)
 		lam(4) = Q(QV)
-		lam(5) = Q(QV) + csy 
-		lam(6) = Q(QV) + cay
-		lam(7) = Q(QV) + cfy
+		lam(5) = Q(QV) + sqrt(csy)
+		lam(6) = Q(QV) + sqrt(cay)
+		lam(7) = Q(QV) + sqrt(cfy)
 	else
 		!Az eigenvalues
-		lam(1) = Q(QW) - cfz
-		lam(2) = Q(QW) - caz
-		lam(3) = Q(QW) - csz
+		lam(1) = Q(QW) - sqrt(cfz)
+		lam(2) = Q(QW) - sqrt(caz)
+		lam(3) = Q(QW) - sqrt(csz)
 		lam(4) = Q(QW)
-		lam(5) = Q(QW) + csz 
-		lam(6) = Q(QW) + caz
-		lam(7) = Q(QW) + cfz
+		lam(5) = Q(QW) + sqrt(csz)
+		lam(6) = Q(QW) + sqrt(caz)
+		lam(7) = Q(QW) + sqrt(cfz)
 	endif
 	end subroutine evals
 	
@@ -394,7 +405,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, bety, betz
 
 	!Speeeeeeeedssssss
-	as = gamma_const * Q(QPRES)/Q(QRHO)
+	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cax = (Q(QMAGX)**2)/Q(QRHO)
@@ -403,8 +414,8 @@ contains
 	!Fassssst
 	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax))
 	!useful constants
-	alf = (as - csx)/(cfx - csx)
-	als = (cfx - as)/(cfx - csx)
+	alf = sqrt((as - csx)/(cfx - csx))
+	als = sqrt((cfx - as)/(cfx - csx))
 	if(abs(Q(QMAGY)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		bety = 1.d0/sqrt(2.d0)
 		betz = bety
@@ -412,11 +423,11 @@ contains
 		bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 		betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 	endif
-	cff = cfx*alf
-	css = csx*als
+	cff = sqrt(cfx)*alf
+	css = sqrt(csx)*als
 	S = sign(1.0d0, Q(QMAGX))
-	Qf = cfx*alf*S
-	Qs = csx*als*S
+	Qf = sqrt(cfx)*alf*S
+	Qs = sqrt(csx)*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	N = 0.5d0/as
@@ -447,7 +458,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, betz
 
 	!Speeeeeeeedssssss
-	as = gamma_const * Q(QPRES)/Q(QRHO)
+	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cay = (Q(QMAGY)**2)/Q(QRHO)
@@ -456,8 +467,8 @@ contains
 	!Fassssst
 	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!useful constants
-	alf = (as - csy)/(cfy - csy)
-	als = (cfy - as)/(cfy - csy)
+	alf = sqrt((as - csy)/(cfy - csy))
+	als = sqrt((cfy - as)/(cfy - csy))
 	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		betx = 1.d0/sqrt(2.d0)
 		betz = betx
@@ -465,11 +476,11 @@ contains
 		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
 		betz = Q(QMAGZ)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
 	endif
-	cff = cfy*alf
-	css = csy*als
+	cff = sqrt(cfy)*alf
+	css = sqrt(csy)*als
 	S = sign(1.0d0, Q(QMAGY))
-	Qf = cfy*alf*S
-	Qs = csy*als*S
+	Qf = sqrt(cfy)*alf*S
+	Qs = sqrt(csy)*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	N = 0.5d0/as
@@ -501,7 +512,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, bety
 
 	!Speeeeeeeedssssss
-	as = gamma_const * Q(QPRES)/Q(QRHO)
+	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	caz = (Q(QMAGZ)**2)/Q(QRHO)
@@ -510,8 +521,8 @@ contains
 	!Fassssst
 	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz))
 	!useful constants
-	alf = (as - csz)/(cfz - csz)
-	als = (cfz - as)/(cfz - csz)
+	alf = sqrt((as - csz)/(cfz - csz))
+	als = sqrt((cfz - as)/(cfz - csz))
 	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGY)).le. 1.d-14) then
 		betx = 1.d0/sqrt(2.d0)
 		bety = betx
@@ -519,11 +530,11 @@ contains
 		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 		bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 	endif
-	cff = cfz*alf
-	css = csz*als
+	cff = sqrt(cfz)*alf
+	css = sqrt(csz)*als
 	S = sign(1.0d0, Q(QMAGZ))
-	Qf = cfz*alf*S
-	Qs = csz*als*S
+	Qf = sqrt(cfz)*alf*S
+	Qs = sqrt(csz)*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	N = 0.5d0/as
@@ -554,7 +565,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, bety, betz
 
 	!Speeeeeeeedssssss
-	as = gamma_const * Q(QPRES)/Q(QRHO)
+	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cax = (Q(QMAGX)**2)/Q(QRHO)
@@ -563,8 +574,8 @@ contains
 	!Fassssst
 	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax))
 	!useful constants
-	alf = (as - csx)/(cfx - csx)
-	als = (cfx - as)/(cfx - csx)
+	alf = sqrt((as - csx)/(cfx - csx))
+	als = sqrt((cfx - as)/(cfx - csx))
 	if(abs(Q(QMAGY)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		bety = 1.d0/sqrt(2.d0)
 		betz = bety
@@ -572,11 +583,11 @@ contains
 		bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 		betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 	endif
-	cff = cfx*alf
-	css = csx*als
+	cff = sqrt(cfx)*alf
+	css = sqrt(csx)*als
 	S = sign(1.0d0, Q(QMAGX))
-	Qf = cfx*alf*S
-	Qs = csx*als*S
+	Qf = sqrt(cfx)*alf*S
+	Qs = sqrt(csx)*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	
@@ -607,7 +618,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, betz
 
 	!Speeeeeeeedssssss
-	as = gamma_const * Q(QPRES)/Q(QRHO)
+	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cay = (Q(QMAGY)**2)/Q(QRHO)
@@ -616,8 +627,8 @@ contains
 	!Fassssst
 	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!useful constants
-	alf = (as - csy)/(cfy - csy)
-	als = (cfy - as)/(cfy - csy)
+	alf = sqrt((as - csy)/(cfy - csy))
+	als = sqrt((cfy - as)/(cfy - csy))
 	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		betx = 1.d0/sqrt(2.d0)
 		betz = betx
@@ -625,11 +636,11 @@ contains
 		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
 		betz = Q(QMAGZ)/(sqrt(Q(QMAGX)**2 + Q(QMAGZ)**2))
 	endif
-	cff = cfy*alf
-	css = csy*als
+	cff = sqrt(cfy)*alf
+	css = sqrt(csy)*als
 	S = sign(1.0d0, Q(QMAGY))
-	Qf = cfy*alf*S
-	Qs = csy*als*S
+	Qf = sqrt(cfy)*alf*S
+	Qs = sqrt(csy)*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	
@@ -660,7 +671,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, bety
 
 	!Speeeeeeeedssssss
-	as = gamma_const * Q(QPRES)/Q(QRHO)
+	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	caz = (Q(QMAGZ)**2)/Q(QRHO)
@@ -669,8 +680,8 @@ contains
 	!Fassssst
 	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz))
 	!useful constants
-	alf = (as - csz)/(cfz - csz)
-	als = (cfz - as)/(cfz - csz)
+	alf = sqrt((as - csz)/(cfz - csz))
+	als = sqrt((cfz - as)/(cfz - csz))
 	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGY)).le. 1.d-14) then
 		betx = 1.d0/sqrt(2.d0)
 		bety = betx
@@ -678,11 +689,11 @@ contains
 		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 		bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 	endif
-	cff = cfz*alf
-	css = csz*als
+	cff = sqrt(cfz)*alf
+	css = sqrt(csz)*als
 	S = sign(1.0d0, Q(QMAGZ))
-	Qf = cfz*alf*S
-	Qs = csz*als*S
+	Qf = sqrt(cfz)*alf*S
+	Qs = sqrt(csz)*als*S
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 				!   w - cf 				w - Caz 				w - cs			w 		w + cs			w + Caz					w + cf
