@@ -187,38 +187,38 @@ implicit none
 	if(sL .gt. 0.d0) then
 	flx = FL
 	choice = "FL"
-	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
-	flx = FsL
-	choice = "FsL"
-	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
-	flx = FssL
-	choice = "FssL"
-	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
-	flx = FssR
-	choice = "FssR"
-	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
-	flx = FsR
-	choice = "FsR"
+	!elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
+	!flx = FsL
+	!choice = "FsL"
+	!elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
+	!flx = FssL
+	!choice = "FssL"
+	!elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
+	!flx = FssR
+	!choice = "FssR"
+	!elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
+	!flx = FsR
+	!choice = "FsR"
 	else 
 	flx = FR
 	choice = "FR"
 	endif
-	do i = 1, QVAR
-		if(isnan(flx(i))) then
-			write(*,*) "Flux is nan in", i, "component"
-			write(*,*) "Flux = ", choice
-			write(*,*) "FL = ", FL
-			write(*,*) "FR = ", FR
-			write(*,*) "QL = ", qm
-			write(*,*) "QR = ", qp
-			write(*,*) "QsL = ", QsL
-			write(*,*) "QsR = ", QsR
-			write(*,*) "QssL = ", QssL
-			write(*,*) "QssR = ", QssR
-			pause
-			return
-		endif
-	enddo
+!	do i = 1, QVAR
+!		if(isnan(flx(i))) then
+!			write(*,*) "Flux is nan in", i, "component"
+!			write(*,*) "Flux = ", choice
+!			write(*,*) "FL = ", FL
+!			write(*,*) "FR = ", FR
+!			write(*,*) "QL = ", qm
+!			write(*,*) "QR = ", qp
+!			write(*,*) "QsL = ", QsL
+!			write(*,*) "QsR = ", QsR
+!			write(*,*) "QssL = ", QssL
+!			write(*,*) "QssR = ", QssR
+!			pause
+!			return
+!		endif
+!	enddo
 end subroutine hlldx
 
 !============================================================= Y Direction =================================================================
@@ -358,38 +358,38 @@ implicit none
 	if(sL .gt. 0.d0) then
 	flx = FL
 	choice = "FL"
-	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
-	flx = FsL
-	choice = "FsL"
-	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
-	flx = FssL
-	choice = "FssL"
-	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
-	flx = FssR
-	choice = "FssR"
-	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
-	flx = FsR
-	choice = "FsR"
+	!elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
+	!flx = FsL
+	!choice = "FsL"
+	!elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
+	!flx = FssL
+	!choice = "FssL"
+	!elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
+	!flx = FssR
+	!choice = "FssR"
+	!elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
+	!flx = FsR
+	!choice = "FsR"
 	else 
 	flx = FR
 	choice = "FR"
 	endif
-	do i = 1, QVAR
-		if(isnan(flx(i))) then
-			write(*,*) "Flux is nan in", i, "component"
-			write(*,*) "Flux = ", choice
-			write(*,*) "FL = ", FL
-			write(*,*) "FR = ", FR
-			write(*,*) "QL = ", qm
-			write(*,*) "QR = ", qp
-			write(*,*) "QsL = ", QsL
-			write(*,*) "QsR = ", QsR
-			write(*,*) "QssL = ", QssL
-			write(*,*) "QssR = ", QssR
-			pause
-			return
-		endif
-	enddo
+!	do i = 1, QVAR
+!		if(isnan(flx(i))) then
+!			write(*,*) "Flux is nan in", i, "component"
+!			write(*,*) "Flux = ", choice
+!			write(*,*) "FL = ", FL
+!			write(*,*) "FR = ", FR
+!			write(*,*) "QL = ", qm
+!			write(*,*) "QR = ", qp
+!			write(*,*) "QsL = ", QsL
+!			write(*,*) "QsR = ", QsR
+!			write(*,*) "QssL = ", QssL
+!			write(*,*) "QssR = ", QssR
+!			pause
+!			return
+!		endif
+!	enddo
 end subroutine hlldy
 
 !============================================================= Z Direction =================================================================
@@ -531,38 +531,38 @@ implicit none
 	if(sL .gt. 0.d0) then
 	flx = FL
 	choice = "FL"
-	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
-	flx = FsL
-	choice = "FsL"
-	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
-	flx = FssL
-	choice = "FssL"
-	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
-	flx = FssR
-	choice = "FssR"
-	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
-	flx = FsR
-	choice = "FsR"
+!	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
+!	flx = FsL
+!	choice = "FsL"
+!	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
+!	flx = FssL
+!	choice = "FssL"
+!	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
+!	flx = FssR
+!	choice = "FssR"
+!	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
+!	flx = FsR
+!	choice = "FsR"
 	else 
 	flx = FR
 	choice = "FR"
 	endif
-	do i = 1, QVAR
-		if(isnan(flx(i))) then
-			write(*,*) "Flux is nan in", i, "component"
-			write(*,*) "Flux = ", choice
-			write(*,*) "FL = ", FL
-			write(*,*) "FR = ", FR
-			write(*,*) "QL = ", qm
-			write(*,*) "QR = ", qp
-			write(*,*) "QsL = ", QsL
-			write(*,*) "QsR = ", QsR
-			write(*,*) "QssL = ", QssL
-			write(*,*) "QssR = ", QssR
-			pause
-			return
-		endif
-	enddo
+!	do i = 1, QVAR
+!		if(isnan(flx(i))) then
+!			write(*,*) "Flux is nan in", i, "component"
+!			write(*,*) "Flux = ", choice
+!			write(*,*) "FL = ", FL
+!			write(*,*) "FR = ", FR
+!			write(*,*) "QL = ", qm
+!			write(*,*) "QR = ", qp
+!			write(*,*) "QsL = ", QsL
+!			write(*,*) "QsR = ", QsR
+!			write(*,*) "QssL = ", QssL
+!			write(*,*) "QssR = ", QssR
+!			pause
+!			return
+!		endif
+!	enddo
 end subroutine hlldz
 
 !====================================================== Fluxes ================================================================================

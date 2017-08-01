@@ -31,7 +31,7 @@ contains
     integer , intent(in   ) ::  	byl1, byl2, byl3, byh1, byh2, byh3
     integer , intent(in   ) ::  	bzl1, bzl2, bzl3, bzh1, bzh2, bzh3
  
-    real(rt), intent(in   ) ::      s( s_l1: s_h1, s_l2: s_h2, s_l3: s_h3, QVAR) !Primitive Vars
+    real(rt), intent(in   ) ::      s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QVAR) !Primitive Vars
     real(rt), intent(in   ) ::      bx(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3)	!Face Centered Magnetic Fields
     real(rt), intent(in   ) ::      by(byl1:byh1, byl2:byh2, byl3:byh3)
     real(rt), intent(in   ) ::      bz(bzl1:bxh1, bzl2:bxh2, bzl3:bzh3)
@@ -41,7 +41,7 @@ contains
 
     real(rt), intent(in   ) :: 		dx,dy,dz,dt,a_old
 
-	real(rt) 				:: 		dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7), temp1(7)
+	real(rt) 				:: 		dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7)
 	real(rt)				:: 		temp(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1,8), smhd(7)
 	real(rt)				::      tbx(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
 	real(rt)				::      tby(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
@@ -63,8 +63,8 @@ contains
 		tbx(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3) = bx(:,:,:) !Face Centered
 		tby(byl1:byh1, byl2:byh2, byl3:byh3) = by(:,:,:)
 		tbz(bzl1:bxh1, bzl2:bxh2, bzl3:bzh3) = bz(:,:,:)
-		write(*,*) bz
-		pause
+!		write(*,*) bz
+!		pause
 !-------------------- Fill Boundaries ---------------------------------------------------
 		temp(s_l1-1,s_l2-1,s_l3-1,1:5) = s(s_l1,s_l2,s_l3,QRHO:QPRES)
 		temp(s_l1-1,s_l2-1,s_l3-1,6:8) = s(s_l1,s_l2,s_l3,QMAGX:QMAGZ)
@@ -156,8 +156,6 @@ contains
 				reig = 0.d0
 				leig = 0.d0
 				lam = 0.d0
-				temp1(1:5) = temp(i,j,k,1:ibx-1)
-				temp1(6:7) = temp(i,j,k,ibx+1:8)
 				!Skip Bx
 				dQL(1:5) = 	temp(i,j,k,1:ibx-1) - temp(i-1,j,k,1:ibx-1) !gas
 				dQL(6:7) = 	temp(i,j,k,ibx+1:8) - temp(i-1,j,k,ibx+1:8)	!mag			
@@ -165,10 +163,14 @@ contains
 				dQR(6:7) = 	temp(i+1,j,k,ibx+1:8) - temp(i,j,k,ibx+1:8)				
 				do ii = 1,7
 					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					if(isnan(dW(ii))) then
+						write(*,*), "nan slope at ii = ", ii, dQL(ii), dQR(ii), temp(i,j,k,ii), temp(i-1,j,k,ii), temp(i+1,j,k,ii)
+						pause
+					endif
 				enddo
-				call evals(lam, temp1, 1) !!X dir eigenvalues
-				call lvecx(leig,temp1)    !! left eigenvectors
-				call rvecx(reig,temp1)    !!right eigenvectors
+				call evals(lam, s(i,j,k,:), 1) !!X dir eigenvalues
+				call lvecx(leig,s(i,j,k,:))    !! left eigenvectors
+				call rvecx(reig,s(i,j,k,:))    !!right eigenvectors
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
 				smhd(3) = temp(i,j,k,iby)/temp(i,j,k,1)
@@ -181,19 +183,25 @@ contains
 		!Plus
 					!!Using HLLD so sum over all eigenvalues
 				do ii = 1,7
-					if(lam(ii).gt.0.d0) then
 						summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
-					endif
 				enddo
 				Ip(i,j,k,QRHO:QPRES,1) 	 = temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 				Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
 				Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
+				if(isnan(Ip(i,j,k,QRHO,1))) then
+					write(*,*) "rho is nan z ", temp(i,j,k,1), summ(1), smhd(1), tbx(i+1,j,k), tbx(i,j,k)
+					write(*,*) "iterator", i, j, k
+					write(*,*) "limits ", "x ", s_l1,s_h1, "y ", s_l2,s_h2, "z ", s_l3, s_h3
+					do ii =1, 7
+						write(*,*) "lam", lam(ii)
+					enddo
+					pause
+				endif
+
 		!Minus
 				summ = 0.d0
 				do ii = 1,7
-					if(lam(ii).lt.0.d0) then
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
-					endif
 				enddo
 				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 				Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
@@ -205,24 +213,27 @@ contains
 				dQL = 0.d0
 				dQR = 0.d0
 				dW = 0.d0
+				reig = 0.d0
+				leig = 0.d0
+				lam = 0.d0
 				!Skip By
-				temp1(1:6) = temp(i,j,k,1:ibx)
-				temp1(7) = temp(i,j,k,8)
 				dQL(1:6) = 	temp(i,j,k,1:ibx) - temp(i,j-1,k,1:ibx) !gas + bx
 				dQL(7) = 	temp(i,j,k,8) - temp(i,j-1,k,iby+1)		!bz			
 				dQR(1:6) = 	temp(i,j+1,k,1:ibx) - temp(i,j,k,1:ibx)
 				dQR(7) = 	temp(i,j+1,k,ibz) - temp(i,j,k,ibz)				
 				do ii = 1,7
 					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					if(isnan(dW(ii))) then
+						write(*,*), "nan slope at ii = ", ii, dQL(ii), dQR(ii), temp(i,j,k,ii), temp(i,j-1,k,ii), temp(i,j+1,k,ii)
+						pause
+					endif
 				enddo
-				call evals(lam, temp1, 2) !!Y dir eigenvalues
-				call lvecy(leig,temp1)    !!left eigenvectors
-				call rvecy(reig,temp1)    !!right eigenvectors
+				call evals(lam, s(i,j,k,:), 2) !!Y dir eigenvalues
+				call lvecy(leig,s(i,j,k,:))    !!left eigenvectors
+				call rvecy(reig,s(i,j,k,:))    !!right eigenvectors
 				!!Using HLLD so sum over all eigenvalues
 				do ii = 1,7
-					if(lam(ii).gt.0.d0) then
 						summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
-					endif
 				enddo
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -239,9 +250,7 @@ contains
 				Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
 				summ = 0.d0
 				do ii = 1,7
-					if(lam(ii).lt.0.d0) then
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
-					endif
 				enddo
 				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
@@ -254,21 +263,27 @@ contains
 				dQL = 0.d0
 				dQR = 0.d0
 				dW = 0.d0
+				reig = 0.d0
+				leig = 0.d0
+				lam = 0.d0
 				!Skip Bz
-				temp1(1:7) = temp(i,j,k,1:iby)
 				dQL(1:7) = 	temp(i,j,k,1:iby) - temp(i,j,k-1,1:iby) 
 				dQR(1:7) = 	temp(i,j,k+1,1:iby) - temp(i,j,k,1:iby)
 				do ii = 1,7
 					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
 				enddo
-				call evals(lam, temp1, 3) !!Z dir eigenvalues
-				call lvecz(leig,temp1)    !!left eigenvectors
-				call rvecz(reig,temp1)    !!right eigenvectors
+				call evals(lam, s(i,j,k,:), 3) !!Z dir eigenvalues
+				do ii = 1,7 
+					if(isnan(lam(ii))) then
+						write(*,*) "nan lambdas ", "s(i,j,k,:) = ", s(i,j,k,:)
+						pause
+					endif
+				enddo
+				call lvecz(leig,s(i,j,k,:))    !!left eigenvectors
+				call rvecz(reig,s(i,j,k,:))    !!right eigenvectors
 				!!Characteristic Tracing
 				do ii = 1,7
-					if(lam(ii).gt.0.d0) then
 						summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
-					endif
 				enddo
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -278,34 +293,27 @@ contains
 				smhd(6) = temp(i,j,k,2)
 				smhd(7) = temp(i,j,k,3)
 				smhd 	= smhd*(tbz(i,j,k+1) - tbz(i,j,k))/dz !cross-talk of normal magnetic field direction
-				write(*,*) smhd
 	!Interpolate
 				Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Ip(i,j,k,QMAGZ,3) 		= temp(i,j,k+1,ibz) !! Bz stuff
 				summ = 0.d0
 				do ii = 1,7
-					if(lam(ii).lt.0.d0) then
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
-					endif
 				enddo
 				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
-				Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 				if(isnan(Im(i,j,k,QRHO,3))) then
-					write(*,*) "rho is nan z ", temp(i,j,k,1), summ(1), smhd(1), tbz(i,j,k+1), tbz(i,j,k)
-					write(*,*) "iterator", i, j, k
-					write(*,*) "limits ", "x ", s_l1,s_h1, "y ", s_l2,s_h2, "z ", s_l3, s_h3
-					do ii =1, 7
-						write(*,*) "lam", lam(ii)
-					enddo
+					write(*,*) "rho - z is nan", temp(i,j,k,1), summ(1), smhd(1)
+					write(*,*) "leig = ", leig
+					write(*,*) "reig = ", reig
 					pause
 				endif
+				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 			enddo
 		enddo
 	enddo
 !Need to add source terms, heating cooling, gravity, etc.
-
 	end subroutine plm
 
 
@@ -357,7 +365,12 @@ contains
 	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax))
 	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay))
 	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz))
-
+	if(isnan(cfz)) then
+		write(*,*) "Fast wave is nan ", cfz
+		write(*,*) " a^2  = ", as, "pressure = ", Q(QPRES)
+		write(*,*) "bx = ", Q(QMAGX), "by = ", Q(QMAGY), "bz = ", Q(QMAGZ)
+		pause
+	endif
 	if(dir.eq.1) then	
 		!Ax eigenvalues
 		lam(1) = Q(QU) - sqrt(cfx)
@@ -433,7 +446,7 @@ contains
 	N = 0.5d0/as
 	
 	leig(1,:) = (/0.d0, -N*Cff	, N*Qs*bety		, N*Qs*betz		, N*alf/Q(QRHO)	, N*AAs*bety/Q(QRHO)			, N*AAs*betz/Q(QRHO)			/) !u - cf
-	leig(2,:) = (/0.d0,  0.d0	, -0.5d0*betz	, 0.5d0*bety	, 0.d0			, -0.5d0*betz/(sqrt(Q(QRHO)))	, 0.5d0*bety*S/(sqrt(Q(QRHO)))	/) !u - cAx
+	leig(2,:) = (/0.d0,  0.d0	, -0.5d0*betz	, 0.5d0*bety	, 0.d0			, -0.5d0*S*betz/(sqrt(Q(QRHO)))	, 0.5d0*bety*S/(sqrt(Q(QRHO)))	/) !u - cAx
 	leig(3,:) = (/0.d0, -N*Css	, -N*Qf*bety	, -N*Qf*betz	, N*als/Q(QRHO)	, -N*AAf*bety/Q(QRHO)			, -N*AAf*betz/Q(QRHO)			/) !u - cs
 	leig(4,:) = (/1.d0,  0.d0	,  0.d0			, 0.d0			, -1.d0/as		, 0.d0							, 0.d0							/) !u 
 	leig(5,:) = (/0.d0,  N*Css	, N*Qf*bety		, N*Qf*betz		, N*als/Q(QRHO)	, -N*AAf*bety/Q(QRHO)			, -N*AAf*betz/Q(QRHO)			/) !u + cs
@@ -486,13 +499,13 @@ contains
 	N = 0.5d0/as
 	
 !Need to double check the rows
-	leig(1,:) = (/0.d0, -N*Cff , N*Qs*betx		, N*Qs*betz		, N*alf/Q(QRHO)	, N*AAs*betx/Q(QRHO)			, N*AAs*betz/Q(QRHO)			/) ! v - cf
-	leig(2,:) = (/0.d0,  0.d0  , -0.5d0*betz	, 0.5d0*betx	, 0.d0			, -0.5d0*betz/(sqrt(Q(QRHO)))	, 0.5d0*betx*S/(sqrt(Q(QRHO)))	/) ! v - cAy
-	leig(3,:) = (/0.d0, -N*Css , -N*Qf*betx		, -N*Qf*betz	, N*als/Q(QRHO)	, -N*AAf*betx/Q(QRHO)			, -N*AAf*betz/Q(QRHO)			/) ! v - cs
+	leig(1,:) = (/0.d0, -N*Cff , N*Qs*betz		, N*Qs*betx 	, N*alf/Q(QRHO)	, N*AAs*betz/Q(QRHO)			, N*AAs*betx/Q(QRHO)			/) ! v - cf
+	leig(2,:) = (/0.d0,  0.d0  , -0.5d0*betx	, 0.5d0*betz	, 0.d0			, -0.5d0*betx*S/(sqrt(Q(QRHO)))	, 0.5d0*betz*S/(sqrt(Q(QRHO)))	/) ! v - cAy
+	leig(3,:) = (/0.d0, -N*Css , -N*Qf*betz 	, -N*Qf*betx	, N*als/Q(QRHO)	, -N*AAf*betz/Q(QRHO)			, -N*AAf*betx/Q(QRHO)			/) ! v - cs
 	leig(4,:) = (/1.d0,  0.d0  ,  0.d0			, 0.d0			, -1.d0/as		, 0.d0							, 0.d0							/) ! v 
-	leig(5,:) = (/0.d0,  N*Css , N*Qf*betx		, N*Qf*betz		, N*als/Q(QRHO)	, -N*AAf*betx/Q(QRHO)			, -N*AAf*betz/Q(QRHO)			/) ! v + cs
-	leig(6,:) = (/0.d0,  0.d0  , 0.5d0*betz		, -0.5d0*betx	, 0.d0			, -0.5d0*betz*S/(sqrt(Q(QRHO)))	, 0.5d0*betx*S/(sqrt(Q(QRHO)))	/) ! v + cAy
-	leig(7,:) = (/0.d0, N*Cff  , -N*Qs*betx		, -N*Qs*betz	, N*alf/Q(QRHO)	, N*AAs*betx/Q(QRHO)			, N*AAs*betz/Q(QRHO)			/) ! v + cf
+	leig(5,:) = (/0.d0,  N*Css , N*Qf*betz		, N*Qf*betx		, N*als/Q(QRHO)	, -N*AAf*betz/Q(QRHO)			, -N*AAf*betx/Q(QRHO)			/) ! v + cs
+	leig(6,:) = (/0.d0,  0.d0  , 0.5d0*betx		, -0.5d0*betz	, 0.d0			, -0.5d0*betx*S/(sqrt(Q(QRHO)))	, 0.5d0*betz*S/(sqrt(Q(QRHO)))	/) ! v + cAy
+	leig(7,:) = (/0.d0, N*Cff  , -N*Qs*betz		, -N*Qs*betx	, N*alf/Q(QRHO)	, N*AAs*betz/Q(QRHO)			, N*AAs*betx/Q(QRHO)			/) ! v + cf
 	
 	
 	end subroutine lvecy
@@ -530,6 +543,10 @@ contains
 		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 		bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 	endif
+		if(isnan(betx)) then
+			write(*,*) "beta x is nan", "bx = ", Q(QMAGX), "by = ", Q(QMAGY)
+			pause
+		endif
 	cff = sqrt(cfz)*alf
 	css = sqrt(csz)*als
 	S = sign(1.0d0, Q(QMAGZ))
@@ -541,7 +558,7 @@ contains
 	
 !Need to double check the order
 	leig(1,:) = (/0.d0, -N*Cff, N*Qs*betx	, N*Qs*bety		, N*alf/Q(QRHO) , N*AAs*betx/Q(QRHO)		    , N*AAs*bety/Q(QRHO)			/) !w - cf
-	leig(2,:) = (/0.d0,  0.d0 , -0.5d0*bety , 0.5d0*betx	, 0.d0			, -0.5d0*bety/(sqrt(Q(QRHO)))   , 0.5d0*betx*S/(sqrt(Q(QRHO)))	/) !w - cAz
+	leig(2,:) = (/0.d0,  0.d0 , -0.5d0*bety , 0.5d0*betx	, 0.d0			, -0.5d0*S*bety/(sqrt(Q(QRHO))) , 0.5d0*betx*S/(sqrt(Q(QRHO)))	/) !w - cAz
 	leig(3,:) = (/0.d0, -N*Css, -N*Qf*betx  , -N*Qf*bety	, N*als/Q(QRHO) , -N*AAf*betx/Q(QRHO)		    , -N*AAf*bety/Q(QRHO)			/) !w - cs
 	leig(4,:) = (/1.d0,  0.d0 ,  0.d0	    , 0.d0			, -1.d0/as		, 0.d0						    , 0.d0							/) !w
  	leig(5,:) = (/0.d0,  N*Css, N*Qf*betx   , N*Qf*bety		, N*als/Q(QRHO) , -N*AAf*betx/Q(QRHO)		    , -N*AAf*bety/Q(QRHO)			/) !w + cs
@@ -647,11 +664,11 @@ contains
 				!   v - cf 				v - Cay 				v - cs			v 		v + cs			v + Cay					v + cf
 	reig(1,:) = (/	Q(QRHO)*alf		, 0.d0					, Q(QRHO)*als	, 1.d0	, Q(QRHO)*als	, 0.d0					, Q(QRHO)*alf	/)
 	reig(2,:) = (/	-cff    	    , 0.d0  				, -css			, 0.d0  , css			, 0.d0  				, 	cff			/)
-	reig(3,:) = (/	Qs*betx			, -betz					, -Qf*betx		, 0.d0  , Qf*betx		, betz 					, -Qs*betx		/)
-	reig(4,:) = (/	Qs*betz			, betx 					, -Qf*betz		, 0.d0  , Qf*betz		, -betx 				, -Qs*betz		/)
+	reig(3,:) = (/	Qs*betz			, -betx					, -Qf*betz		, 0.d0  , Qf*betz		, betx 					, -Qs*betz		/)
+	reig(4,:) = (/	Qs*betx			, betz 					, -Qf*betx		, 0.d0  , Qf*betx		, -betz 				, -Qs*betx		/)
 	reig(5,:) = (/	Q(QRHO)*as*alf	, 0.d0	 				, Q(QRHO)*as*als, 0.d0  , Q(QRHO)*as*als, 0.d0  				, Q(QRHO)*as*alf/)
-	reig(6,:) = (/	AAs*betx		, -betz*S*sqrt(Q(QRHO))	, -AAf*betx		, 0.d0  , -AAf*betx		, -betz*S*sqrt(Q(QRHO)) , AAs*betx		/)
-	reig(7,:) = (/	AAs*betz		, betx*S*sqrt(Q(QRHO))	, -AAf*betz		, 0.d0	, -AAf*betz		, betx*S*sqrt(Q(QRHO))	, AAs*betz		/)
+	reig(6,:) = (/	AAs*betz		, -betx*S*sqrt(Q(QRHO))	, -AAf*betz		, 0.d0  , -AAf*betz		, -betx*S*sqrt(Q(QRHO)) , AAs*betz		/)
+	reig(7,:) = (/	AAs*betx		, betz*S*sqrt(Q(QRHO))	, -AAf*betx		, 0.d0	, -AAf*betx		, betz*S*sqrt(Q(QRHO))	, AAs*betx		/)
 	
 	
 	end subroutine rvecy
