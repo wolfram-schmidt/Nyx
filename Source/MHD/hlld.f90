@@ -86,15 +86,15 @@ implicit none
 	QssR = 0.d0
 	FssL = 0.d0
 	FssR = 0.d0
-	call primtofluxy(qm, FL)
-	call primtofluxy(qp, FR)	
+	call primtofluxx(qm, FL)
+	call primtofluxx(qp, FR)	
 	
 	eL   = (qm(QPRES) -0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)) &
 			+ 0.5d0*dot_product(qm(QU:QW),qm(QU:QW))*qm(QRHO)
 	eR   = (qp(QPRES) -0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)) &
 			+ 0.5d0*dot_product(qp(QU:QW),qp(QU:QW))*qp(QRHO)
-	asL  = gamma_const * qm(QPRES)/qm(QRHO)
-	asR  = gamma_const * qp(QPRES)/qp(QRHO)
+	asL  = gamma_const * (qm(QPRES) - 0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)))/qm(QRHO)
+	asR  = gamma_const * (qp(QPRES) - 0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)))/qp(QRHO)
 	caL  = (qm(QMAGX)**2 + qm(QMAGY)**2 + qm(QMAGZ)**2)/qm(QRHO) !Magnetic Speeds
 	caR  = (qp(QMAGX)**2 + qp(QMAGY)**2 + qp(QMAGZ)**2)/qp(QRHO)
 	caxL = (qm(QMAGX)**2)/qm(QRHO)
@@ -133,10 +133,10 @@ implicit none
 	QsR(QMAGX) = qm(QMAGX) 
 	!Y dir
 	QsL(QMAGY) = qm(QMAGY)*(qm(QRHO)*(sL - qm(QU))**2 - qm(QMAGX)**2)/(qm(QRHO)*(sL - qm(QU))*(sL - sM) - qm(QMAGX)**2)
-	QsR(QMAGY) = qp(QMAGY)*(qp(QRHO)*(sR - qp(QU))**2 - qm(QMAGX)**2)/(qp(QRHO)*(sR - qp(QU))*(sR - sM) - qm(QMAGX)**2)
+	QsR(QMAGY) = qp(QMAGY)*(qp(QRHO)*(sR - qp(QU))**2 - qp(QMAGX)**2)/(qp(QRHO)*(sR - qp(QU))*(sR - sM) - qp(QMAGX)**2)
 	!Z dir
 	QsL(QMAGZ) = qm(QMAGZ)*(qm(QRHO)*(sL - qm(QU))**2 - qm(QMAGX)**2)/(qm(QRHO)*(sL - qm(QU))*(sL - sM) - qm(QMAGX)**2)
-	QsR(QMAGZ) = qp(QMAGZ)*(qp(QRHO)*(sR - qp(QU))**2 - qm(QMAGX)**2)/(qp(QRHO)*(sR - qp(QU))*(sR - sM) - qm(QMAGX)**2)
+	QsR(QMAGZ) = qp(QMAGZ)*(qp(QRHO)*(sR - qp(QU))**2 - qp(QMAGX)**2)/(qp(QRHO)*(sR - qp(QU))*(sR - sM) - qp(QMAGX)**2)
 	
 	!Energy *Stored in Pressure slot
 	QsL(QPRES) = (sL - qm(QU))*eL - ptL*qm(QU) + pst*sM + qm(QMAGX)*(qm(QU)*qm(QMAGX) + qm(QV)*qm(QMAGY) + qm(QW)*qm(QMAGZ) &
@@ -175,7 +175,7 @@ implicit none
 				   /(sqrt(QsL(QRHO)) + sqrt(QsR(QRHO)))
 	QssR(QMAGZ) = QssL(QMAGZ)
 	!Energy *Stored in Pressure slot
-	QssL(QPRES) = QsL(QPRES) - sqrt(QsL(QRHO))*(dot_product(QsL(QU:QW),QsL(QMAGX:QMAGZ)) - dot_product(QssL(QU:QW),QssL(QMAGX:QMAGZ)))*sign(1.d0, QsR(QMAGX))
+	QssL(QPRES) = QsL(QPRES) - sqrt(QsL(QRHO))*(dot_product(QsL(QU:QW),QsL(QMAGX:QMAGZ)) - dot_product(QssL(QU:QW),QssL(QMAGX:QMAGZ)))*sign(1.d0, QsL(QMAGX))
 	QssR(QPRES) = QsR(QPRES) + sqrt(QsR(QRHO))*(dot_product(QsR(QU:QW),QsR(QMAGX:QMAGZ)) - dot_product(QssR(QU:QW),QssR(QMAGX:QMAGZ)))*sign(1.d0, QsR(QMAGX))
 
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
@@ -187,18 +187,18 @@ implicit none
 	if(sL .gt. 0.d0) then
 	flx = FL
 	choice = "FL"
-	!elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
-	!flx = FsL
-	!choice = "FsL"
-	!elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
-	!flx = FssL
-	!choice = "FssL"
-	!elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
-	!flx = FssR
-	!choice = "FssR"
-	!elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
-	!flx = FsR
-	!choice = "FsR"
+	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
+	flx = FsL
+	choice = "FsL"
+	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
+	flx = FssL
+	choice = "FssL"
+	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
+	flx = FssR
+	choice = "FssR"
+	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
+	flx = FsR
+	choice = "FsR"
 	else 
 	flx = FR
 	choice = "FR"
@@ -264,8 +264,8 @@ implicit none
 			+ 0.5d0*dot_product(qm(QU:QW),qm(QU:QW))*qm(QRHO)
 	eR   = (qp(QPRES) -0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)) &
 			+ 0.5d0*dot_product(qp(QU:QW),qp(QU:QW))*qp(QRHO)
-	asL  = gamma_const * qm(QPRES)/qm(QRHO)
-	asR  = gamma_const * qp(QPRES)/qp(QRHO)
+	asL  = gamma_const * (qm(QPRES) - 0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)))/qm(QRHO)
+	asR  = gamma_const * (qp(QPRES) - 0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)))/qp(QRHO)
 	caL  = (qm(QMAGX)**2 + qm(QMAGY)**2 + qm(QMAGZ)**2)/qm(QRHO) !Magnetic Speeds
 	caR  = (qp(QMAGX)**2 + qp(QMAGY)**2 + qp(QMAGZ)**2)/qp(QRHO)
 	cayL = (qm(QMAGY)**2)/qm(QRHO)
@@ -358,18 +358,18 @@ implicit none
 	if(sL .gt. 0.d0) then
 	flx = FL
 	choice = "FL"
-	!elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
-	!flx = FsL
-	!choice = "FsL"
-	!elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
-	!flx = FssL
-	!choice = "FssL"
-	!elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
-	!flx = FssR
-	!choice = "FssR"
-	!elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
-	!flx = FsR
-	!choice = "FsR"
+	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
+	flx = FsL
+	choice = "FsL"
+	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
+	flx = FssL
+	choice = "FssL"
+	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
+	flx = FssR
+	choice = "FssR"
+	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
+	flx = FsR
+	choice = "FsR"
 	else 
 	flx = FR
 	choice = "FR"
@@ -437,8 +437,8 @@ implicit none
 			+ 0.5d0*dot_product(qm(QU:QW),qm(QU:QW))*qm(QRHO)
 	eR   = (qp(QPRES) -0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)) &
 			+ 0.5d0*dot_product(qp(QU:QW),qp(QU:QW))*qp(QRHO)
-	asL  = gamma_const * qm(QPRES)/qm(QRHO)
-	asR  = gamma_const * qp(QPRES)/qp(QRHO)
+	asL  = gamma_const * (qm(QPRES) - 0.5d0*dot_product(qm(QMAGX:QMAGZ),qm(QMAGX:QMAGZ)))/qm(QRHO)
+	asR  = gamma_const * (qp(QPRES) - 0.5d0*dot_product(qp(QMAGX:QMAGZ),qp(QMAGX:QMAGZ)))/qp(QRHO)
 	caL  = (qm(QMAGX)**2 + qm(QMAGY)**2 + qm(QMAGZ)**2)/qm(QRHO) !Magnetic Speeds
 	caR  = (qp(QMAGX)**2 + qp(QMAGY)**2 + qp(QMAGZ)**2)/qp(QRHO)
 	cazL = (qm(QMAGZ)**2)/qm(QRHO)
@@ -531,18 +531,18 @@ implicit none
 	if(sL .gt. 0.d0) then
 	flx = FL
 	choice = "FL"
-!	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
-!	flx = FsL
-!	choice = "FsL"
-!	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
-!	flx = FssL
-!	choice = "FssL"
-!	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
-!	flx = FssR
-!	choice = "FssR"
-!	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
-!	flx = FsR
-!	choice = "FsR"
+	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
+	flx = FsL
+	choice = "FsL"
+	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
+	flx = FssL
+	choice = "FssL"
+	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
+	flx = FssR
+	choice = "FssR"
+	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
+	flx = FsR
+	choice = "FsR"
 	else 
 	flx = FR
 	choice = "FR"
