@@ -24,11 +24,19 @@ implicit none
 	
 	integer				  :: i, j, k
 
+ flx = 0.d0 
+
  if(dir.eq.1) then
 	do k = flx_l3, flx_h3
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
-				call hlldx(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
+				call hlldx(qm(i+1,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
+				if(isnan(flx(i,j,k,1))) then
+					write(*,*) "Nan flux at ", i, j, k
+					write(*,*) "q - =", qm(i+1,j,k,:)
+					write(*,*) "q + =", qp(i,j,k,:)
+					pause
+				endif
 			enddo
 		enddo
 	enddo
@@ -36,7 +44,13 @@ implicit none
 	do k = flx_l3, flx_h3
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
-				call hlldy(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
+				call hlldy(qm(i,j+1,k,:),qp(i,j,k,:),flx(i,j,k,:))
+				if(isnan(flx(i,j,k,1))) then
+					write(*,*) "Nan flux_y at ", i, j, k
+					write(*,*) "q - =", qm(i,j+1,k,:)
+					write(*,*) "q + =", qp(i,j,k,:)
+					pause
+				endif
 			enddo
 		enddo
 	enddo
@@ -44,7 +58,7 @@ implicit none
 	do k = flx_l3, flx_h3
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
-				call hlldz(qm(i,j,k,:),qp(i,j,k,:),flx(i,j,k,:))
+				call hlldz(qm(i,j,k+1,:),qp(i,j,k,:),flx(i,j,k,:))
 			enddo
 		enddo
 	enddo
@@ -103,8 +117,8 @@ implicit none
 	cfL  = sqrt(0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*caxL)))
 	cfR  = sqrt(0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*caxR)))
 	!Riemann Speeds
-	sL   = min(qm(QU),qp(QU)) - max(cfL,cfR)
-	sR 	 = max(qm(QU),qp(QU)) + max(cfL,cfR)
+	sL   = min(qm(QU) - cfL,qp(QU) - cfR)
+	sR 	 = max(qm(QU) + cfL,qp(QU) + cfR)
 	sM   = ((sR - qp(QU))*qp(QRHO)*qp(QU) - (sL - qm(QU))*qm(QRHO)*qm(QU) - qp(QPRES) + qm(QPRES))/((sR - qp(QU))*qp(QRHO) - (sL - qm(QU))*qm(QRHO))
 	!Pressures in the Riemann Fan
 	ptL  = qm(QPRES)
@@ -145,7 +159,15 @@ implicit none
 	QsR(QPRES) = (sR - qp(QU))*eR - ptR*qp(QU) + pst*sM + qp(QMAGX)*(qp(QU)*qp(QMAGX) + qp(QV)*qp(QMAGY) + qp(QW)*qp(QMAGZ) &
 				  - (QsR(QU)*QsR(QMAGX) + QsR(QV)*QsR(QMAGY) + QsR(QW)*QsR(QMAGZ)))
 	QsR(QPRES) = QsR(QPRES)/(sR - sM)
-
+	!Hack
+	do i = 1, QVAR
+		if (isnan(QsL(i))) then
+			QsL(i) = qm(i)
+		endif
+		if(isnan(QsR(i))) then
+			QsR(i) = qp(i)
+		endif
+	enddo
 	!speeds
 	ssL = sM - abs(qm(QMAGX))/sqrt(QsL(QRHO))
 	ssR = sM + abs(qp(QMAGX))/sqrt(QsR(QRHO))
@@ -177,7 +199,15 @@ implicit none
 	!Energy *Stored in Pressure slot
 	QssL(QPRES) = QsL(QPRES) - sqrt(QsL(QRHO))*(dot_product(QsL(QU:QW),QsL(QMAGX:QMAGZ)) - dot_product(QssL(QU:QW),QssL(QMAGX:QMAGZ)))*sign(1.d0, QsL(QMAGX))
 	QssR(QPRES) = QsR(QPRES) + sqrt(QsR(QRHO))*(dot_product(QsR(QU:QW),QsR(QMAGX:QMAGZ)) - dot_product(QssR(QU:QW),QssR(QMAGX:QMAGZ)))*sign(1.d0, QsR(QMAGX))
-
+	!Hack
+	do i = 1, QVAR
+		if (isnan(QssL(i))) then
+			QssL(i) = QsL(i)
+		endif
+		if(isnan(QssR(i))) then
+			QssR(i) = QsR(i)
+		endif
+	enddo
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
 	FsL  = FL + sL*(QsL - qm)
 	FssL = FL + ssL*QssL - (ssL - sL)*QsL - sL*qm
@@ -274,12 +304,12 @@ implicit none
 	cfL  = sqrt(0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*cayL)))
 	cfR  = sqrt(0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*cayR)))
 	!Riemann Speeds
-	sL   = min(qm(QV),qp(QV)) - max(cfL,cfR)
-	sR 	 = max(qm(QV),qp(QV)) + max(cfL,cfR)
-	sM   = ((sR - qp(QV))*qp(QRHO)*qp(QV) - (sL - qm(QV))*qm(QRH O)*qm(QV) - qp(QPRES) + qm(QPRES))/((sR - qp(QV))*qp(QRHO) - (sL - qm(QV))*qm(QRHO))
-	!Pressures in the Riemann Fan
+	sL   = min(qm(QV) - cfL,qp(QV) - cfR)
+	sR 	 = max(qm(QV) + cfL,qp(QV) + cfR)
 	ptL  = qm(QPRES)
 	ptR  = qp(QPRES)
+	sM   = ((sR - qp(QV))*qp(QRHO)*qp(QV) - (sL - qm(QV))*qm(QRHO)*qm(QV) - ptR + ptL)/((sR - qp(QV))*qp(QRHO) - (sL - qm(QV))*qm(QRHO))
+	!Pressures in the Riemann Fan
 	pst  = (sR - qp(QV))*qp(QRHO)*ptL - (sL - qm(QV))*qm(QRHO)*ptR + qm(QRHO)*qp(QRHO)*(sR - qp(QV))*(sL - qm(QV))*(qp(QV) - qm(QV))
 	pst  = pst/((sR - qp(QV))*qp(QRHO) - (sL - qm(QV))*qm(QRHO))
 
@@ -290,7 +320,7 @@ implicit none
 	!velocities
 	!X dir
 	QsL(QU)    = qm(QU) - qm(QMAGY)*qm(QMAGX)*((sM - qm(QV))/(qm(QRHO)*(sL - qm(QV))*(sL - sM) - qm(QMAGY)**2))
-	QsR(QU)    = qp(QU) - qp(QMAGY)*qp(QMAGX)*((sM - qp(QV))/(qp(QRHO)*(sR - qp(QV))*(sR - sM) - qm(QMAGY)**2))
+	QsR(QU)    = qp(QU) - qp(QMAGY)*qp(QMAGX)*((sM - qp(QV))/(qp(QRHO)*(sR - qp(QV))*(sR - sM) - qp(QMAGY)**2))
 	!Y dir
 	QsL(QV)    = sM
 	QsR(QV)    = sM
@@ -316,7 +346,15 @@ implicit none
 	QsR(QPRES) = (sR - qp(QV))*eR - ptR*qp(QV) + pst*sM + qp(QMAGY)*(qp(QU)*qp(QMAGX) + qp(QV)*qp(QMAGY) + qp(QW)*qp(QMAGZ) &
 				  - (QsR(QU)*QsR(QMAGX) + QsR(QV)*QsR(QMAGY) + QsR(QW)*QsR(QMAGZ)))
 	QsR(QPRES) = QsR(QPRES)/(sR - sM)
-
+	!Hack
+	do i = 1, QVAR
+		if (isnan(QsL(i))) then
+			QsL(i) = qm(i)
+		endif
+		if(isnan(QsR(i))) then
+			QsR(i) = qp(i)
+		endif
+	enddo
 	!speeds
 	ssL = sM - abs(qm(QMAGY))/sqrt(QsL(QRHO))
 	ssR = sM + abs(qp(QMAGY))/sqrt(QsR(QRHO))
@@ -348,7 +386,16 @@ implicit none
 	!Energy *Stored in Pressure slot
 	QssL(QPRES) = QsL(QPRES) - sqrt(QsL(QRHO))*(dot_product(QsL(QU:QW),QsL(QMAGX:QMAGZ)) - dot_product(QssL(QU:QW),QssL(QMAGX:QMAGZ)))*sign(1.d0, QsR(QMAGY))
 	QssR(QPRES) = QsR(QPRES) + sqrt(QsR(QRHO))*(dot_product(QsR(QU:QW),QsR(QMAGX:QMAGZ)) - dot_product(QssR(QU:QW),QssR(QMAGX:QMAGZ)))*sign(1.d0, QsR(QMAGY))
-
+	
+	!Hack
+	do i = 1, QVAR
+		if (isnan(QssL(i))) then
+			QssL(i) = QsL(i)
+		endif
+		if(isnan(QssR(i))) then
+			QssR(i) = QsR(i)
+		endif
+	enddo
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
 	FsL  = FL + sL*(QsL - qm)
 	FssL = FL + ssL*QssL - (ssL - sL)*QsL - sL*qm
@@ -374,22 +421,6 @@ implicit none
 	flx = FR
 	choice = "FR"
 	endif
-!	do i = 1, QVAR
-!		if(isnan(flx(i))) then
-!			write(*,*) "Flux is nan in", i, "component"
-!			write(*,*) "Flux = ", choice
-!			write(*,*) "FL = ", FL
-!			write(*,*) "FR = ", FR
-!			write(*,*) "QL = ", qm
-!			write(*,*) "QR = ", qp
-!			write(*,*) "QsL = ", QsL
-!			write(*,*) "QsR = ", QsR
-!			write(*,*) "QssL = ", QssL
-!			write(*,*) "QssR = ", QssR
-!			pause
-!			return
-!		endif
-!	enddo
 end subroutine hlldy
 
 !============================================================= Z Direction =================================================================
@@ -447,8 +478,8 @@ implicit none
 	cfL  = sqrt(0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*cazL)))
 	cfR  = sqrt(0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*cazR)))
 	!Riemann Speeds
-	sL   = min(qm(QW),qp(QW)) - max(cfL,cfR)
-	sR 	 = max(qm(QW),qp(QW)) + max(cfL,cfR)
+	sL   = min(qm(QW) - cfL,qp(QW) - cfR)
+	sR 	 = max(qm(QW) + cfL,qp(QW) + cfR)
 	sM   = ((sR - qp(QW))*qp(QRHO)*qp(QW) - (sL - qm(QW))*qm(QRHO)*qm(QW) - qp(QPRES) + qm(QPRES))/((sR - qp(QW))*qp(QRHO) - (sL - qm(QW))*qm(QRHO))
 	!Pressures in the Riemann Fan
 	ptL  = qm(QPRES)
@@ -489,7 +520,15 @@ implicit none
 	QsR(QPRES) = (sR - qp(QW))*eR - ptR*qp(QW) + pst*sM + qp(QMAGZ)*(qp(QU)*qp(QMAGX) + qp(QV)*qp(QMAGY) + qp(QW)*qp(QMAGZ) &
 				  - (QsR(QU)*QsR(QMAGX) + QsR(QV)*QsR(QMAGY) + QsR(QW)*QsR(QMAGZ)))
 	QsR(QPRES) = QsR(QPRES)/(sR - sM)
-
+	!Hack
+	do i = 1, QVAR
+		if (isnan(QsL(i))) then
+			QsL(i) = qm(i)
+		endif
+		if(isnan(QsR(i))) then
+			QsR(i) = qp(i)
+		endif
+	enddo
 	!speeds
 	ssL = sM - abs(qm(QMAGZ))/sqrt(QsL(QRHO))
 	ssR = sM + abs(qp(QMAGZ))/sqrt(QsR(QRHO))
@@ -521,7 +560,15 @@ implicit none
 	!Energy *Stored in Pressure slot
 	QssL(QPRES) = QsL(QPRES) - sqrt(QsL(QRHO))*(dot_product(QsL(QU:QW),QsL(QMAGX:QMAGZ)) - dot_product(QssL(QU:QW),QssL(QMAGX:QMAGZ)))*sign(1.d0, QsR(QMAGZ))
 	QssR(QPRES) = QsR(QPRES) + sqrt(QsR(QRHO))*(dot_product(QsR(QU:QW),QsR(QMAGX:QMAGZ)) - dot_product(QssR(QU:QW),QssR(QMAGX:QMAGZ)))*sign(1.d0, QsR(QMAGZ))
-
+	!Hack
+	do i = 1, QVAR
+		if (isnan(QssL(i))) then
+			QssL(i) = QsL(i)
+		endif
+		if(isnan(QssR(i))) then
+			QssR(i) = QsR(i)
+		endif
+	enddo
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
 	FsL  = FL + sL*(QsL - qm)
 	FssL = FL + ssL*QssL - (ssL - sL)*QsL - sL*qm

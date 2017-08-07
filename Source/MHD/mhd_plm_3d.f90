@@ -189,13 +189,15 @@ contains
 				Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
 				Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				if(isnan(Ip(i,j,k,QRHO,1))) then
-					write(*,*) "rho is nan z ", temp(i,j,k,1), summ(1), smhd(1), tbx(i+1,j,k), tbx(i,j,k)
+					write(*,*) "rho is nan x ", temp(i,j,k,1), summ(1), smhd(1), tbx(i+1,j,k), tbx(i,j,k)
 					write(*,*) "iterator", i, j, k
 					write(*,*) "limits ", "x ", s_l1,s_h1, "y ", s_l2,s_h2, "z ", s_l3, s_h3
 					do ii =1, 7
+						write(*,*) "leig = ", leig(ii,:)
 						write(*,*) "lam", lam(ii)
-					enddo
-					pause
+						write(*,*) "reig = ", reig(:,ii)
+						pause
+					enddo					
 				endif
 
 		!Minus
@@ -223,10 +225,6 @@ contains
 				dQR(7) = 	temp(i,j+1,k,ibz) - temp(i,j,k,ibz)				
 				do ii = 1,7
 					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
-					if(isnan(dW(ii))) then
-						write(*,*), "nan slope at ii = ", ii, dQL(ii), dQR(ii), temp(i,j,k,ii), temp(i,j-1,k,ii), temp(i,j+1,k,ii)
-						pause
-					endif
 				enddo
 				call evals(lam, s(i,j,k,:), 2) !!Y dir eigenvalues
 				call lvecy(leig,s(i,j,k,:))    !!left eigenvectors
@@ -253,6 +251,14 @@ contains
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
 				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				if(isnan(Im(i,j,k,QRHO,2))) then
+					write(*,*) "rho_y - nan at = ", i, j, k
+					write(*,*) "rho in", temp(i,j,k,1), "summ(1) =", summ(1), "mhd sources =", smhd(1)
+					write(*,*) "lam = ", lam(1) 
+					write(*,*) "leig =", leig(1,:)
+					write(*,*) "reig =", reig(:,1)
+					pause
+				endif
 				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
 				Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
 				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) +0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
@@ -429,6 +435,7 @@ contains
 	!useful constants
 	alf = sqrt((as - csx)/(cfx - csx))
 	als = sqrt((cfx - as)/(cfx - csx))
+	if(cfx - as .lt. 0.d0) als = 0.d0
 	if(abs(Q(QMAGY)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		bety = 1.d0/sqrt(2.d0)
 		betz = bety
@@ -436,11 +443,21 @@ contains
 		bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 		betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 	endif
+	if(isnan(bety)) then
+		 write(*,*) "bety is nan ", "By = ", Q(QMAGY), "Bz = ", Q(QMAGZ)
+		 pause
+	endif
 	cff = sqrt(cfx)*alf
 	css = sqrt(csx)*als
 	S = sign(1.0d0, Q(QMAGX))
 	Qf = sqrt(cfx)*alf*S
 	Qs = sqrt(csx)*als*S
+	if(isnan(Qs)) then
+		 write(*,*) "Qs is nan", "csx = ", csx, "alpha slow = ", als, "alpha fast = ", alf, "cfx - a^2 = ", cfx - as
+		 write(*,*) "a^2 = ", as, "Rho = ", Q(QRHO), "cfx = ", cfx, "ca = ", ca, "cfx - csx", cfx - csx
+		 pause
+	endif
+		
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	N = 0.5d0/as
@@ -481,7 +498,9 @@ contains
 	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!useful constants
 	alf = sqrt((as - csy)/(cfy - csy))
+	if(as - csy .lt. 0.d0) alf = 0.d0
 	als = sqrt((cfy - as)/(cfy - csy))
+	if(cfy - as .lt. 0.d0) als = 0.d0
 	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		betx = 1.d0/sqrt(2.d0)
 		betz = betx
@@ -494,6 +513,10 @@ contains
 	S = sign(1.0d0, Q(QMAGY))
 	Qf = sqrt(cfy)*alf*S
 	Qs = sqrt(csy)*als*S
+	if(isnan(Cff)) then 
+			write(*,*) "Cff is nan", " cfy = ", cfy, "alpha fast = ", alf
+			pause
+	endif
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	N = 0.5d0/as
@@ -536,6 +559,7 @@ contains
 	!useful constants
 	alf = sqrt((as - csz)/(cfz - csz))
 	als = sqrt((cfz - as)/(cfz - csz))
+	if(cfz - as .lt. 0.d0) als = 0.d0
 	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGY)).le. 1.d-14) then
 		betx = 1.d0/sqrt(2.d0)
 		bety = betx
@@ -543,15 +567,19 @@ contains
 		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 		bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 	endif
-		if(isnan(betx)) then
-			write(*,*) "beta x is nan", "bx = ", Q(QMAGX), "by = ", Q(QMAGY)
+	if(isnan(betx)) then
+			write(*,*) "betx is nan", " Bx = ", Q(QMAGX), " By = ", Q(QMAGY)
 			pause
-		endif
+	endif
 	cff = sqrt(cfz)*alf
 	css = sqrt(csz)*als
 	S = sign(1.0d0, Q(QMAGZ))
 	Qf = sqrt(cfz)*alf*S
 	Qs = sqrt(csz)*als*S
+	if(isnan(Qs)) then
+			write(*,*) "Qs is nan", " csz = ", csz, " als = ", als
+			pause
+	endif
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	N = 0.5d0/as
@@ -593,6 +621,7 @@ contains
 	!useful constants
 	alf = sqrt((as - csx)/(cfx - csx))
 	als = sqrt((cfx - as)/(cfx - csx))
+	if(cfx - as .lt. 0.d0) als = 0.d0
 	if(abs(Q(QMAGY)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		bety = 1.d0/sqrt(2.d0)
 		betz = bety
@@ -645,7 +674,9 @@ contains
 	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay))
 	!useful constants
 	alf = sqrt((as - csy)/(cfy - csy))
+	if(as - csy .lt. 0.d0) alf = 0.d0
 	als = sqrt((cfy - as)/(cfy - csy))
+	if(cfy - as .lt. 0.d0) als = 0.d0
 	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		betx = 1.d0/sqrt(2.d0)
 		betz = betx
@@ -699,6 +730,7 @@ contains
 	!useful constants
 	alf = sqrt((as - csz)/(cfz - csz))
 	als = sqrt((cfz - as)/(cfz - csz))
+	if(cfz - as .lt. 0.d0) als = 0.d0
 	if(abs(Q(QMAGX)).le. 1.d-14 .and.abs(Q(QMAGY)).le. 1.d-14) then
 		betx = 1.d0/sqrt(2.d0)
 		bety = betx

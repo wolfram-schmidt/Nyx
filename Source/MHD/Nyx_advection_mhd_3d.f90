@@ -112,23 +112,19 @@
 	  write(*,*) "hi = ", hi
 	  write(*,*) "loq = ", q_l1, q_l2, q_l3
 	  write(*,*) "hiq = ", q_h1, q_h2, q_h3
-	  pause
 
       call bl_allocate(     q, lo-NHYP, hi+NHYP, QVAR)
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
       call bl_allocate(     c, lo-NHYP, hi+NHYP      )
       call bl_allocate(  csml, lo-NHYP, hi+NHYP      )
+	  call bl_allocate(  srcQ, lo-1, hi+1, QVAR)
 	  allocate(	E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3, 3, 4))
 	  allocate( flx(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
 	  allocate( qp(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
 	  allocate( qm(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
-	  flx = 0.d0
-	  flux1 = 0.d0
-	  flux2 = 0.d0
-	  flux3 = 0.d0
 	  q = 0.d0
 
-      call bl_allocate(  srcQ, lo-1, hi+1, QVAR)
+      
       dx = delta(1)
       dy = delta(2)
       dz = delta(3)
@@ -571,16 +567,7 @@ end subroutine fort_advance_mhd
 					uout(i,j,k,URHO:UEDEN) = uin(i,j,k,URHO:UEDEN) - dt/dx*(flux(i+1,j,k,URHO:UEDEN,1) - flux(i,j,k,URHO:UEDEN,1)) &
 											 -dt/dy*(flux(i,j+1,k,URHO:UEDEN,2) - flux(i,j,k,URHO:UEDEN,2)) &
 											 -dt/dz*(flux(i,j,k+1,URHO:UEDEN,3) - flux(i,j,k,URHO:UEDEN,3)) !Add source terms later
-					if(uout(i,j,k,UEDEN).lt. 0.d0) then
-						write(*,*) "Negative Energy", uout(i,j,k,UEDEN)
-						write(*,*) "Energy In", uin(i, j, k, UEDEN)
-						write(*,*) "Flux x", -dt/dx*(flux(i+1, j, k, UEDEN, 1) - flux(i,j,k,UEDEN,1))
-						write(*,*) "Flux y", -dt/dy*(flux(i, j+1, k, UEDEN, 2) - flux(i,j,k,UEDEN,2))
-						write(*,*) "Flux z", -dt/dz*(flux(i, j, k+1, UEDEN, 3) - flux(i,j,k,UEDEN,3))
-						write(*,*), i, j, k
-						pause
-					endif
-					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) !Internal Energy Hack
+					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5*uout(i,j,k,URHO)*dot_product(uout(i,j,k,UMX:UMZ)/uout(i,j,k,URHO),uout(i,j,k,UMX:UMZ)/uout(i,j,k,URHO))
 				enddo
 			enddo
 		enddo
