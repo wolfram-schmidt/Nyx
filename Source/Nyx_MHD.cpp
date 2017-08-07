@@ -127,6 +127,7 @@ Nyx::just_the_mhd (Real time,
 
     // Create FAB for extended grid values (including boundaries) and fill.
     MultiFab S_old_tmp(S_old.boxArray(), S_old.DistributionMap(), NUM_STATE, NUM_GROW);
+	std::cout<<S_old.boxArray()<<std::endl;
     FillPatch(*this, S_old_tmp, NUM_GROW, time, State_Type, 0, NUM_STATE);
     MultiFab D_old_tmp(D_old.boxArray(), D_old.DistributionMap(), 2, NUM_GROW);
     FillPatch(*this, D_old_tmp, NUM_GROW, time, DiagEOS_Type, 0, 2);

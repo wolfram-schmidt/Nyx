@@ -70,6 +70,8 @@ write(*,*) "Do Flux 1D"
 do i = 1,3
 	call PrimToCons(qm(:,:,:,:,i), um(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 	call PrimToCons(qp(:,:,:,:,i), up(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	write(*,*) "flx1D", i
+	call checkisnan(flx1D(:,:,:,:,i), flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, QVAR)
 enddo
 !Use "1D" fluxes To interpolate Temporary Edge Centered Electric Fields
 write(*,*) "Do Electric Field 1D"

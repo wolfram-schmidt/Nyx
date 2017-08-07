@@ -102,22 +102,26 @@
       q_h1 = hi(1)+NHYP
       q_h2 = hi(2)+NHYP
       q_h3 = hi(3)+NHYP
-
       srcq_l1 = lo(1)-1
       srcq_l2 = lo(2)-1
       srcq_l3 = lo(3)-1
       srcq_h1 = hi(1)+1
       srcq_h2 = hi(2)+1
       srcq_h3 = hi(3)+1
+	  write(*,*) "lo = ", lo
+	  write(*,*) "hi = ", hi
+	  write(*,*) "loq = ", q_l1, q_l2, q_l3
+	  write(*,*) "hiq = ", q_h1, q_h2, q_h3
+	  pause
 
       call bl_allocate(     q, lo-NHYP, hi+NHYP, QVAR)
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
       call bl_allocate(     c, lo-NHYP, hi+NHYP      )
       call bl_allocate(  csml, lo-NHYP, hi+NHYP      )
-	  allocate(	E(lo(1)-NHYP:hi(1)+NHYP,lo(2)-NHYP:hi(2)+NHYP,lo(3)-NHYP:hi(3)+NHYP, 3, 4))
-	  allocate( flx(lo(1)-NHYP:hi(1)+NHYP,lo(2)-NHYP:hi(2)+NHYP,lo(3)-NHYP:hi(3)+NHYP,QVAR , 3))
-	  allocate( qp(lo(1)-NHYP:hi(1)+NHYP,lo(2)-NHYP:hi(2)+NHYP,lo(3)-NHYP:hi(3)+NHYP,QVAR , 3))
-	  allocate( qm(lo(1)-NHYP:hi(1)+NHYP,lo(2)-NHYP:hi(2)+NHYP,lo(3)-NHYP:hi(3)+NHYP,QVAR , 3))
+	  allocate(	E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3, 3, 4))
+	  allocate( flx(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
+	  allocate( qp(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
+	  allocate( qm(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
 	  flx = 0.d0
 	  flux1 = 0.d0
 	  flux2 = 0.d0
@@ -133,20 +137,20 @@
 
 !Step One, Calculate Primitives based on conservatives
 	  call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3,&
-					bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
-					byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
-					bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
-                    q , c ,csml,flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
+					bxin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+					byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+					bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+                    q , c , csml, flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
                     src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
-                    srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                    srcQ, srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
                     grav,gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
                     courno,dx,dy,dz,dt,ngq,ngf,a_old,a_new)
 
 !Step Two, Interpolate Cell centered values to faces
 	  call plm(q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
-				 bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
-				 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
-				 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
+				 bxin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+				 byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+				 bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
                  qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
 !write(*,*) "Bounds", q_l1,q_l2,q_l3,q_h1,q_h2,q_h3
 	  
@@ -154,16 +158,12 @@ flx = 0.d0
 !Step Three, Corner Couple and find the correct fluxes + electric fields
 	  call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &	
 							flx, E, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, dx , dy, dz, dt)
-write(*,*) "Checking Flux"
-	call checkisnan(flx, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old, QVAR)
 !Step Four, Conservative update
       call consup(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
                   uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
                   src ,src_l1 ,src_l2 ,src_l3 ,src_h1 ,src_h2 ,src_h3, &
                   flx , q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, &
                   lo ,hi ,dx ,dy ,dz ,dt ,a_old ,a_new)
-write(*,*) "Checking uout"
-	call checkisnan(uout, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old, NVAR)
 !Step Five Magnetic Update
      call magup(bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
 		 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
@@ -172,15 +172,7 @@ write(*,*) "Checking uout"
 		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-		 E,q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, dx, dy, dz, dt, a_old, a_new)
-write(*,*) "Checking Bxout"
-	call checkisnan(bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3,1)
-
-write(*,*) "Checking Byout"
-	call checkisnan(byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3,1)
-
-write(*,*) "Checking Bzout"
-	call checkisnan(bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3,1)
+		 E,q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3,lo, hi, dx, dy, dz, dt, a_old, a_new)
 
 	  flux1(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,URHO:UEDEN) = flx(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,URHO:UEDEN,1)
 	  flux2(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,URHO:UEDEN) = flx(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,URHO:UEDEN,2)
@@ -291,6 +283,7 @@ end subroutine fort_advance_mhd
       integer          :: ngp, ngf, loq(3), hiq(3)
       integer          :: n, nq
       integer          :: iadv, ispec
+	  integer		   :: btile(3)
       real(rt) :: courx, coury, courz, courmx, courmy, courmz
       real(rt) :: a_half, a_dot, rhoInv
       real(rt) :: dtdxaold, dtdyaold, dtdzaold, small_pres_over_dens
@@ -359,21 +352,38 @@ end subroutine fort_advance_mhd
 !      end if ! UFS > 0
 
       small_pres_over_dens = small_pres / small_dens
-
-	  !Calculate Cell Centered Magnetic Field 
-	 q(:,:,:,QMAGX) = bx(bxin_l1,bxin_l2,bxin_l3) 
-	 q(:,:,:,QMAGY) = by(byin_l1,byin_l2,byin_l3) 
-	 q(:,:,:,QMAGZ) = bz(bzin_l1,bzin_l2,bzin_l3)  
-		do i = bxin_l1, bxin_h1 - 1
-			q(i,bxin_l2:bxin_h2,bxin_l3:bxin_h3,QMAGX) = 0.5d0*(bx(i+1,:,:) + bx(i,:,:))
-		end do
-		do j = byin_l2, byin_h2 - 1
-			q(byin_l1:byin_h1,j,byin_l3:byin_h3,QMAGY) = 0.5d0*(by(:,j+1,:) + by(:,j,:))
-		end do
-		do k = bzin_l3, bzin_h3 - 1
-			q(bzin_l1:bzin_h1,bzin_l2:bzin_h2,k,QMAGZ) = 0.5d0*(bz(:,:,k+1) + bz(:,:,k))
+	  !Calculate Cell Centered Magnetic Field x
+      do k = bxin_l3, bxin_h3 -1
+         do j = bxin_l2, bxin_h2 -1
+            do i = bxin_l1, bxin_h1 -1
+					q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
+				end do
+			end do
 		end do
 
+      do k = byin_l3, byin_h3 -1
+         do j = byin_l2, byin_h2 -1
+            do i = byin_l1, byin_h1 -1
+					q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
+				end do
+			end do
+		end do
+      do k = bzin_l3, bzin_h3 -1
+         do j = bzin_l2, bzin_h2 -1
+            do i = bzin_l1, bzin_h1 -1
+					q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
+				end do
+			end do
+		end do
+	   q(bxin_l1:bxin_h1,bxin_l2:bxin_h2, bxin_h3, QMAGX) = bx(:,:,bxin_h3)
+	   q(bxin_l1:bxin_h1,bxin_h2, bxin_l3:bxin_h3, QMAGX) = bx(:,bxin_h2,:)	
+	   q(bxin_h1,bxin_l2:bxin_h2, bxin_l3:bxin_h3, QMAGX) = bx(bxin_h1,:,:)
+	   q(byin_l1:byin_h1,byin_l2:byin_h2, byin_h3, QMAGY) = by(:,:,byin_h3)
+	   q(byin_l1:byin_h1,byin_h2, byin_l3:byin_h3, QMAGY) = by(:,byin_h2,:)	
+	   q(byin_h1,byin_l2:byin_h2, byin_l3:byin_h3, QMAGY) = by(byin_h1,:,:)
+	   q(bzin_l1:bzin_h1,bzin_l2:bzin_h2, bzin_h3, QMAGZ) = bz(:,:,bzin_h3)
+	   q(bzin_l1:bzin_h1,bzin_h2, bzin_l3:bzin_h3, QMAGZ) = bz(:,bzin_h2,:)	
+	   q(bzin_h1,bzin_l2:bzin_h2, bzin_l3:bzin_h3, QMAGZ) = bz(bzin_h1,:,:)
       ! Get p, T, c, csml using q state
       do k = loq(3), hiq(3)
          do j = loq(2), hiq(2)
@@ -555,20 +565,18 @@ end subroutine fort_advance_mhd
 	  integer 				:: i, j, k		
 	  uout = 0.d0
 	  !****TO DO ******* SOURCES
-		do k = uout_l3, uout_h3
-			do j = uout_l2, uout_h2
-				do i = uout_l1, uout_h1
+		do k = lo(3), hi(3)
+			do j = lo(2), hi(2)
+				do i = lo(1), hi(1)
 					uout(i,j,k,URHO:UEDEN) = uin(i,j,k,URHO:UEDEN) - dt/dx*(flux(i+1,j,k,URHO:UEDEN,1) - flux(i,j,k,URHO:UEDEN,1)) &
 											 -dt/dy*(flux(i,j+1,k,URHO:UEDEN,2) - flux(i,j,k,URHO:UEDEN,2)) &
 											 -dt/dz*(flux(i,j,k+1,URHO:UEDEN,3) - flux(i,j,k,URHO:UEDEN,3)) !Add source terms later
 					if(uout(i,j,k,UEDEN).lt. 0.d0) then
 						write(*,*) "Negative Energy", uout(i,j,k,UEDEN)
-						write(*,*) "Flux x", flux(i+1, j, k, UEDEN, 1) 
-						write(*,*) flux(i,j,k,UEDEN,1)
-						write(*,*) "Flux y", flux(i, j+1, k, UEDEN, 2) 
-						write(*,*) flux(i,j,k,UEDEN,2)
-						write(*,*) "Flux z", flux(i, j, k+1, UEDEN, 3) 
-						write(*,*) flux(i,j,k,UEDEN,3)
+						write(*,*) "Energy In", uin(i, j, k, UEDEN)
+						write(*,*) "Flux x", -dt/dx*(flux(i+1, j, k, UEDEN, 1) - flux(i,j,k,UEDEN,1))
+						write(*,*) "Flux y", -dt/dy*(flux(i, j+1, k, UEDEN, 2) - flux(i,j,k,UEDEN,2))
+						write(*,*) "Flux z", -dt/dz*(flux(i, j, k+1, UEDEN, 3) - flux(i,j,k,UEDEN,3))
 						write(*,*), i, j, k
 						pause
 					endif
@@ -590,7 +598,7 @@ end subroutine fort_advance_mhd
 		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-		 E,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, dx, dy, dz, dt, a_old, a_new)
+		 E,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,lo, hi, dx, dy, dz, dt, a_old, a_new)
 
      use amrex_fort_module, only : rt => amrex_real
      use meth_params_module, only : QVAR
@@ -605,6 +613,7 @@ end subroutine fort_advance_mhd
 		integer, intent(in)   :: bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
 		integer, intent(in)   :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
 		integer, intent(in)   :: q_l1, q_l2,q_l3 ,q_h1,q_h2, q_h3
+		integer, intent(in)   :: lo(3), hi(3)
 
 		real(rt), intent(in)  :: bxin(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
 		real(rt), intent(in)  :: byin(byin_l1:byin_h1, byin_l2:byin_h2, byin_l3:byin_h3)
@@ -618,7 +627,7 @@ end subroutine fort_advance_mhd
 		real(rt), intent(out) :: bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
 
 		integer				  :: i, j, k
-	
+		
 		
 		!***** TO DO ***** SOURCES
 		bxout = 0.d0
@@ -626,27 +635,27 @@ end subroutine fort_advance_mhd
 		bzout = 0.d0
 
 		!-------------------------------- bx --------------------------------------------------
-			do k = bxout_l3,bxout_h3
-				do j = bxout_l2,bxout_h2
-					do i = bxout_l1,bxout_h1
+			do k = lo(3), hi(3)
+				do j = lo(2), hi(2)
+					do i = lo(1), hi(1)
 						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k,2,1) - (E(i,j,k,3,2) - E(i,j,k,3,1)))
 					enddo
 				enddo
 			enddo
 
 		!------------------------------- by --------------------------------------------------
-			do k = byout_l3,byout_h3
-				do j = byout_l2,byout_h2
-					do i = byout_l1,byout_h1
+			do k = lo(3), hi(3)
+				do j = lo(2), hi(2)
+					do i = lo(1), hi(1)
 						byout(i,j,k) = byin(i,j,k) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
 					enddo
 				enddo
 			enddo
 
 		!------------------------------- bz --------------------------------------------------
-			do k = bzout_l3,bzout_h3
-				do j = bzout_l2,bzout_h2
-					do i = bzout_l1,bzout_h1
+			do k = lo(3), hi(3)
+				do j = lo(2), hi(2)
+					do i = lo(1), hi(1)
 						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j,k,1,4) - E(i,j,k,1,3) - (E(i,j,k,2,3) - E(i,j,k,2,4)))
 							if(isnan(bzout(i,j,k))) then
 								write(*,*) "bzout is nan  ", "bzin = ", bzin(i,j,k), "E =  ",E(i,j,k,1,4),E(i,j,k,1,3),E(i,j,k,2,3),E(i,j,k,2,4)

@@ -276,7 +276,7 @@ implicit none
 	!Riemann Speeds
 	sL   = min(qm(QV),qp(QV)) - max(cfL,cfR)
 	sR 	 = max(qm(QV),qp(QV)) + max(cfL,cfR)
-	sM   = ((sR - qp(QV))*qp(QRHO)*qp(QV) - (sL - qm(QV))*qm(QRHO)*qm(QV) - qp(QPRES) + qm(QPRES))/((sR - qp(QV))*qp(QRHO) - (sL - qm(QV))*qm(QRHO))
+	sM   = ((sR - qp(QV))*qp(QRHO)*qp(QV) - (sL - qm(QV))*qm(QRH O)*qm(QV) - qp(QPRES) + qm(QPRES))/((sR - qp(QV))*qp(QRHO) - (sL - qm(QV))*qm(QRHO))
 	!Pressures in the Riemann Fan
 	ptL  = qm(QPRES)
 	ptR  = qp(QPRES)
