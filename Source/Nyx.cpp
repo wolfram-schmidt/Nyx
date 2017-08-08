@@ -1390,11 +1390,14 @@ Nyx::post_timestep (int iteration)
     }
 
 #ifndef NO_HYDRO
+//#ifdef MHD
+//#else
     if (do_hydro)
     {
        // Re-compute temperature after all the other updates.
        compute_new_temp();
     }
+//#endif
 #endif
 }
 
@@ -2074,7 +2077,7 @@ Nyx::compute_new_temp ()
 
     Real cur_time   = state[State_Type].curTime();
 
-    reset_internal_energy(S_new,D_new);
+ //   reset_internal_energy(S_new,D_new);
 
     Real a = get_comoving_a(cur_time);
 

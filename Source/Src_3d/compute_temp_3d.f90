@@ -34,7 +34,6 @@
           if (z .ne. this_z) &
              call interp_to_this_z(z)
       end if
-
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
@@ -66,6 +65,7 @@
                   if (print_fortran_warnings .gt. 0) then
                      print *,'   '
                      print *,'>>> Warning: (rho e) is negative in compute_temp: ',i,j,k
+		     print *, state(i,j,k,UEINT)
                   end if
                    ! Set temp to small_temp and compute corresponding internal energy
                    call nyx_eos_given_RT(eint, dummy_pres, state(i,j,k,URHO), small_temp, &

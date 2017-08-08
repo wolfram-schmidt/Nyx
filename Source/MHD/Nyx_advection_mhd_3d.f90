@@ -149,7 +149,12 @@
 				 bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
                  qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
 !write(*,*) "Bounds", q_l1,q_l2,q_l3,q_h1,q_h2,q_h3
-	  
+!qm(:,:,:,:,1) = q
+!qm(:,:,:,:,2) = q
+!qm(:,:,:,:,3) = q
+!qp(:,:,:,:,1) = q
+!qp(:,:,:,:,2) = q
+!qp(:,:,:,:,3) = q
 flx = 0.d0
 !Step Three, Corner Couple and find the correct fluxes + electric fields
 	  call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &	
@@ -200,14 +205,14 @@ flx = 0.d0
                                lo,hi,dx,dy,dz,dt,a_old,a_new,e_added,ke_added)
       endif
       ! Enforce species >= 0
-      call enforce_nonnegative_species(uout,uout_l1,uout_l2,uout_l3, &
-                                       uout_h1,uout_h2,uout_h3,lo,hi,0)
+ !     call enforce_nonnegative_species(uout,uout_l1,uout_l2,uout_l3, &
+  !                                     uout_h1,uout_h2,uout_h3,lo,hi,0)
 
       ! Re-normalize the species
-      if (normalize_species .eq. 1) then
-         call normalize_new_species(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-                                    lo,hi)
-      end if
+   !   if (normalize_species .eq. 1) then
+    !     call normalize_new_species(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
+     !                               lo,hi)
+     ! end if
 
 end subroutine fort_advance_mhd
 
@@ -559,7 +564,7 @@ end subroutine fort_advance_mhd
 
 
 	  integer 				:: i, j, k		
-	  uout = 0.d0
+	 uout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:) = 0.d0
 	  !****TO DO ******* SOURCES
 		do k = lo(3), hi(3)
 			do j = lo(2), hi(2)
@@ -568,6 +573,16 @@ end subroutine fort_advance_mhd
 											 -dt/dy*(flux(i,j+1,k,URHO:UEDEN,2) - flux(i,j,k,URHO:UEDEN,2)) &
 											 -dt/dz*(flux(i,j,k+1,URHO:UEDEN,3) - flux(i,j,k,URHO:UEDEN,3)) !Add source terms later
 					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5*uout(i,j,k,URHO)*dot_product(uout(i,j,k,UMX:UMZ)/uout(i,j,k,URHO),uout(i,j,k,UMX:UMZ)/uout(i,j,k,URHO))
+					if(uout(i,j,k,UEDEN).lt.0.d0) then
+						write(*,*) "Negative Energy at", i, j, k, ' NRG in = ', uin(i,j,k,UEDEN)
+						write(*,*) "flux x= ", - dt/dx*(flux(i+1,j,k,UEDEN,1) - flux(i,j,k,UEDEN,1))
+						write(*,*) "flux y= ", - dt/dy*(flux(i,j+1,k,UEDEN,2) - flux(i,j,k,UEDEN,2))
+						write(*,*) "flux z= ", - dt/dz*(flux(i,j,k+1,UEDEN,3) - flux(i,j,k,UEDEN,3))
+						write(*,*) "internal NRG = ", uout(i,j,k,UEINT)
+						pause
+					endif
+
+					!write(*,*) "Density = ",i,j,k, uout(i,j,k,URHO)
 				enddo
 			enddo
 		enddo
@@ -617,15 +632,15 @@ end subroutine fort_advance_mhd
 		
 		
 		!***** TO DO ***** SOURCES
-		bxout = 0.d0
-		byout = 0.d0
-		bzout = 0.d0
-
+		bxout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
+		byout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
+		bzout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
 		!-------------------------------- bx --------------------------------------------------
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k,2,1) - (E(i,j,k,3,2) - E(i,j,k,3,1)))
+						print *, "Bx = ", bxout(i,j,k)
 					enddo
 				enddo
 			enddo
@@ -635,6 +650,7 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						byout(i,j,k) = byin(i,j,k) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
+						print *, "By = ", byout(i,j,k)
 					enddo
 				enddo
 			enddo
@@ -644,11 +660,7 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j,k,1,4) - E(i,j,k,1,3) - (E(i,j,k,2,3) - E(i,j,k,2,4)))
-							if(isnan(bzout(i,j,k))) then
-								write(*,*) "bzout is nan  ", "bzin = ", bzin(i,j,k), "E =  ",E(i,j,k,1,4),E(i,j,k,1,3),E(i,j,k,2,3),E(i,j,k,2,4)
-								write(*,*) "i, j, k = " , i, j, k
-								pause
-							endif
+						print *, "Bz = ", bzout(i,j,k)
 					enddo
 				enddo
 			enddo

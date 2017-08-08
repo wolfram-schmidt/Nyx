@@ -261,7 +261,7 @@ contains
 				endif
 				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
 				Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
-				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) +0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
+				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
 				
 	!========================================= Z Direction ================================================				
 				summ = 0.d0
@@ -319,6 +319,12 @@ contains
 			enddo
 		enddo
 	enddo
+				Im(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,1)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
+				Im(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,2)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
+				Im(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,3)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
+				Ip(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,1)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
+				Ip(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,2)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
+				Ip(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,3)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
 !Need to add source terms, heating cooling, gravity, etc.
 	end subroutine plm
 
@@ -371,12 +377,6 @@ contains
 	cfx = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cax))
 	cfy = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cay))
 	cfz = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*caz))
-	if(isnan(cfz)) then
-		write(*,*) "Fast wave is nan ", cfz
-		write(*,*) " a^2  = ", as, "pressure = ", Q(QPRES)
-		write(*,*) "bx = ", Q(QMAGX), "by = ", Q(QMAGY), "bz = ", Q(QMAGZ)
-		pause
-	endif
 	if(dir.eq.1) then	
 		!Ax eigenvalues
 		lam(1) = Q(QU) - sqrt(cfx)
@@ -436,6 +436,7 @@ contains
 	alf = sqrt((as - csx)/(cfx - csx))
 	als = sqrt((cfx - as)/(cfx - csx))
 	if(cfx - as .lt. 0.d0) als = 0.d0
+	if(as - csx .lt. 0.d0) alf = 0.d0
 	if(abs(Q(QMAGY)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		bety = 1.d0/sqrt(2.d0)
 		betz = bety
@@ -452,16 +453,14 @@ contains
 	S = sign(1.0d0, Q(QMAGX))
 	Qf = sqrt(cfx)*alf*S
 	Qs = sqrt(csx)*als*S
-	if(isnan(Qs)) then
-		 write(*,*) "Qs is nan", "csx = ", csx, "alpha slow = ", als, "alpha fast = ", alf, "cfx - a^2 = ", cfx - as
-		 write(*,*) "a^2 = ", as, "Rho = ", Q(QRHO), "cfx = ", cfx, "ca = ", ca, "cfx - csx", cfx - csx
+	N = 0.5d0/as
+	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
+	AAs = sqrt(as)*als*sqrt(Q(QRHO))
+	if(isnan(cff)) then
+	     write(*,*) "cff is nan", cff, "cfx = ", cfx, "alpha Fast =", alf, "sqrt(cfx) = ", sqrt(cfx)
 		 pause
 	endif
 		
-	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
-	AAs = sqrt(as)*als*sqrt(Q(QRHO))
-	N = 0.5d0/as
-	
 	leig(1,:) = (/0.d0, -N*Cff	, N*Qs*bety		, N*Qs*betz		, N*alf/Q(QRHO)	, N*AAs*bety/Q(QRHO)			, N*AAs*betz/Q(QRHO)			/) !u - cf
 	leig(2,:) = (/0.d0,  0.d0	, -0.5d0*betz	, 0.5d0*bety	, 0.d0			, -0.5d0*S*betz/(sqrt(Q(QRHO)))	, 0.5d0*bety*S/(sqrt(Q(QRHO)))	/) !u - cAx
 	leig(3,:) = (/0.d0, -N*Css	, -N*Qf*bety	, -N*Qf*betz	, N*als/Q(QRHO)	, -N*AAf*bety/Q(QRHO)			, -N*AAf*betz/Q(QRHO)			/) !u - cs
@@ -622,6 +621,7 @@ contains
 	alf = sqrt((as - csx)/(cfx - csx))
 	als = sqrt((cfx - as)/(cfx - csx))
 	if(cfx - as .lt. 0.d0) als = 0.d0
+	if(as - csx .lt. 0.d0) alf = 0.d0
 	if(abs(Q(QMAGY)).le. 1.d-14 .and.abs(Q(QMAGZ)).le. 1.d-14) then
 		bety = 1.d0/sqrt(2.d0)
 		betz = bety

@@ -543,7 +543,7 @@ Nyx::advance_mhd (Real time,
 	MultiFab& Bz_new = get_new_data(Mag_Type_z);
     MultiFab& D_new = get_new_data(DiagEOS_Type);
 
-//    reset_internal_energy(S_new,D_new);
+    //reset_internal_energy(S_new,D_new); //Getting an Error in Here Need to fix
 
     return dt;
 }
@@ -682,7 +682,6 @@ Nyx::advance_hydro (Real time,
 
     compute_new_temp();
 #endif /*GRAVITY*/
-
     reset_internal_energy(S_new,D_new);
 
     return dt;
