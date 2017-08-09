@@ -655,7 +655,8 @@ end subroutine qflux
 	real(rt), intent(in) :: uout(uout_l1:uout_h1,uout_l2:uout_h2,uout_l3:uout_h3)
 
 	integer :: i,j,k
-
+!    write(*,*) "uout = ", uout 
+!       pause
 
 		do k = uout_l3,uout_h3
 			do j = uout_l2, uout_h2

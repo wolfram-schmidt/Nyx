@@ -91,8 +91,9 @@
       integer ngq,ngf
       integer q_l1, q_l2, q_l3, q_h1, q_h2, q_h3
       integer srcq_l1, srcq_l2, srcq_l3, srcq_h1, srcq_h2, srcq_h3
-!      integer 	:: i,j,k
-
+      integer 	:: i,j,k!, alloc
+    
+!      alloc = 0
       ngq = NHYP
       ngf = 1
 
@@ -120,31 +121,44 @@
 	  allocate( qm(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
 	  q = 0.d0
 
-      
+
+!Allocation Hacks
+    do k = bxout_l3, bxout_h3
+        do j = bxout_l2, bxout_h2
+            do i = bxout_l1, bxout_h1
+                if(isnan(bxout(i,j,k))) then
+                    bxout(i,j,k) = 0.d0
+                endif
+            enddo
+        enddo
+    enddo
+    do k = byout_l3, byout_h3
+        do j = byout_l2, byout_h2
+            do i = byout_l1, byout_h1
+                if(isnan(byout(i,j,k))) then
+                    byout(i,j,k) = 0.d0
+                endif
+            enddo
+        enddo
+    enddo
+    do k = bzout_l3, bzout_h3
+        do j = bzout_l2, bzout_h2
+            do i = bzout_l1, bzout_h1
+                if(isnan(bzout(i,j,k))) then
+                    bzout(i,j,k) = 0.d0
+                endif
+            enddo
+        enddo
+    enddo
       dx = delta(1)
       dy = delta(2)
       dz = delta(3)
 
-    write(*,*) "Bx in", bxin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
-        pause
-    write(*,*) "lo = ", lo, "hi = ", hi, bxin(lo(1),lo(2),lo(3))    
-    write(*,*) "Checking Bx in" 
-    call checkisnan(bxin(:,:,:), lo(1), lo(2), lo(3), hi(1), hi(2), hi(3))
-        write(*,*) "By in", byin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
-        pause
-    write(*,*) "Checking By in" 
-    call checkisnan(byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3))
-        write(*,*) "Bz in", bzin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
-        pause
-    write(*,*) "Checking Bz in" 
-    call checkisnan(bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3))
-
-
 !Step One, Calculate Primitives based on conservatives
 	  call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3,&
-					bxin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-					byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-					bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+					bxin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)), lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+					byin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)), lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+					bzin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)), lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
                     q , c , csml, flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
                     src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                     srcQ, srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
