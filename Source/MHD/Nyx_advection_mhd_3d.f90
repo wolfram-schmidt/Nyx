@@ -27,7 +27,7 @@
 !--------------------- Dependencies ------------------------------------------------
       use amrex_fort_module, only : rt => amrex_real
       use mempool_module, only : bl_allocate, bl_deallocate
-	  use ct_upwind, only : corner_transport
+	  use ct_upwind, only : corner_transport, checkisnan
 	  use mhd_plm_module, only : plm
       use meth_params_module!, only : QVAR, NTHERM, NHYP, normalize_species, NVAR, URHO, UEDEN
       use enforce_module, only : enforce_nonnegative_species
@@ -91,7 +91,7 @@
       integer ngq,ngf
       integer q_l1, q_l2, q_l3, q_h1, q_h2, q_h3
       integer srcq_l1, srcq_l2, srcq_l3, srcq_h1, srcq_h2, srcq_h3
-      integer 	:: i
+!      integer 	:: i,j,k
 
       ngq = NHYP
       ngf = 1
@@ -108,11 +108,7 @@
       srcq_h1 = hi(1)+1
       srcq_h2 = hi(2)+1
       srcq_h3 = hi(3)+1
-	  write(*,*) "lo = ", lo
-	  write(*,*) "hi = ", hi
-	  write(*,*) "loq = ", q_l1, q_l2, q_l3
-	  write(*,*) "hiq = ", q_h1, q_h2, q_h3
-
+	  
       call bl_allocate(     q, lo-NHYP, hi+NHYP, QVAR)
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
       call bl_allocate(     c, lo-NHYP, hi+NHYP      )
@@ -129,6 +125,19 @@
       dy = delta(2)
       dz = delta(3)
 
+    write(*,*) "Bx in", bxin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
+        pause
+    write(*,*) "lo = ", lo, "hi = ", hi, bxin(lo(1),lo(2),lo(3))    
+    write(*,*) "Checking Bx in" 
+    call checkisnan(bxin(:,:,:), lo(1), lo(2), lo(3), hi(1), hi(2), hi(3))
+        write(*,*) "By in", byin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
+        pause
+    write(*,*) "Checking By in" 
+    call checkisnan(byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3))
+        write(*,*) "Bz in", bzin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3))
+        pause
+    write(*,*) "Checking Bz in" 
+    call checkisnan(bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3))
 
 
 !Step One, Calculate Primitives based on conservatives
@@ -359,32 +368,53 @@ end subroutine fort_advance_mhd
             do i = bxin_l1, bxin_h1 -1
 					q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
 				end do
+				    q(bxin_h1,j,k,QMAGX) = bx(bxin_h1,j,k)
 			end do
+			    q(bxin_h1,bxin_h2,k,QMAGX) = bx(bxin_h1,bxin_h2,k)
 		end do
-
+      q(bxin_h1,bxin_h2,bxin_h3,QMAGX) = bx(bxin_h1,bxin_h2,bxin_h3)
       do k = byin_l3, byin_h3 -1
          do j = byin_l2, byin_h2 -1
             do i = byin_l1, byin_h1 -1
 					q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
 				end do
+				q(byin_h1,j,k,QMAGY) = by(byin_h1,j,k)
 			end do
+			q(byin_h1,byin_h2,k,QMAGY) = by(byin_h1,byin_h2,k)
 		end do
+		q(byin_h1,byin_h2,byin_h3,QMAGY) = by(byin_h1,byin_h2,byin_h3)
       do k = bzin_l3, bzin_h3 -1
          do j = bzin_l2, bzin_h2 -1
             do i = bzin_l1, bzin_h1 -1
 					q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
 				end do
+				q(bzin_h1,j,k,QMAGZ) = bz(bzin_h1,j,k)
 			end do
+			q(bzin_h1,bzin_h2,k,QMAGZ) = bz(bzin_h1,bzin_h2,k)			
 		end do
-	   q(bxin_l1:bxin_h1,bxin_l2:bxin_h2, bxin_h3, QMAGX) = bx(:,:,bxin_h3)
-	   q(bxin_l1:bxin_h1,bxin_h2, bxin_l3:bxin_h3, QMAGX) = bx(:,bxin_h2,:)	
-	   q(bxin_h1,bxin_l2:bxin_h2, bxin_l3:bxin_h3, QMAGX) = bx(bxin_h1,:,:)
-	   q(byin_l1:byin_h1,byin_l2:byin_h2, byin_h3, QMAGY) = by(:,:,byin_h3)
-	   q(byin_l1:byin_h1,byin_h2, byin_l3:byin_h3, QMAGY) = by(:,byin_h2,:)	
-	   q(byin_h1,byin_l2:byin_h2, byin_l3:byin_h3, QMAGY) = by(byin_h1,:,:)
-	   q(bzin_l1:bzin_h1,bzin_l2:bzin_h2, bzin_h3, QMAGZ) = bz(:,:,bzin_h3)
-	   q(bzin_l1:bzin_h1,bzin_h2, bzin_l3:bzin_h3, QMAGZ) = bz(:,bzin_h2,:)	
-	   q(bzin_h1,bzin_l2:bzin_h2, bzin_l3:bzin_h3, QMAGZ) = bz(bzin_h1,:,:)
+       q(bzin_h1,bzin_h2,bzin_h3,QMAGZ) = bz(bzin_h1,bzin_h2,bzin_h3)
+       			
+	   q(q_l1:bxin_l1,:,:, QMAGX) = bx(bxin_l1,bxin_l2,bxin_l3)
+	   q(bxin_h1:q_h1,:,:, QMAGX) = bx(bxin_h1,bxin_h2,bxin_h3)
+   	   q(:,q_l2:bxin_l2,:, QMAGX) = bx(bxin_l1,bxin_l2,bxin_l3)
+	   q(:,bxin_h2:q_h2,:, QMAGX) = bx(bxin_h1,bxin_h2,bxin_h3)
+   	   q(:,:,q_l3:bxin_l3, QMAGX) = bx(bxin_l1,bxin_l2,bxin_l3)
+	   q(:,:,bxin_h3:q_h3, QMAGX) = bx(bxin_h1,bxin_h2,bxin_h3)
+
+   	   q(q_l1:byin_l1,:,:, QMAGY) = by(byin_l1,byin_l2,byin_l3)
+	   q(byin_h1:q_h1,:,:, QMAGY) = by(byin_h1,byin_h2,byin_h3)
+   	   q(:,q_l2:byin_l2,:, QMAGY) = by(byin_l1,byin_l2,byin_l3)
+	   q(:,byin_h2:q_h2,:, QMAGY) = by(byin_h1,byin_h2,byin_h3)
+   	   q(:,:,q_l3:byin_l3, QMAGY) = by(byin_l1,byin_l2,byin_l3)
+	   q(:,:,byin_h3:q_h3, QMAGY) = by(byin_h1,byin_h2,byin_h3)
+
+   	   q(q_l1:bzin_l1,:,:, QMAGZ) = bz(bzin_l1,bzin_l2,bzin_l3)
+	   q(bzin_h1:q_h1,:,:, QMAGZ) = bz(bzin_h1,bzin_h2,bzin_h3)
+   	   q(:,q_l2:bzin_l2,:, QMAGZ) = bz(bzin_l1,bzin_l2,bzin_l3)
+	   q(:,bzin_h2:q_h2,:, QMAGZ) = bz(bzin_h1,bzin_h2,bzin_h3)
+   	   q(:,:,q_l3:bzin_l3, QMAGZ) = bz(bzin_l1,bzin_l2,bzin_l3)
+	   q(:,:,bzin_h3:q_h3, QMAGZ) = bz(bzin_h1,bzin_h2,bzin_h3)
+	   
       ! Get p, T, c, csml using q state
       do k = loq(3), hiq(3)
          do j = loq(2), hiq(2)
@@ -632,15 +662,15 @@ end subroutine fort_advance_mhd
 		
 		
 		!***** TO DO ***** SOURCES
-		bxout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
-		byout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
-		bzout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
+	!	bxout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
+	!	byout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
+	!	bzout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
 		!-------------------------------- bx --------------------------------------------------
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k,2,1) - (E(i,j,k,3,2) - E(i,j,k,3,1)))
-						print *, "Bx = ", bxout(i,j,k)
+						write(*,*) "bx = ", bxout(i,j,k)
 					enddo
 				enddo
 			enddo
@@ -650,7 +680,7 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						byout(i,j,k) = byin(i,j,k) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
-						print *, "By = ", byout(i,j,k)
+						write(*,*) "by = ", byout(i,j,k)
 					enddo
 				enddo
 			enddo
@@ -660,7 +690,7 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j,k,1,4) - E(i,j,k,1,3) - (E(i,j,k,2,3) - E(i,j,k,2,4)))
-						print *, "Bz = ", bzout(i,j,k)
+						write(*,*) "bz = ", bzout(i,j,k)
 					enddo
 				enddo
 			enddo

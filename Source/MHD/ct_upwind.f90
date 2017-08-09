@@ -8,6 +8,12 @@ module ct_upwind
 
  private primtocons
  public corner_transport
+ 
+ 
+interface checkisnan
+       module procedure checkisnanmult
+       module procedure checkisnans
+end interface checkisnan
 
  contains
 
@@ -612,11 +618,10 @@ implicit none
 	qflx(QMAGZ) = flx(QMAGZ)
 
 end subroutine qflux
-end module ct_upwind
 
 
 !============================================ Debug code =====================================================
-	subroutine checkisnan(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, num)
+	subroutine checkisnanmult(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, num)
 	   use amrex_fort_module, only : rt => amrex_real
 
 	implicit none
@@ -639,7 +644,31 @@ end module ct_upwind
 			enddo
 		enddo
 	enddo
-	end subroutine checkisnan
+	end subroutine checkisnanmult
+!============ single =====================	
+
+	subroutine checkisnans(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3)
+	   use amrex_fort_module, only : rt => amrex_real
+
+	implicit none
+	integer, intent(in)  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
+	real(rt), intent(in) :: uout(uout_l1:uout_h1,uout_l2:uout_h2,uout_l3:uout_h3)
+
+	integer :: i,j,k
+
+
+		do k = uout_l3,uout_h3
+			do j = uout_l2, uout_h2
+				do i = uout_l1,uout_h1
+					if(isnan(uout(i,j,k)).or.(abs(uout(i,j,k)).ge. 1d16)) then
+						write(*,*) "Bad values ",  uout(i,j,k)
+						write(*,*) "Failure to converge ", "i, j, k = ", i, j, k
+						stop
+					endif
+				enddo
+			enddo
+		enddo
+	end subroutine checkisnans
 
 !====================================== Density Check ========================================
 	subroutine checknegdens(uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3)
@@ -663,3 +692,4 @@ end module ct_upwind
 			enddo
 		enddo
 	end subroutine checknegdens
+end module ct_upwind
