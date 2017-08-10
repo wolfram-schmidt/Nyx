@@ -29,7 +29,7 @@ implicit none
  if(dir.eq.1) then
 	do k = flx_l3, flx_h3
 		do j = flx_l2, flx_h2
-			do i = flx_l1, flx_h1
+			do i = flx_l1, flx_h1-1
 				call hlldx(qp(i,j,k,:),qm(i+1,j,k,:),flx(i,j,k,:))
 				if(isnan(flx(i,j,k,2)).or. abs(flx(i,j,k,2)).ge. 1d14) then
 					write(*,*) "Nan flux at ", i, j, k
@@ -42,7 +42,7 @@ implicit none
 	enddo
  elseif(dir.eq.2) then
 	do k = flx_l3, flx_h3
-		do j = flx_l2, flx_h2
+		do j = flx_l2, flx_h2-1
 			do i = flx_l1, flx_h1
 				call hlldy(qp(i,j,k,:),qm(i,j+1,k,:),flx(i,j,k,:))
 				if(isnan(flx(i,j,k,2))) then
@@ -55,7 +55,7 @@ implicit none
 		enddo
 	enddo
  else 
-	do k = flx_l3, flx_h3
+	do k = flx_l3, flx_h3-1
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldz(qp(i,j,k,:),qm(i,j,k+1,:),flx(i,j,k,:))
@@ -82,6 +82,7 @@ implicit none
 	real(rt)			  :: cfL, cfR, sL, sR, sM, ssL, ssR, pst, caL, caxL
 	real(rt) 			  :: caR, caxR, asL, asR, ptL, ptR, eL, eR
 	real(rt)			  :: FL(QVAR), FR(QVAR)
+	real(rt)              :: uL(QVAR), uR(QVAR)	
 	real(rt)			  :: QsL(QVAR), FsL(QVAR)
 	real(rt)			  :: QsR(QVAR), FsR(QVAR)
 	real(rt)			  :: QssL(QVAR), FssL(QVAR)
@@ -100,6 +101,9 @@ implicit none
 	QssR = 0.d0
 	FssL = 0.d0
 	FssR = 0.d0
+	
+    call PToC(qL,uL)
+    call PToC(qR,uR)	
 	call primtofluxx(qL, FL)
 	call primtofluxx(qR, FR)	
 	
@@ -209,10 +213,10 @@ implicit none
 		endif
 	enddo
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
-	FsL  = FL + sL*(QsL - qL)
-	FssL = FL + ssL*QssL - (ssL - sL)*QsL - sL*qL
+	FsL  = FL + sL*(QsL - uL)
+	FssL = FL + ssL*QssL - (ssL - sL)*QsL - sL*uL
 	FsR  = FR + sR*(QsR - qR)
-	FssR = FR + ssR*QssR - (ssR - sR)*QsR - sR*qR
+	FssR = FR + ssR*QssR - (ssR - sR)*QsR - sR*uR
 	!Solve the RP
 	if(sL .gt. 0.d0) then
 	flx = FL
@@ -240,7 +244,7 @@ implicit none
 !			write(*,*) "FL = ", FL
 !			write(*,*) "FR = ", FR
 !			write(*,*) "QL = ", qL
-!			write(*,*) "QR = ", qR
+!			write(*,*) "QR = ", qRs
 !			write(*,*) "QsL = ", QsL
 !			write(*,*) "QsR = ", QsR
 !			write(*,*) "QssL = ", QssL
@@ -250,13 +254,11 @@ implicit none
 !		endif
 !	enddo
 
-	!Rusanof flux
-	flx = 0.5d0*(FL + FR) + 0.5d0*sM*(QL - QR)
 end subroutine hlldx
 
 !============================================================= Y Direction =================================================================
 
-subroutine hlldy(qR,qL,flx)
+subroutine hlldy(qL,qR,flx)
 
 !Main assumption, the normal velocity/Mag field is constant in the Riemann fan, and is sM/By respectively. 
 !Total Pressure is constant throughout the Riemann fan, pst!
@@ -272,6 +274,7 @@ implicit none
 	real(rt)			  :: cfL, cfR, sL, sR, sM, ssL, ssR, pst, caL, cayL
 	real(rt) 			  :: caR, cayR, asL, asR, ptL, ptR, eL, eR
 	real(rt)			  :: FL(QVAR), FR(QVAR)
+    real(rt)              :: uL(QVAR), uR(QVAR)
 	real(rt)			  :: QsL(QVAR), FsL(QVAR)
 	real(rt)			  :: QsR(QVAR), FsR(QVAR)
 	real(rt)			  :: QssL(QVAR), FssL(QVAR)
@@ -291,6 +294,9 @@ implicit none
 	QssR = 0.d0
 	FssL = 0.d0
 	FssR = 0.d0
+
+    call PToC(qL,uL)
+    call PToC(qR,uR)
 	call primtofluxy(qL, FL)
 	call primtofluxy(qR, FR)
 	eL   = (qL(QPRES) -0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)) &
@@ -400,10 +406,10 @@ implicit none
 		endif
 	enddo
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
-	FsL  = FL + sL*(QsL - qL)
-	FssL = FL + ssL*QssL - (ssL - sL)*QsL - sL*qL
-	FsR  = FR + sR*(QsR - qR)
-	FssR = FR + ssR*QssR - (ssR - sR)*QsR - sR*qR
+	FsL  = FL + sL*(QsL - uL)
+	FssL = FL + ssL*QssL - (ssL - sL)*QsL - sL*uL
+	FsR  = FR + sR*(QsR - uR)
+	FssR = FR + ssR*QssR - (ssR - sR)*QsR - sR*uR
 	!Solve the RP
 	if(sL .gt. 0.d0) then
 	flx = FL
@@ -411,7 +417,7 @@ implicit none
 	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
 	flx = FsL
 	choice = "FsL"
-	elseif(ssl .le. 0.d0 .and. sM .gt. 0.d0) then
+	elseif(ssL .le. 0.d0 .and. sM .gt. 0.d0) then
 	flx = FssL
 	choice = "FssL"
 	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
@@ -424,13 +430,11 @@ implicit none
 	flx = FR
 	choice = "FR"
 	endif
-	!Rusanof flux
-	flx = 0.5d0*(FL + FR) + 0.5d0*sM*(QL - QR)
 end subroutine hlldy
 
 !============================================================= Z Direction =================================================================
 
-subroutine hlldz(qR,qL,flx)
+subroutine hlldz(qL,qR,flx)
 
 !Main assumption, the normal velocity/Mag field is constant in the Riemann fan, and is sM/Bz respectively. 
 !Total Pressure is constant throughout the Riemann fan, pst!
@@ -446,6 +450,7 @@ implicit none
 	real(rt)			  :: cfL, cfR, sL, sR, sM, ssL, ssR, pst, caL, cazL
 	real(rt) 			  :: caR, cazR, asL, asR, ptL, ptR, eL, eR
 	real(rt)			  :: FL(QVAR), FR(QVAR)
+	real(rt)              :: uL(QVAR), uR(QVAR)
 	real(rt)			  :: QsL(QVAR), FsL(QVAR)
 	real(rt)			  :: QsR(QVAR), FsR(QVAR)
 	real(rt)			  :: QssL(QVAR), FssL(QVAR)
@@ -465,7 +470,9 @@ implicit none
 	QssR = 0.d0
 	FssL = 0.d0
 	FssR = 0.d0
-
+    
+    call PToC(qL,uL)
+    call PToC(qR,uR)
 	call primtofluxz(qL, FL)
 	call primtofluxz(qR, FR)
 	
@@ -575,10 +582,10 @@ implicit none
 		endif
 	enddo
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
-	FsL  = FL + sL*(QsL - qL)
-	FssL = FL + ssL*QssL - (ssL - sL)*QsL - sL*qL
+	FsL  = FL + sL*(QsL - uL)
+	FssL = FL + ssL*QssL - (ssL - sL)*QsL - sL*uL
 	FsR  = FR + sR*(QsR - qR)
-	FssR = FR + ssR*QssR - (ssR - sR)*QsR - sR*qR
+	FssR = FR + ssR*QssR - (ssR - sR)*QsR - sR*uR
 	!Solve the RP
 	if(sL .gt. 0.d0) then
 	flx = FL
@@ -615,8 +622,6 @@ implicit none
 !			return
 !		endif
 !	enddo
-	!Rusanof flux
-	flx = 0.5d0*(FL + FR) + 0.5d0*sM*(QL - QR)
 end subroutine hlldz
 
 !====================================================== Fluxes ================================================================================
@@ -695,5 +700,28 @@ implicit none
 	F(QMAGZ) = 0.d0
 
 end subroutine primtofluxz
+
+!================================================= Calculate the Conservative Variables ===============================================
+
+subroutine PToC(q, u)
+
+ use amrex_fort_module, only : rt => amrex_real
+ use meth_params_module
+
+implicit none
+
+	real(rt), intent(in)	::q(QVAR)
+	real(rt), intent(out)	::u(QVAR)
+
+ 			u(URHO)   = q(QRHO)
+ 			u(UMX)    = q(QRHO)*q(QU)
+ 			u(UMY)    = q(QRHO)*q(QV)
+ 			u(UMZ)    = q(QRHO)*q(QW)
+			u(UEDEN)  = (q(QPRES) - 0.5d0*(dot_product(q(QMAGX:QMAGZ),q(QMAGX:QMAGZ))))/(gamma_minus_1) &
+							      + 0.5d0*q(QRHO)*dot_product(q(QU:QW),q(QU:QW)) &
+							      + 0.5d0*(dot_product(q(QMAGX:QMAGZ),q(QMAGX:QMAGZ)))
+			u(UEINT) = (q(QPRES) - 0.5d0*dot_product(q(QMAGX:QMAGZ),q(QMAGX:QMAGZ)))/(gamma_minus_1)
+			u(QMAGX:QMAGZ) = q(QMAGX:QMAGZ)
+end subroutine PToC
 
 end module hlld_solver

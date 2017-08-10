@@ -181,6 +181,9 @@ implicit none
  		 do i = q_l1, q_h1
 			if(q(i,j,k,QRHO).lt.small_dens) then
 				u(i,j,k,URHO) = small_dens
+                Print *,"prim rho less than small dens at"
+                print *, i, j, k
+                pause
 			else
 	 			u(i,j,k,URHO)  = q(i,j,k,QRHO)
 			endif
@@ -222,6 +225,10 @@ implicit none
  		 do i = q_l1, q_h1
 			if(u(i,j,k,QRHO).lt.small_dens) then
 			q(i,j,k,QRHO) = small_dens
+			    Print *,"cons rho less than small dens at"
+                print *, i, j, k
+                print *, "rho = ", u(i,j,k,QRHO)
+                pause
 			else
  			q(i,j,k,QRHO)  = u(i,j,k,URHO)
 			endif
@@ -278,6 +285,12 @@ implicit none
 				uL(i,j,k,URHO:UEDEN,2,2) = um(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))! z corrected y
 				uL(i,j,k,URHO:UEDEN,3,1) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))! x corrected z
 				uL(i,j,k,URHO:UEDEN,3,2) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))! y corrected z
+				if(uL(i,j,k,URHO,1,2).le. 0.d0) then
+				    print *, "non physical density"
+				    print *, uL(i,j,k,URHO,1,2), "rho in = ", um(i,j,k,URHO,1), "rhozL", up(i,j,k,URHO,3), "rhozR = ", um(i,j,k+1,URHO,3)
+				    print *, "z flux", - dt/(3.d0*dx)*(flx(i,j,k+1,URHO,3) - flx(i,j,k,URHO,3))
+				    pause
+				endif
 	!Right Corrected States
 				uR(i,j,k,URHO:UEDEN,1,1) = up(i,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))
 				uR(i,j,k,URHO:UEDEN,1,2) = up(i,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))

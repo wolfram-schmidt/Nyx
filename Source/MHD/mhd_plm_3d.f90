@@ -188,6 +188,7 @@ contains
 				Ip(i,j,k,QRHO:QPRES,1) 	 = temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 				Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
 				Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
+				Ip(i,j,k,QPRES,1)        = Ip(i,j,k,QPRES,1) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,1),Ip(i,j,k,QMAGX:QMAGZ,1))
 				if(isnan(Ip(i,j,k,QRHO,1))) then
 					write(*,*) "rho is nan x ", temp(i,j,k,1), summ(1), smhd(1), tbx(i+1,j,k), tbx(i,j,k)
 					write(*,*) "iterator", i, j, k
@@ -208,6 +209,7 @@ contains
 				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 				Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
 				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QPRES,1)        = Im(i,j,k,QPRES,1) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1))
 				
 	!========================================= Y Direction ================================================				
 				summ = 0.d0
@@ -246,6 +248,7 @@ contains
 				Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
 				Ip(i,j,k,QMAGY,2) 		= temp(i,j+1,k,iby) !! By stuff
 				Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
+				Ip(i,j,k,QPRES,2)       = Ip(i,j,k,QPRES,2) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,2),Ip(i,j,k,QMAGX:QMAGZ,2))
 				summ = 0.d0
 				do ii = 1,7
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
@@ -262,7 +265,7 @@ contains
 				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
 				Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
 				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
-				
+				Im(i,j,k,QPRES,2)       = Im(i,j,k,QPRES,2) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2))				
 	!========================================= Z Direction ================================================				
 				summ = 0.d0
 				smhd = 0.d0
@@ -303,6 +306,7 @@ contains
 				Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Ip(i,j,k,QMAGZ,3) 		= temp(i,j,k+1,ibz) !! Bz stuff
+				Ip(i,j,k,QPRES,3)       = Ip(i,j,k,QPRES,3) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,3),Ip(i,j,k,QMAGX:QMAGZ,3))
 				summ = 0.d0
 				do ii = 1,7
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
@@ -316,6 +320,7 @@ contains
 				endif
 				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
+				Im(i,j,k,QPRES,3)       = Im(i,j,k,QPRES,3) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3))
 			enddo
 		enddo
 	enddo
