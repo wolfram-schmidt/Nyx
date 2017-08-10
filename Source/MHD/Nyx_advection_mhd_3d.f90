@@ -684,7 +684,7 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k,2,1) - (E(i,j,k,3,2) - E(i,j,k,3,1)))
-						write(*,*) "bx = ", bxout(i,j,k)
+!						write(*,*) "bx = ", bxout(i,j,k)
 					enddo
 				enddo
 			enddo
@@ -694,7 +694,7 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						byout(i,j,k) = byin(i,j,k) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
-						write(*,*) "by = ", byout(i,j,k)
+!						write(*,*) "by = ", byout(i,j,k)
 					enddo
 				enddo
 			enddo
@@ -704,7 +704,7 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j,k,1,4) - E(i,j,k,1,3) - (E(i,j,k,2,3) - E(i,j,k,2,4)))
-						write(*,*) "bz = ", bzout(i,j,k)
+!						write(*,*) "bz = ", bzout(i,j,k)
 					enddo
 				enddo
 			enddo
