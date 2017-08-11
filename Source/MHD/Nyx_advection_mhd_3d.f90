@@ -195,6 +195,7 @@ flx = 0.d0
 		 bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
 		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
+		 uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
 		 E,q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3,lo, hi, dx, dy, dz, dt, a_old, a_new)
 
@@ -605,6 +606,7 @@ end subroutine fort_advance_mhd
 	  real(rt), intent(in)  :: flux(flux_l1:flux_h1,flux_l2:flux_h2,flux_l3:flux_h3,QVAR,3)
 	  real(rt), intent(in) 	:: dx,dy,dz,dt,a_old, a_new 
 	  real(rt), intent(out) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
+	  real(rt)				:: u, v, w
 
 
 	  integer 				:: i, j, k		
@@ -616,17 +618,14 @@ end subroutine fort_advance_mhd
 					uout(i,j,k,URHO:UEDEN) = uin(i,j,k,URHO:UEDEN) - dt/dx*(flux(i+1,j,k,URHO:UEDEN,1) - flux(i,j,k,URHO:UEDEN,1)) &
 											 -dt/dy*(flux(i,j+1,k,URHO:UEDEN,2) - flux(i,j,k,URHO:UEDEN,2)) &
 											 -dt/dz*(flux(i,j,k+1,URHO:UEDEN,3) - flux(i,j,k,URHO:UEDEN,3)) !Add source terms later
-					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5*uout(i,j,k,URHO)*dot_product(uout(i,j,k,UMX:UMZ)/uout(i,j,k,URHO),uout(i,j,k,UMX:UMZ)/uout(i,j,k,URHO))
-					if(uout(i,j,k,UEDEN).lt.0.d0) then
-						write(*,*) "Negative Energy at", i, j, k, ' NRG in = ', uin(i,j,k,UEDEN)
-						write(*,*) "flux x= ", - dt/dx*(flux(i+1,j,k,UEDEN,1) - flux(i,j,k,UEDEN,1))
-						write(*,*) "flux y= ", - dt/dy*(flux(i,j+1,k,UEDEN,2) - flux(i,j,k,UEDEN,2))
-						write(*,*) "flux z= ", - dt/dz*(flux(i,j,k+1,UEDEN,3) - flux(i,j,k,UEDEN,3))
-						write(*,*) "internal NRG = ", uout(i,j,k,UEINT)
-						pause
+					u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
+					v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
+					w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
+					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+					!Hack!
+					if(uout(i,j,k,UEINT).le. 0.d0) then
+						uout(i,j,k,UEINT) = uout(i,j,k,UEDEN)
 					endif
-
-					!write(*,*) "Density = ",i,j,k, uout(i,j,k,URHO)
 				enddo
 			enddo
 		enddo
@@ -643,11 +642,12 @@ end subroutine fort_advance_mhd
 		 bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
 		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
+		 uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
 		 E,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,lo, hi, dx, dy, dz, dt, a_old, a_new)
 
      use amrex_fort_module, only : rt => amrex_real
-     use meth_params_module, only : QVAR
+     use meth_params_module, only : QVAR, NVAR, UEINT
 
 	implicit none
 	
@@ -657,6 +657,7 @@ end subroutine fort_advance_mhd
 		integer, intent(in)   :: bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
 		integer, intent(in)   :: byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
 		integer, intent(in)   :: bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
+		integer, intent(in)	  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
 		integer, intent(in)   :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
 		integer, intent(in)   :: q_l1, q_l2,q_l3 ,q_h1,q_h2, q_h3
 		integer, intent(in)   :: lo(3), hi(3)
@@ -668,6 +669,8 @@ end subroutine fort_advance_mhd
 		real(rt), intent(in)  :: E(q_l1:q_h1, q_l2:q_h2, q_l3:q_h3, 3, 4) 
 		real(rt), intent(in)  :: dx, dy, dz, dt, a_old, a_new
 
+		real(rt), intent(inout) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
+
 		real(rt), intent(out) :: bxout(bxout_l1:bxout_h1, bxout_l2:bxout_h2, bxout_l3:bxout_h3)
 		real(rt), intent(out) :: byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
 		real(rt), intent(out) :: bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
@@ -676,15 +679,11 @@ end subroutine fort_advance_mhd
 		
 		
 		!***** TO DO ***** SOURCES
-	!	bxout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
-	!	byout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
-	!	bzout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)) = 0.d0
 		!-------------------------------- bx --------------------------------------------------
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k,2,1) - (E(i,j,k,3,2) - E(i,j,k,3,1)))
-!						write(*,*) "bx = ", bxout(i,j,k)
 					enddo
 				enddo
 			enddo
@@ -694,7 +693,6 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						byout(i,j,k) = byin(i,j,k) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
-!						write(*,*) "by = ", byout(i,j,k)
 					enddo
 				enddo
 			enddo
@@ -704,9 +702,16 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j,k,1,4) - E(i,j,k,1,3) - (E(i,j,k,2,3) - E(i,j,k,2,4)))
-!						write(*,*) "bz = ", bzout(i,j,k)
 					enddo
 				enddo
 			enddo
-		!--------------------------------------------------------------------------------------
+		!-------------------------------- Internal Energy ----------------------------------------------------
+			do k = lo(3), hi(3)
+				do j = lo(2), hi(2)
+					do i = lo(1), hi(1)
+						uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*((0.5d0*(bxout(i+1,j,k) + bxout(i,j,k)))**2 + &
+											(0.5d0*(byout(i,j+1,k) + byout(i,j,k)))**2 + (0.5d0*(bzout(i,j,k+1) + bzout(i,j,k)))**2)
+					enddo
+				enddo
+			enddo			
 	end subroutine magup
