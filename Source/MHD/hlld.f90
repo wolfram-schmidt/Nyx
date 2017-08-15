@@ -31,12 +31,6 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1-1
 				call hlldx(qp(i,j,k,:),qm(i+1,j,k,:),flx(i,j,k,:))
-				if(isnan(flx(i,j,k,2)).or. abs(flx(i,j,k,2)).ge. 1d14) then
-					write(*,*) "Nan flux at ", i, j, k
-					write(*,*) "q - =", qm(i+1,j,k,:)
-					write(*,*) "q + =", qp(i,j,k,:)
-					pause
-				endif
 			enddo
 		enddo
 	enddo
@@ -45,12 +39,6 @@ implicit none
 		do j = flx_l2, flx_h2-1
 			do i = flx_l1, flx_h1
 				call hlldy(qp(i,j,k,:),qm(i,j+1,k,:),flx(i,j,k,:))
-				if(isnan(flx(i,j,k,2))) then
-					write(*,*) "Nan flux_y at ", i, j, k
-					write(*,*) "q - =", qm(i,j+1,k,:)
-					write(*,*) "q + =", qp(i,j,k,:)
-					pause
-				endif
 			enddo
 		enddo
 	enddo
