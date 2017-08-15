@@ -682,26 +682,27 @@ end subroutine fort_advance_mhd
 		!-------------------------------- bx --------------------------------------------------
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
-					do i = lo(1), hi(1)
-						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k,2,1) - (E(i,j,k,3,2) - E(i,j,k,3,1)))
+					do i = lo(1)-1, hi(1)-1
+						bxout(i+1,j,k) = bxin(i+1,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k,2,1) - (E(i,j,k,3,2) - E(i,j,k,3,1)))
 					enddo
 				enddo
 			enddo
 
 		!------------------------------- by --------------------------------------------------
 			do k = lo(3), hi(3)
-				do j = lo(2), hi(2)
+				do j = lo(2)-1, hi(2)-1
 					do i = lo(1), hi(1)
-						byout(i,j,k) = byin(i,j,k) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
+						byout(i,j+1,k) = byin(i,j+1,k) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
+						write(*,*) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
 					enddo
 				enddo
 			enddo
-
+			pause
 		!------------------------------- bz --------------------------------------------------
-			do k = lo(3), hi(3)
+			do k = lo(3)-1, hi(3)-1
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
-						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j,k,1,4) - E(i,j,k,1,3) - (E(i,j,k,2,3) - E(i,j,k,2,4)))
+						bzout(i,j,k+1) = bzin(i,j,k+1) - dt/dz*(E(i,j,k,1,4) - E(i,j,k,1,3) - (E(i,j,k,2,3) - E(i,j,k,2,4)))
 					enddo
 				enddo
 			enddo
