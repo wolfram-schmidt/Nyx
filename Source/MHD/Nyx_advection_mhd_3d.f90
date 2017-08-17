@@ -29,6 +29,8 @@
       use mempool_module, only : bl_allocate, bl_deallocate
 	  use ct_upwind, only : corner_transport, checkisnan
 	  use mhd_plm_module, only : plm
+	  use hlld_solver, only : hlld
+	  use electric_field, only :elec_1
       use meth_params_module!, only : QVAR, NTHERM, NHYP, normalize_species, NVAR, URHO, UEDEN
       use enforce_module, only : enforce_nonnegative_species
       use bl_constants_module
@@ -182,6 +184,19 @@ flx = 0.d0
 !Step Three, Corner Couple and find the correct fluxes + electric fields
 	  call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &	
 							flx, E, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, dx , dy, dz, dt)
+
+!	call hlld(qm(:,:,:,:,1),qp(:,:,:,:,1),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,1),&
+!			  q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, 1)
+	!y-dir	
+!	call hlld(qm(:,:,:,:,2),qp(:,:,:,:,2),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,2),&
+!			  q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, 2)
+	!z-dir
+!	call hlld(qm(:,:,:,:,3),qp(:,:,:,:,3),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,3),&
+!			  q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, 3)
+!	E = 0.d0
+!	call elec_1(E, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+!			flx, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3) 
+
 !Step Four, Conservative update
       call consup(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
                   uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
@@ -467,10 +482,11 @@ end subroutine fort_advance_mhd
                ! Pressure = (gamma - 1) * rho * e + 0.5 B dot B
                q(i,j,k,QPRES) = gamma_minus_1 * q(i,j,k,QREINT) &
 				+ 0.5d0*(q(i,j,k,QMAGX)**2 + q(i,j,k,QMAGY)**2 + q(i,j,k,QMAGZ)**2)
+			!	write(*,*) "pressure = ", q(i,j,k,QPRES), i, j, k
             end do
          end do
       end do
-
+!pause
       a_half = HALF * (a_old + a_new)
       a_dot   = (a_new - a_old) / dt
 
@@ -616,16 +632,12 @@ end subroutine fort_advance_mhd
 			do j = lo(2), hi(2)
 				do i = lo(1), hi(1)
 					uout(i,j,k,URHO:UEDEN) = uin(i,j,k,URHO:UEDEN) - dt/dx*(flux(i+1,j,k,URHO:UEDEN,1) - flux(i,j,k,URHO:UEDEN,1)) &
-											 -dt/dy*(flux(i,j+1,k,URHO:UEDEN,2) - flux(i,j,k,URHO:UEDEN,2)) &
-											 -dt/dz*(flux(i,j,k+1,URHO:UEDEN,3) - flux(i,j,k,URHO:UEDEN,3)) !Add source terms later
+											 - dt/dy*(flux(i,j+1,k,URHO:UEDEN,2) - flux(i,j,k,URHO:UEDEN,2)) &
+											 - dt/dz*(flux(i,j,k+1,URHO:UEDEN,3) - flux(i,j,k,URHO:UEDEN,3)) !Add source terms later
 					u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
 					v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
 					w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
 					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
-					!Hack!
-					if(uout(i,j,k,UEINT).le. 0.d0) then
-						uout(i,j,k,UEINT) = uout(i,j,k,UEDEN)
-					endif
 				enddo
 			enddo
 		enddo
@@ -647,7 +659,7 @@ end subroutine fort_advance_mhd
 		 E,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,lo, hi, dx, dy, dz, dt, a_old, a_new)
 
      use amrex_fort_module, only : rt => amrex_real
-     use meth_params_module, only : QVAR, NVAR, UEINT
+     use meth_params_module!, only : QVAR, NVAR, UEINT
 
 	implicit none
 	
@@ -683,7 +695,7 @@ end subroutine fort_advance_mhd
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1)-1, hi(1)-1
-						bxout(i+1,j,k) = bxin(i+1,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k,2,1) - (E(i,j,k,3,2) - E(i,j,k,3,1)))
+						bxout(i+1,j,k) = bxin(i+1,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k-1,2,3) - (E(i,j,k,3,2) - E(i,j-1,k,3,2)))
 					enddo
 				enddo
 			enddo
@@ -692,17 +704,16 @@ end subroutine fort_advance_mhd
 			do k = lo(3), hi(3)
 				do j = lo(2)-1, hi(2)-1
 					do i = lo(1), hi(1)
-						byout(i,j+1,k) = byin(i,j+1,k) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
-						write(*,*) - dt/dy*(E(i,j,k,3,2) - E(i,j,k,3,3) - (E(i,j,k,1,4) - E(i,j,k,1,1)))
+						byout(i,j+1,k) = byin(i,j+1,k) - dt/dy*(E(i,j,k,3,2) - E(i-1,j,k,3,2) - (E(i,j,k,1,4) - E(i,j,k-1,1,4)))
 					enddo
 				enddo
 			enddo
-			pause
+!			pause
 		!------------------------------- bz --------------------------------------------------
 			do k = lo(3)-1, hi(3)-1
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
-						bzout(i,j,k+1) = bzin(i,j,k+1) - dt/dz*(E(i,j,k,1,4) - E(i,j,k,1,3) - (E(i,j,k,2,3) - E(i,j,k,2,4)))
+						bzout(i,j,k+1) = bzin(i,j,k+1) - dt/dz*(E(i,j,k,1,4) - E(i,j-1,k,1,4) - (E(i,j,k,2,3) - E(i-1,j,k,2,3)))
 					enddo
 				enddo
 			enddo
@@ -712,7 +723,9 @@ end subroutine fort_advance_mhd
 					do i = lo(1), hi(1)
 						uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*((0.5d0*(bxout(i+1,j,k) + bxout(i,j,k)))**2 + &
 											(0.5d0*(byout(i,j+1,k) + byout(i,j,k)))**2 + (0.5d0*(bzout(i,j,k+1) + bzout(i,j,k)))**2)
+						!write(*,*) "internal energy = ", uout(i,j,k,UEINT), "total energy = ", uout(i,j,k,UEDEN)
 					enddo
 				enddo
 			enddo			
+	!		pause
 	end subroutine magup

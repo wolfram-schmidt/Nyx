@@ -576,7 +576,11 @@ protected:
     void reflux();
 
     void enforce_nonnegative_species(amrex::MultiFab& S_new);
+#ifdef MHD
+	void enforce_mhd_consistent_e(amrex::MultiFab& S, amrex::MultiFab& Bx, amrex::MultiFab& By, amrex::MultiFab& Bz);
+#else
     void enforce_consistent_e(amrex::MultiFab& S);
+#endif
 #endif
 
     void average_down();

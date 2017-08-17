@@ -108,6 +108,10 @@ extern "C"
   void fort_init_e_from_rhoe
      (BL_FORT_FAB_ARG(state), const int* num_state,
       const int* lo, const int* hi, amrex::Real* comoving_a);
+	
+  void fort_mhd_enforce_consistent_e
+    (const int* lo, const int* hi, BL_FORT_FAB_ARG(state), 
+	BL_FORT_FAB_ARG(bx), BL_FORT_FAB_ARG(by), BL_FORT_FAB_ARG(bz));
 
   void fort_enforce_consistent_e
     (const int* lo, const int* hi, BL_FORT_FAB_ARG(state));

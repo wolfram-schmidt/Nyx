@@ -51,7 +51,7 @@
       u_r = 0.0               ! right velocity (cm/s)
       rho_r = 0.125           ! right density (g/cc)
       B_x_r = 0.75	      ! right x component of magnetic field
-      B_y_r = 1.	      ! right y component of magnetic field
+      B_y_r = -1.	      ! right y component of magnetic field
       B_z_r = 0.	      ! right z component of magnetic field
       p_r = 0.1               ! right pressure (erg/cc)
 

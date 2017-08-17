@@ -22,7 +22,7 @@ subroutine corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3,
 
  use amrex_fort_module, only : rt => amrex_real
  use meth_params_module, only : QVAR
- use electric_field, only : elec_interp
+ use electric_field, only : elec_interp, elec_1
 implicit none
 
 	integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2,q_h3
@@ -87,6 +87,9 @@ enddo
 write(*,*) "Do Electric Field 1D"
 	call elec_interp(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+!	call elec_1(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
+!			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+
 write(*,*) "Corner Couple Cons"
 !Corner Couple
 	call corner_couple(cons_temp_L, cons_temp_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
@@ -127,6 +130,9 @@ enddo
 	flx1D(:,:,:,:,:) = 0.5d0*(flx2D(:,:,:,:,:,1) + flx2D(:,:,:,:,:,2))
 	call elec_interp(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+!	call elec_1(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
+!			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+
 
 !Half Step conservative vars
 	call half_step(cons_half_L, cons_half_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
@@ -159,6 +165,9 @@ call prim_half(q2D,q,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx1D,flx_l1,flx_l2,flx_l3,fl
 !Final Electric Field Update
 call elec_interp(elec, q2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+
+!call elec_1(elec, q2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
+!			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 end subroutine corner_transport
 

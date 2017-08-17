@@ -1778,6 +1778,24 @@ Nyx::enforce_nonnegative_species (MultiFab& S_new)
     }
 }
 
+#ifdef MHD
+void
+Nyx::enforce_mhd_consistent_e (MultiFab& S, MultiFab& Bx, MultiFab& By, MultiFab& Bz)
+{
+    BL_PROFILE("Nyx::enforce_mhd_consistent_e()");
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for (MFIter mfi(S,true); mfi.isValid(); ++mfi)
+    {
+        const Box& box = mfi.tilebox();
+        const int* lo = box.loVect();
+        const int* hi = box.hiVect();
+        fort_mhd_enforce_consistent_e
+	  (lo, hi, BL_TO_FORTRAN(S[mfi]),BL_TO_FORTRAN(Bx[mfi]),BL_TO_FORTRAN(By[mfi]),BL_TO_FORTRAN(Bz[mfi]));
+    }
+}
+#else
 void
 Nyx::enforce_consistent_e (MultiFab& S)
 {
@@ -1794,6 +1812,7 @@ Nyx::enforce_consistent_e (MultiFab& S)
 	  (lo, hi, BL_TO_FORTRAN(S[mfi]));
     }
 }
+#endif
 #endif
 
 void

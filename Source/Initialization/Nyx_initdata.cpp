@@ -189,7 +189,11 @@ Nyx::initData ()
             }
 
            compute_new_temp();
-           enforce_consistent_e(S_new);
+#ifdef MHD
+
+#else
+        enforce_mhd_consistent_e(S_new, Bx_new, By_new, Bz_new);
+#endif
         }
         else
         {
@@ -360,7 +364,18 @@ Nyx::init_from_plotfile ()
         Nyx& nyx_lev = get_level(lev);
         MultiFab& S_new = nyx_lev.get_new_data(State_Type);
         MultiFab& D_new = nyx_lev.get_new_data(DiagEOS_Type);
+#ifdef MHD
+	   MultiFab& Bx_new	= nyx_lev.get_new_data(Mag_Type_x);
+
+	   MultiFab& By_new	= nyx_lev.get_new_data(Mag_Type_y);
+
+	   MultiFab& Bz_new	= nyx_lev.get_new_data(Mag_Type_z);
+#endif
+
         int ns = S_new.nComp();
+		int nbx = Bx_new.nComp();
+		int nby = By_new.nComp();
+		int nbz = Bz_new.nComp();
         int nd = D_new.nComp();
 
 #ifdef _OPENMP
@@ -384,7 +399,11 @@ Nyx::init_from_plotfile ()
         }
 
         // Define (rho E) given (rho e) and the momenta
+#ifdef MHD
+        nyx_lev.enforce_mhd_consistent_e(S_new, Bx_new, By_new, Bz_new);
+#else
         nyx_lev.enforce_consistent_e(S_new);
+#endif
     }
 
     if (verbose && ParallelDescriptor::IOProcessor())

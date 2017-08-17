@@ -162,11 +162,8 @@ contains
 				dQR(1:5) = 	temp(i+1,j,k,1:ibx-1) - temp(i,j,k,1:ibx-1)
 				dQR(6:7) = 	temp(i+1,j,k,ibx+1:8) - temp(i,j,k,ibx+1:8)				
 				do ii = 1,7
-					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
-					if(isnan(dW(ii))) then
-						write(*,*), "nan slope at ii = ", ii, dQL(ii), dQR(ii), temp(i,j,k,ii), temp(i-1,j,k,ii), temp(i+1,j,k,ii)
-						pause
-					endif
+					!call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
 				enddo
 				call evals(lam, s(i,j,k,:), 1) !!X dir eigenvalues
 				call lvecx(leig,s(i,j,k,:))    !! left eigenvectors
@@ -226,7 +223,8 @@ contains
 				dQR(1:6) = 	temp(i,j+1,k,1:ibx) - temp(i,j,k,1:ibx)
 				dQR(7) = 	temp(i,j+1,k,ibz) - temp(i,j,k,ibz)				
 				do ii = 1,7
-					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					!call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting						
 				enddo
 				call evals(lam, s(i,j,k,:), 2) !!Y dir eigenvalues
 				call lvecy(leig,s(i,j,k,:))    !!left eigenvectors
@@ -279,7 +277,8 @@ contains
 				dQL(1:7) = 	temp(i,j,k,1:iby) - temp(i,j,k-1,1:iby) 
 				dQR(1:7) = 	temp(i,j,k+1,1:iby) - temp(i,j,k,1:iby)
 				do ii = 1,7
-					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					!call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					call minmod(dW(ii), dQL(ii), dQR(ii))
 				enddo
 				call evals(lam, s(i,j,k,:), 3) !!Z dir eigenvalues
 				do ii = 1,7 
@@ -332,6 +331,23 @@ contains
 				Ip(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,3)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
 !Need to add source terms, heating cooling, gravity, etc.
 	end subroutine plm
+!======================================== Minmod TVD slope limiter =========================================
+	subroutine minmod(dW, WR, WL)
+	
+	use amrex_fort_module, only : rt => amrex_real
+
+	implicit none
+
+	real(rt), intent(in) :: WR, WL
+	real(rt), intent(out) :: dW
+	dW = 0.d0
+
+	if(abs(WR).lt.abs(WL).and.WR*WL.gt. 0.d0) then
+		dW = WR
+	elseif(abs(WL).lt.abs(WR).and.WR*WL.gt.0.d0) then
+		dW = WL
+	endif
+	end subroutine
 
 
 !========================================= VanLeer TVD slope limiter =======================================

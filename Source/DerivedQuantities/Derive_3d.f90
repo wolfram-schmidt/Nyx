@@ -244,7 +244,7 @@
                   print *,'    '
                   call bl_error("Error:: Derive_3d.f90 :: derpres")
                else
-                  p(i,j,k,1) = gamma_minus_1 * u(i,j,k,UEINT)
+                  p(i,j,k,1) = gamma_minus_1 * u(i,j,k,UEINT) 
                end if
 
             enddo
