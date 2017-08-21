@@ -724,7 +724,7 @@ implicit none
 	enddo
 end subroutine elec_interp	
 
-subroutine elec_1(E, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+subroutine electric_edge(E, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 use amrex_fort_module, only : rt => amrex_real
@@ -736,7 +736,7 @@ implicit none
 	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
 	real(rt), intent(in) 	::flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)
 
-	real(rt), intent(out)	::E(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,3,4) !12 Edges total
+	real(rt), intent(out)	::E(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,3)
 	
 	real(rt)				::Ecen
 	real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
@@ -745,134 +745,157 @@ implicit none
 	integer					::i ,j ,k	
 
 
-	do k = flx_l3,flx_h3-1
-		do j = flx_l2,flx_h2-1
-			do i = flx_l1,flx_h1-1
-				E(i,j,k,1,1) = 0.5d0*(-flx(i,j+1,k,QMAGZ,2) + flx(i,j,k,QMAGY,3))
-				E(i,j,k,2,1) = 0.5d0*(flx(i+1,j,k,QMAGZ,1) - flx(i,j,k,QMAGX,3))
-				E(i,j,k,1,2) = 0.5d0*(-flx(i,j,k,QMAGZ,2) + flx(i,j,k,QMAGY,3))
-				E(i,j,k,2,2) = 0.5d0*(flx(i,j,k,QMAGZ,1) - flx(i,j,k,QMAGX,3))
-				E(i,j,k,3,1) = 0.5d0*(-flx(i+1,j,k,QMAGY,1) + flx(i,j,k,QMAGX,2))
-				E(i,j,k,3,2) = 0.5d0*(-flx(i+1,j,k,QMAGY,1) + flx(i,j+1,k,QMAGX,2))				
-				E(i,j,k,3,3) = 0.5d0*(-flx(i,j,k,QMAGY,1) + flx(i,j+1,k,QMAGX,2))
-				E(i,j,k,3,4) = 0.5d0*(-flx(i,j,k,QMAGY,1) + flx(i,j,k,QMAGX,2))
-				E(i,j,k,1,3) = 0.5d0*(-flx(i,j,k,QMAGZ,2) + flx(i,j,k+1,QMAGY,3))
-				E(i,j,k,2,3) = 0.5d0*(flx(i+1,j,k,QMAGZ,1) - flx(i,j,k+1,QMAGX,3))
-				E(i,j,k,1,4) = 0.5d0*(-flx(i,j+1,k,QMAGZ,2) + flx(i,j,k+1,QMAGY,3))
-				E(i,j,k,2,4) = 0.5d0*(flx(i,j,k,QMAGZ,1) - flx(i,j,k+1,QMAGX,3))
+	do k = flx_l3+1,flx_h3-1
+		do j = flx_l2+1,flx_h2-1
+			do i = flx_l1+1,flx_h1-1
+!============================================= Ex i, j -1/2, k -1/2 ===========================================================================
+				call electric(q(i,j-1,k-1),Ecen,1)
+				a = 2.d0*(flx(i,j-1,k,QMAGY,3) - Ecen)
+				call electric(q(i,j-1,k),Ecen,1)
+				b = 2.d0*(Ecen - flx(i,j-1,k,QMAGY,3))
+				if(q(i,j-1,k,QW).gt. 0.d0) then
+					d1 = a
+				elseif(q(i,j-1,k,QW).lt. 0.d0) then
+					d1 = b
+				else
+					d1 = 0.5d0*(a+b)
+				endif
+				a = b
+				b = 2.d0*(flx(i,j-1,k+1,QMAGY,3) - Ecen)
+				if(flx(i,j-1,k+1,QRHO,3).gt. 0.d0) then
+					d2 = a
+				elseif(flx(i,j-1,k+1,QRHO,3).lt. 0.d0) then
+					d2 = b
+				else
+					d2 = 0.5d0*(a+b)
+				endif
+				dd1 = 0.125d0*(d1 - d2)
+
+				call electric(q(i,j-1,k-1),Ecen,1)
+				a = 2.d0*(-flx(i,j,k-1,QMAGZ,2) - Ecen)
+				call electric(q(i,j,k-1),Ecen,1)
+				b = 2.d0*(Ecen + flx(i,j,k-1,QMAGZ,2))
+				if(q(i,j,k,QV).gt. 0.d0) then
+					d1 = a
+				elseif(q(i,j,k,QV).lt. 0.d0) then
+					d1 = b
+				else
+					d1 = 0.5d0*(a+b)
+				endif
+
+				a = b 
+				b = 2.d0*(-flx(i,j+1,k-1) - Ecen) 
+				if(flx(i,j+1,k,QRHO,2).gt.0.d0) then
+					d2 = a
+				elseif(flx(i,j+1,k,QRHO,2).lt. 0.d0) then
+					d2 = b
+				else 
+					d2 = 0.5d0*(a+b)
+				endif
+				dd2 = 0.125*(d1 - d2)
+
+				E(i,j,k,1) = 0.25d0*(-flx(i,j,k-1,QMAGZ,2) - flx(i,j,k,QMAGZ,2) + flx(i,j-1,k,QMAGY,3) + flx(i,j,k,QMAGY,3))&
+							+ dd1 + dd2
+!============================================= Ey i-1/2, j, k-1/2 ===========================================================================
+				call electric(q(i-1,j,k-1),Ecen,2)
+				a = 2.d0*(-flx(i,j,k-1,QMAGZ,1) - Ecen)
+				call electric(q(i,j,k-1),Ecen,2)
+				b = 2.d0*(Ecen - flx(i,j,k-1,QMAGZ,1))
+				if(q(i,j,k,QW).gt. 0.d0) then
+					d1 = a
+				elseif(q(i,j,k,QW).lt. 0.d0) then
+					d1 = b
+				else
+					d1 = 0.5d0*(a+b)
+				endif
+				a = b
+				b = 2.d0*(flx(i+1,j,k-1,QMAGZ,1) - Ecen)
+				if(flx(i,j,k-1,QRHO,3).gt. 0.d0) then
+					d2 = a
+				elseif(flx(i,j,k+1,QRHO,3).lt. 0.d0) then
+					d2 = b
+				else
+					d2 = 0.5d0*(a+b)
+				endif
+				dd1 = 0.125d0*(d1 - d2)
+
+				call electric(q(i,j,k),Ecen,2)
+				a = 2.d0*(Ecen + flx(i,j,k,QMAGX,3))
+				b = 2.d0*(-flx(i,j,k+1,QMAGX,3) - Ecen)
+				if(q(i,j,k,QV).gt. 0.d0) then
+					d1 = a
+				elseif(q(i,j,k,QV).lt. 0.d0) then
+					d1 = b
+				else
+					d1 = 0.5d0*(a+b)
+				endif
+
+				a = b 
+				call ecen(q(i,j,k+1),Ecen,2)
+				b = 2.d0*(Ecen + flx(i,j,k+1,QMAGX,3)) 
+				if(flx(i,j+1,k,QRHO,2).gt.0.d0) then
+					d2 = a
+				elseif(flx(i,j+1,k,QRHO,2).lt. 0.d0) then
+					d2 = b
+				else 
+					d2 = 0.5d0*(a+b)
+				endif
+				dd2 = 0.125*(d1 - d2)
+
+				E(i,j,k,2) = 0.25d0*(flx(i,j,k,QMAGZ,1) + flx(i,j,k-1,QMAGZ,1) - flx(i-1,j,k,QMAGX,3) + flx(i,j,k,QMAGX,3))&
+							+ dd1 + dd2
+
+!============================================= Ez i-1/2, j-1/2, k ===========================================================================
+				call electric(q(i-1,j-1,k),Ecen,3)
+				a = 2.d0*(flx() - Ecen)
+				call electric(q(i,j-1,k),Ecen,3)
+				b = 2.d0*(Ecen - flx())
+				if(q(i,j,k,QW).gt. 0.d0) then
+					d1 = a
+				elseif(q(i,j,k,QW).lt. 0.d0) then
+					d1 = b
+				else 
+					d1 = 0.5d0*(a+b)
+				endif
+				a = b
+				b = 2.d0*(flx() - Ecen)
+				if(flx().gt. 0.d0) then
+					d2 = a
+				elseif(flx().lt. 0.d0) then
+					d2 = b
+				else
+					d2 = 0.5d0*(a+b)
+				endif
+				dd1 = 0.125d0*(d1 - d2)
+
+				call electric(q(i-1,j-1,k),Ecen,3)
+				a = 2.d0*(Ecen + flx())
+				call electric(q(i-1,j,k),Ecen,3)
+				b = 2.d0*(-flx() - Ecen)
+				if(q(i,j,k,QV).gt. 0.d0) then
+					d1 = a
+				elseif(q(i,j,k,QV).lt. 0.d0) then
+					d1 = b
+				else
+					d1 = 0.5d0*(a+b)
+				endif
+
+				a = b 
+				b = 2.d0*(Ecen + flx()) 
+				if(flx().gt.0.d0) then
+					d2 = a
+				elseif(flx().lt. 0.d0) then
+					d2 = b
+				else 
+					d2 = 0.5d0*(a+b)
+				endif
+				dd2 = 0.125*(d1 - d2)
+
+				E(i,j,k,2) = 0.25d0*(flx(i,j,k,QMAGZ,1) + flx(i,j,k-1,QMAGZ,1) - flx(i-1,j,k,QMAGX,3) - flx(i,j,k,QMAGX,3))&
+							+ dd1 + dd2
 			enddo
-			E(flx_h1,j,k,1,1) = 0.5d0*(-flx(flx_h1,j+1,k,QMAGZ,2) + flx(flx_h1,j,k,QMAGY,3))
-			E(flx_h1,j,k,2,1) = - flx(flx_h1,j,k,QMAGX,3)
-			E(flx_h1,j,k,1,2) = 0.5d0*(-flx(flx_h1,j,k,QMAGZ,2) + flx(flx_h1,j,k,QMAGY,3))
-			E(flx_h1,j,k,2,2) = 0.5d0*(flx(flx_h1,j,k,QMAGZ,1) - flx(flx_h1,j,k,QMAGX,3))
-			E(flx_h1,j,k,3,1) = flx(flx_h1,j,k,QMAGX,2)
-			E(flx_h1,j,k,3,2) = flx(flx_h1,j+1,k,QMAGX,2)				
-			E(flx_h1,j,k,3,3) = 0.5d0*(-flx(flx_h1,j,k,QMAGY,1) + flx(flx_h1,j+1,k,QMAGX,2))
-			E(flx_h1,j,k,3,4) = 0.5d0*(-flx(flx_h1,j,k,QMAGY,1) + flx(flx_h1,j,k,QMAGX,2))
-			E(flx_h1,j,k,1,3) = 0.5d0*(-flx(flx_h1,j,k,QMAGZ,2) + flx(flx_h1,j,k+1,QMAGY,3))
-			E(flx_h1,j,k,2,3) = - flx(flx_h1,j,k+1,QMAGX,3)
-			E(flx_h1,j,k,1,4) = 0.5d0*(-flx(flx_h1,j+1,k,QMAGZ,2) + flx(flx_h1,j,k+1,QMAGY,3))
-			E(flx_h1,j,k,2,4) = 0.5d0*(flx(flx_h1,j,k,QMAGZ,1) - flx(flx_h1,j,k+1,QMAGX,3))
 		enddo
-		E(flx_h1,flx_h2,k,1,1) = flx(flx_h1,flx_h2,k,QMAGY,3)
-		E(flx_h1,flx_h2,k,2,1) = - flx(flx_h1,flx_h2,k,QMAGX,3)
-		E(flx_h1,flx_h2,k,1,2) = 0.5d0*(-flx(flx_h1,flx_h2,k,QMAGZ,2) + flx(flx_h1,flx_h2,k,QMAGY,3))
-		E(flx_h1,flx_h2,k,2,2) = 0.5d0*(flx(flx_h1,flx_h2,k,QMAGZ,1) - flx(flx_h1,flx_h2,k,QMAGX,3))
-		E(flx_h1,flx_h2,k,3,1) = flx(flx_h1,flx_h2,k,QMAGX,2)
-		E(flx_h1,flx_h2,k,3,2) = flx(flx_h1,flx_h2,k,QMAGX,2)				
-		E(flx_h1,flx_h2,k,3,3) = -flx(flx_h1,flx_h2,k,QMAGY,1)
-		E(flx_h1,flx_h2,k,3,4) = 0.5d0*(-flx(flx_h1,flx_h2,k,QMAGY,1) + flx(flx_h1,flx_h2,k,QMAGX,2))
-		E(flx_h1,flx_h2,k,1,3) = 0.5d0*(-flx(flx_h1,flx_h2,k,QMAGZ,2) + flx(flx_h1,flx_h2,k+1,QMAGY,3))
-		E(flx_h1,flx_h2,k,2,3) = - flx(flx_h1,flx_h2,k+1,QMAGX,3)
-		E(flx_h1,flx_h2,k,1,4) = flx(flx_h1,flx_h2,k+1,QMAGY,3)
-		E(flx_h1,flx_h2,k,2,4) = 0.5d0*(flx(flx_h1,flx_h2,k,QMAGZ,1) - flx(flx_h1,flx_h2,k+1,QMAGX,3))
 	enddo
 
-
-	do j = flx_l2,flx_h2-1
-		do i = flx_l1,flx_h1-1
-				E(i,j,flx_h3,1,1) = flx(i,j,flx_h3,QMAGY,3)
-				E(i,j,flx_h3,2,1) = -flx(i,j,flx_h3,QMAGX,3)
-				E(i,j,flx_h3,1,2) = -flx(i,j,flx_h3,QMAGZ,2)
-				E(i,j,flx_h3,2,2) = 0.5d0*(flx(i,j,flx_h3,QMAGZ,1) - flx(i,j,flx_h3,QMAGX,3))
-				E(i,j,flx_h3,3,1) = 0.5d0*(-flx(i+1,j,flx_h3,QMAGY,1) + flx(i,j,k,QMAGX,2))
-				E(i,j,flx_h3,3,2) = 0.5d0*(-flx(i+1,j,flx_h3,QMAGY,1) + flx(i,j+1,k,QMAGX,2))				
-				E(i,j,flx_h3,3,3) = 0.5d0*(-flx(i,j,flx_h3,QMAGY,1) + flx(i,j+1,flx_h3,QMAGX,2))
-				E(i,j,flx_h3,3,4) = 0.5d0*(-flx(i,j,flx_h3,QMAGY,1) + flx(i,j,flx_h3,QMAGX,2))
-				E(i,j,flx_h3,1,3) = -flx(i,j,flx_h3,QMAGZ,2) 
-				E(i,j,flx_h3,2,3) = flx(i+1,j,flx_h3,QMAGZ,1)
-				E(i,j,flx_h3,1,4) = -flx(i,j+1,flx_h3,QMAGZ,2)
-				E(i,j,flx_h3,2,4) = flx(i,j,flx_h3,QMAGZ,1)
-		enddo
-				E(flx_h1,j,flx_h3,1,1) = flx(flx_h1,j,flx_h3,QMAGY,3)
-				E(flx_h1,j,flx_h3,2,1) = -flx(flx_h1,j,flx_h3,QMAGX,3)
-				E(flx_h1,j,flx_h3,1,2) = -flx(flx_h1,j,flx_h3,QMAGZ,2)
-				E(flx_h1,j,flx_h3,2,2) = 0.5d0*(flx(flx_h1,j,flx_h3,QMAGZ,1) - flx(flx_h1,j,flx_h3,QMAGX,3))
-				E(flx_h1,j,flx_h3,3,1) = flx(flx_h1,j,flx_h3,QMAGX,2)
-				E(flx_h1,j,flx_h3,3,2) = flx(flx_h1,j+1,flx_h3,QMAGX,2)				
-				E(flx_h1,j,flx_h3,3,3) = 0.5d0*(-flx(flx_h1,j,flx_h3,QMAGY,1) + flx(flx_h1,j+1,flx_h3,QMAGX,2))
-				E(flx_h1,j,flx_h3,3,4) = 0.5d0*(-flx(flx_h1,j,flx_h3,QMAGY,1) + flx(flx_h1,j,flx_h3,QMAGX,2))
-				E(flx_h1,j,flx_h3,1,3) = -flx(flx_h1,j,flx_h3,QMAGZ,2) 
-				E(flx_h1,j,flx_h3,2,3) = flx(flx_h1,j,flx_h3,QMAGZ,1)
-				E(flx_h1,j,flx_h3,1,4) = -flx(flx_h1,j+1,flx_h3,QMAGZ,2)
-				E(flx_h1,j,flx_h3,2,4) = flx(flx_h1,j,flx_h3,QMAGZ,1)
-	enddo
-	do k = flx_l3, flx_h3-1
-		do i = flx_l1, flx_h1-1
-			E(i,flx_h2,k,1,1) = flx(i,flx_h2,k,QMAGY,3)
-			E(i,flx_h2,k,2,1) = 0.5d0*(flx(i+1,flx_h2,k,QMAGZ,1) - flx(i,flx_h2,k,QMAGX,3))
-			E(i,flx_h2,k,1,2) = 0.5d0*(-flx(i,flx_h2,k,QMAGZ,2) + flx(i,flx_h2,k,QMAGY,3))
-			E(i,flx_h2,k,2,2) = 0.5d0*(flx(i,flx_h2,k,QMAGZ,1) - flx(i,flx_h2,k,QMAGX,3))
-			E(i,flx_h2,k,3,1) = 0.5d0*(-flx(i+1,flx_h2,k,QMAGY,1) + flx(i,flx_h2,k,QMAGX,2))
-			E(i,flx_h2,k,3,2) = -flx(i+1,flx_h2,k,QMAGY,1)				
-			E(i,flx_h2,k,3,3) = -flx(i,flx_h2,k,QMAGY,1)
-			E(i,flx_h2,k,3,4) = 0.5d0*(-flx(i,flx_h2,k,QMAGY,1) + flx(i,flx_h2,k,QMAGX,2))
-			E(i,flx_h2,k,1,3) = 0.5d0*(-flx(i,flx_h2,k,QMAGZ,2) + flx(i,flx_h2,k+1,QMAGY,3))
-			E(i,flx_h2,k,2,3) = 0.5d0*(flx(i+1,flx_h2,k,QMAGZ,1) - flx(i,flx_h2,k+1,QMAGX,3))
-			E(i,flx_h2,k,1,4) =  flx(i,flx_h2,k+1,QMAGY,3)
-			E(i,flx_h2,k,2,4) = 0.5d0*(flx(i,flx_h2,k,QMAGZ,1) - flx(i,flx_h2,k+1,QMAGX,3))			
-		enddo
-		E(flx_h1,flx_h2,k,1,1) = flx(flx_h1,flx_h2,k,QMAGY,3)
-		E(flx_h1,flx_h2,k,2,1) = - flx(flx_h1,flx_h2,k,QMAGX,3)
-		E(flx_h1,flx_h2,k,1,2) = 0.5d0*(-flx(flx_h1,flx_h2,k,QMAGZ,2) + flx(flx_h1,flx_h2,k,QMAGY,3))
-		E(flx_h1,flx_h2,k,2,2) = 0.5d0*(flx(flx_h1,flx_h2,k,QMAGZ,1) - flx(flx_h1,flx_h2,k,QMAGX,3))
-		E(flx_h1,flx_h2,k,3,1) = flx(flx_h1,flx_h2,k,QMAGX,2)
-		E(flx_h1,flx_h2,k,3,2) = -flx(flx_h1,flx_h2,k,QMAGY,1)				
-		E(flx_h1,flx_h2,k,3,3) = -flx(flx_h1,flx_h2,k,QMAGY,1)
-		E(flx_h1,flx_h2,k,3,4) = 0.5d0*(-flx(flx_h1,flx_h2,k,QMAGY,1) + flx(flx_h1,flx_h2,k,QMAGX,2))
-		E(flx_h1,flx_h2,k,1,3) = 0.5d0*(-flx(flx_h1,flx_h2,k,QMAGZ,2) + flx(flx_h1,flx_h2,k+1,QMAGY,3))
-		E(flx_h1,flx_h2,k,2,3) = - flx(flx_h1,flx_h2,k+1,QMAGX,3)
-		E(flx_h1,flx_h2,k,1,4) =  flx(flx_h1,flx_h2,k+1,QMAGY,3)
-		E(flx_h1,flx_h2,k,2,4) = 0.5d0*(flx(flx_h1,flx_h2,k,QMAGZ,1) - flx(flx_h1,flx_h2,k+1,QMAGX,3))	
-	enddo
-
-	do i = flx_l1,flx_h1-1
-			E(i,flx_h2,flx_h3,1,1) = flx(i,flx_h2,flx_h3,QMAGY,3)
-			E(i,flx_h2,flx_h3,2,1) = -flx(i,flx_h2,flx_h3,QMAGX,3)
-			E(i,flx_h2,flx_h3,1,2) = -flx(i,flx_h2,flx_h3,QMAGZ,2)
-			E(i,flx_h2,flx_h3,2,2) = 0.5d0*(flx(i,flx_h2,flx_h3,QMAGZ,1) - flx(i,flx_h2,flx_h3,QMAGX,3))
-			E(i,flx_h2,flx_h3,3,1) = 0.5d0*(-flx(i+1,flx_h2,flx_h3,QMAGY,1) + flx(i,flx_h2,k,QMAGX,2))
-			E(i,flx_h2,flx_h3,3,2) = -flx(i+1,flx_h2,flx_h3,QMAGY,1)			
-			E(i,flx_h2,flx_h3,3,3) = -flx(i,flx_h2,flx_h3,QMAGY,1)
-			E(i,flx_h2,flx_h3,3,4) = 0.5d0*(-flx(i,flx_h2,flx_h3,QMAGY,1) + flx(i,flx_h2,flx_h3,QMAGX,2))
-			E(i,flx_h2,flx_h3,1,3) = -flx(i,flx_h2,flx_h3,QMAGZ,2) 
-			E(i,flx_h2,flx_h3,2,3) = flx(i+1,flx_h2,flx_h3,QMAGZ,1)
-			E(i,flx_h2,flx_h3,1,4) = -flx(i,flx_h2,flx_h3,QMAGZ,2)
-			E(i,flx_h2,flx_h3,2,4) = flx(i,flx_h2,flx_h3,QMAGZ,1)
-	enddo
-
-	E(flx_h1,flx_h2,flx_h3,1,1) = flx(flx_h1,flx_h2,flx_h3,QMAGY,3)
-	E(flx_h1,flx_h2,flx_h3,2,1) = - flx(flx_h1,flx_h2,flx_h3,QMAGX,3)
-	E(flx_h1,flx_h2,flx_h3,1,2) = 0.5d0*(-flx(flx_h1,flx_h2,flx_h3,QMAGZ,2) + flx(flx_h1,flx_h2,flx_h3,QMAGY,3))
-	E(flx_h1,flx_h2,flx_h3,2,2) = 0.5d0*(flx(flx_h1,flx_h2,flx_h3,QMAGZ,1) - flx(flx_h1,flx_h2,flx_h3,QMAGX,3))
-	E(flx_h1,flx_h2,flx_h3,3,1) = flx(flx_h1,flx_h2,flx_h3,QMAGX,2)
-	E(flx_h1,flx_h2,flx_h3,3,2) = flx(flx_h1,flx_h2,flx_h3,QMAGX,2)				
-	E(flx_h1,flx_h2,flx_h3,3,3) = -flx(flx_h1,flx_h2,flx_h3,QMAGY,1)
-	E(flx_h1,flx_h2,flx_h3,3,4) = 0.5d0*(-flx(flx_h1,flx_h2,flx_h3,QMAGY,1) + flx(flx_h1,flx_h2,flx_h3,QMAGX,2))
-	E(flx_h1,flx_h2,flx_h3,1,3) = -flx(flx_h1,flx_h2,flx_h3,QMAGZ,2)
-	E(flx_h1,flx_h2,flx_h3,2,3) = - flx(flx_h1,flx_h2,flx_h3,QMAGX,3)
-	E(flx_h1,flx_h2,flx_h3,1,4) = flx(flx_h1,flx_h2,flx_h3,QMAGY,3)
-	E(flx_h1,flx_h2,flx_h3,2,4) = flx(flx_h1,flx_h2,flx_h3,QMAGZ,1)
-
-end subroutine elec_1
+end subroutine electric_edge
 end module electric_field
