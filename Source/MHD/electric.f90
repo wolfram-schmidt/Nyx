@@ -801,41 +801,40 @@ implicit none
 				a = 2.d0*(-flx(i,j,k-1,QMAGZ,1) - Ecen)
 				call electric(q(i,j,k-1),Ecen,2)
 				b = 2.d0*(Ecen - flx(i,j,k-1,QMAGZ,1))
-				if(q(i,j,k,QW).gt. 0.d0) then
+				if(flx(i,j,k-1,QRHO,1).gt. 0.d0) then
 					d1 = a
-				elseif(q(i,j,k,QW).lt. 0.d0) then
+				elseif(flx(i,j,k-1,QRHO,1).lt. 0.d0) then
 					d1 = b
 				else
 					d1 = 0.5d0*(a+b)
 				endif
 				a = b
 				b = 2.d0*(flx(i+1,j,k-1,QMAGZ,1) - Ecen)
-				if(flx(i,j,k-1,QRHO,3).gt. 0.d0) then
+				if(q(i,j,k-1,QU).gt. 0.d0) then
 					d2 = a
-				elseif(flx(i,j,k+1,QRHO,3).lt. 0.d0) then
+				elseif(q(i,j,k-1,QU).lt. 0.d0) then
 					d2 = b
 				else
 					d2 = 0.5d0*(a+b)
 				endif
 				dd1 = 0.125d0*(d1 - d2)
 
-				call electric(q(i,j,k),Ecen,2)
-				a = 2.d0*(Ecen + flx(i,j,k,QMAGX,3))
-				b = 2.d0*(-flx(i,j,k+1,QMAGX,3) - Ecen)
-				if(q(i,j,k,QV).gt. 0.d0) then
+				call electric(q(i-1,j,k-1),Ecen,2)
+				a = 2.d0*(flx(i-1,j,k,QMAGX,3) - Ecen)
+    			call electric(q(i-1,j,k),Ecen,2)
+				b = 2.d0*(Ecen - flx(i-1,j,k,QMAGX,3))
+				if(q(i-1,j,k,QV).gt. 0.d0) then
 					d1 = a
-				elseif(q(i,j,k,QV).lt. 0.d0) then
+				elseif(q(i-1,j,k,QV).lt. 0.d0) then
 					d1 = b
 				else
 					d1 = 0.5d0*(a+b)
 				endif
-
 				a = b 
-				call ecen(q(i,j,k+1),Ecen,2)
-				b = 2.d0*(Ecen + flx(i,j,k+1,QMAGX,3)) 
-				if(flx(i,j+1,k,QRHO,2).gt.0.d0) then
+				b = 2.d0*(flx(i-1,j,k+1,QMAGX,3) - Ecen) 
+				if(q(i-1,j,k,QV).gt.0.d0) then
 					d2 = a
-				elseif(flx(i,j+1,k,QRHO,2).lt. 0.d0) then
+				elseif(q(i-1,j,k,QV).lt. 0.d0) then
 					d2 = b
 				else 
 					d2 = 0.5d0*(a+b)
@@ -847,21 +846,21 @@ implicit none
 
 !============================================= Ez i-1/2, j-1/2, k ===========================================================================
 				call electric(q(i-1,j-1,k),Ecen,3)
-				a = 2.d0*(flx() - Ecen)
+				a = 2.d0*(-flx(i,j-1,k,QMAGY,1) - Ecen)
 				call electric(q(i,j-1,k),Ecen,3)
-				b = 2.d0*(Ecen - flx())
-				if(q(i,j,k,QW).gt. 0.d0) then
+				b = 2.d0*(Ecen + flx(i,j-1,k,QMAGY,1))
+				if(flx(i,j-1,k,QRHO,1).gt. 0.d0) then
 					d1 = a
-				elseif(q(i,j,k,QW).lt. 0.d0) then
+				elseif(flx(i,j-1,k,QRHO,1).lt. 0.d0) then
 					d1 = b
 				else 
 					d1 = 0.5d0*(a+b)
 				endif
 				a = b
-				b = 2.d0*(flx() - Ecen)
-				if(flx().gt. 0.d0) then
+				b = 2.d0*(-flx(i+1,j-1,k,QMAGY,1) - Ecen)
+				if(flx(i+1,j-1,k,QRHO,1).gt. 0.d0) then
 					d2 = a
-				elseif(flx().lt. 0.d0) then
+				elseif(flx(i+1,j-1,k,QRHO,1).lt. 0.d0) then
 					d2 = b
 				else
 					d2 = 0.5d0*(a+b)
@@ -869,22 +868,22 @@ implicit none
 				dd1 = 0.125d0*(d1 - d2)
 
 				call electric(q(i-1,j-1,k),Ecen,3)
-				a = 2.d0*(Ecen + flx())
+				a = 2.d0*(flx(i-1,j,k,QMAGX,2) - Ecen)
 				call electric(q(i-1,j,k),Ecen,3)
-				b = 2.d0*(-flx() - Ecen)
-				if(q(i,j,k,QV).gt. 0.d0) then
+				b = 2.d0*(Ecen - flx(i-1,j,k,QMAGX,2))
+				if((flx(i-1,j,k,QRHO,2).gt. 0.d0) then
 					d1 = a
-				elseif(q(i,j,k,QV).lt. 0.d0) then
+				elseif((flx(i-1,j,k,QRHO,2).lt. 0.d0) then
 					d1 = b
 				else
 					d1 = 0.5d0*(a+b)
 				endif
 
 				a = b 
-				b = 2.d0*(Ecen + flx()) 
-				if(flx().gt.0.d0) then
+				b = 2.d0*(flx(i-1,j+1,k,QMAGX,2) - Ecen) 
+				if(q(i-1,j,k,QV).gt.0.d0) then
 					d2 = a
-				elseif(flx().lt. 0.d0) then
+				elseif(q(i-1,j,k,QV).lt. 0.d0) then
 					d2 = b
 				else 
 					d2 = 0.5d0*(a+b)
