@@ -30,7 +30,7 @@
 	  use ct_upwind, only : corner_transport, checkisnan
 	  use mhd_plm_module, only : plm
 	  use hlld_solver, only : hlld
-	  use electric_field, only :elec_1
+	  use electric_field!, only :elec_1
       use meth_params_module!, only : QVAR, NTHERM, NHYP, normalize_species, NVAR, URHO, UEDEN
       use enforce_module, only : enforce_nonnegative_species
       use bl_constants_module
@@ -84,7 +84,7 @@
  !     real(rt), pointer :: div(:,:,:)
  !     real(rt), pointer :: pdivu(:,:,:)
       real(rt), pointer :: srcQ(:,:,:,:)
-	  real(rt), allocatable :: E(:,:,:,:,:)
+	  real(rt), allocatable :: E(:,:,:,:)
 	  real(rt), allocatable :: flx(:,:,:,:,:)
 	  real(rt), allocatable :: qp(:,:,:,:,:)
 	  real(rt), allocatable :: qm(:,:,:,:,:)
@@ -117,7 +117,7 @@
       call bl_allocate(     c, lo-NHYP, hi+NHYP      )
       call bl_allocate(  csml, lo-NHYP, hi+NHYP      )
 	  call bl_allocate(  srcQ, lo-1, hi+1, QVAR)
-	  allocate(	E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3, 3, 4))
+	  allocate(	E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3, 3))
 	  allocate( flx(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
 	  allocate( qp(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
 	  allocate( qm(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
@@ -678,7 +678,7 @@ end subroutine fort_advance_mhd
 		real(rt), intent(in)  :: byin(byin_l1:byin_h1, byin_l2:byin_h2, byin_l3:byin_h3)
 		real(rt), intent(in)  :: bzin(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
 		real(rt), intent(in)  :: src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, QVAR)
-		real(rt), intent(in)  :: E(q_l1:q_h1, q_l2:q_h2, q_l3:q_h3, 3, 4) 
+		real(rt), intent(in)  :: E(q_l1:q_h1, q_l2:q_h2, q_l3:q_h3, 3) 
 		real(rt), intent(in)  :: dx, dy, dz, dt, a_old, a_new
 
 		real(rt), intent(inout) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
@@ -694,26 +694,26 @@ end subroutine fort_advance_mhd
 		!-------------------------------- bx --------------------------------------------------
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
-					do i = lo(1)-1, hi(1)-1
-						bxout(i+1,j,k) = bxin(i+1,j,k) - dt/dx*(E(i,j,k,2,3) - E(i,j,k-1,2,3) - (E(i,j,k,3,2) - E(i,j-1,k,3,2)))
+					do i = lo(1), hi(1)
+						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k+1,2) - E(i,j,k,2) - (E(i+1,j,k,3) - E(i,j,k,3)))
 					enddo
 				enddo
 			enddo
 
 		!------------------------------- by --------------------------------------------------
 			do k = lo(3), hi(3)
-				do j = lo(2)-1, hi(2)-1
+				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
-						byout(i,j+1,k) = byin(i,j+1,k) - dt/dy*(E(i,j,k,3,2) - E(i-1,j,k,3,2) - (E(i,j,k,1,4) - E(i,j,k-1,1,4)))
+						byout(i,j,k) = byin(i,j,k) - dt/dy*(E(i+1,j,k,3) - E(i,j,k,3) - (E(i,j,k+1,1) - E(i,j,k,1)))
 					enddo
 				enddo
 			enddo
 !			pause
 		!------------------------------- bz --------------------------------------------------
-			do k = lo(3)-1, hi(3)-1
+			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
-						bzout(i,j,k+1) = bzin(i,j,k+1) - dt/dz*(E(i,j,k,1,4) - E(i,j-1,k,1,4) - (E(i,j,k,2,3) - E(i-1,j,k,2,3)))
+						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j+1,k,1) - E(i,j,k,1) - (E(i+1,j,k,2) - E(i,j,k,2)))
 					enddo
 				enddo
 			enddo
