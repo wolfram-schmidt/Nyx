@@ -137,6 +137,8 @@
      real(rt) :: xcen,ycen,zcen
      integer  :: i,j,k
 
+     state(:,:,:,UMX:UMZ) = 0.d0
+
       do k = lo(3), hi(3)
          zcen = xlo(3) + delta(3)*(float(k-lo(3)) + 0.5d0)
 
@@ -227,4 +229,9 @@
             enddo
          enddo
       enddo
+
+      mag_x = B_x_l
+      mag_y = B_y_l
+      mag_z = B_z_l
+
       end subroutine fort_initdata
