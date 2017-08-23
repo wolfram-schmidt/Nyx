@@ -433,10 +433,6 @@ contains
 		bety = Q(QMAGY)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 		betz = Q(QMAGZ)/(sqrt(Q(QMAGY)**2 + Q(QMAGZ)**2))
 	endif
-	if(isnan(bety)) then
-		 write(*,*) "bety is nan ", "By = ", Q(QMAGY), "Bz = ", Q(QMAGZ)
-		 pause
-	endif
 	cff = sqrt(cfx)*alf
 	css = sqrt(csx)*als
 	S = sign(1.0d0, Q(QMAGX))
@@ -445,10 +441,7 @@ contains
 	N = 0.5d0/as
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
-	if(isnan(cff)) then
-	     write(*,*) "cff is nan", cff, "cfx = ", cfx, "alpha Fast =", alf, "sqrt(cfx) = ", sqrt(cfx)
-		 pause
-	endif
+
 		
 	leig(1,:) = (/0.d0, -N*Cff	, N*Qs*bety		, N*Qs*betz		, N*alf/Q(QRHO)	, N*AAs*bety/Q(QRHO)			, N*AAs*betz/Q(QRHO)			/) !u - cf
 	leig(2,:) = (/0.d0,  0.d0	, -0.5d0*betz	, 0.5d0*bety	, 0.d0			, -0.5d0*S*betz/(sqrt(Q(QRHO)))	, 0.5d0*bety*S/(sqrt(Q(QRHO)))	/) !u - cAx
@@ -501,10 +494,6 @@ contains
 	S = sign(1.0d0, Q(QMAGY))
 	Qf = sqrt(cfy)*alf*S
 	Qs = sqrt(csy)*als*S
-	if(isnan(Cff)) then 
-			write(*,*) "Cff is nan", " cfy = ", cfy, "alpha fast = ", alf
-			pause
-	endif
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	N = 0.5d0/as
@@ -555,19 +544,11 @@ contains
 		betx = Q(QMAGX)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 		bety = Q(QMAGY)/(sqrt(Q(QMAGX)**2 + Q(QMAGY)**2))
 	endif
-	if(isnan(betx)) then
-			write(*,*) "betx is nan", " Bx = ", Q(QMAGX), " By = ", Q(QMAGY)
-			pause
-	endif
 	cff = sqrt(cfz)*alf
 	css = sqrt(csz)*als
 	S = sign(1.0d0, Q(QMAGZ))
 	Qf = sqrt(cfz)*alf*S
 	Qs = sqrt(csz)*als*S
-	if(isnan(Qs)) then
-			write(*,*) "Qs is nan", " csz = ", csz, " als = ", als
-			pause
-	endif
 	AAf = sqrt(as)*alf*sqrt(Q(QRHO))
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	N = 0.5d0/as
@@ -594,7 +575,7 @@ contains
 	real(rt), intent(out)	::reig(7,7)
 
 	!The characteristic speeds of the system 
-	real(rt)				:: cfx, cax, csx, ca, as, S, N
+	real(rt)				:: cfx, cax, csx, ca, as, S
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, bety, betz
 
 	!Speeeeeeeedssssss
@@ -649,7 +630,7 @@ contains
 	real(rt), intent(out)	::reig(7,7)
 
 	!The characteristic speeds of the system 
-	real(rt)				:: cfy, cay, csy, ca, as, S, N
+	real(rt)				:: cfy, cay, csy, ca, as, S
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, betz
 
 	!Speeeeeeeedssssss
@@ -704,7 +685,7 @@ contains
 	real(rt), intent(out)	::reig(7,7)
 
 	!The characteristic speeds of the system 
-	real(rt)				:: cfz, caz, csz, ca, as, S, N
+	real(rt)				:: cfz, caz, csz, ca, as, S
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, bety
 
 	!Speeeeeeeedssssss

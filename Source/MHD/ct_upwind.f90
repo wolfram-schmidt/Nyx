@@ -87,7 +87,7 @@ do i = 1,3
 enddo
 !Use "1D" fluxes To interpolate Temporary Edge Centered Electric Fields
 write(*,*) "Do Electric Field 1D"
-	call electric_edge(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
+	call electric_edge(Etemp, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 write(*,*) "Corner Couple Cons"
@@ -126,7 +126,7 @@ enddo
 
 !Use Averaged 2D fluxes to interpolate temporary Edge Centered Electric Fields, reuse "flx1D"
 	flx1D(:,:,:,:,:) = 0.5d0*(flx2D(:,:,:,:,:,1) + flx2D(:,:,:,:,:,2))
-	call electric_edge(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
+	call electric_edge(Etemp, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 
@@ -157,7 +157,7 @@ print *, "Flux Half Step"
 !Primitive update
 call prim_half(q2D,q,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx1D,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 !Final Electric Field Update
-call electric_edge(elec, q2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
+call electric_edge(elec, q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 end subroutine corner_transport
@@ -460,11 +460,6 @@ implicit none
 				!-> Affected by Y flux
 				uR(i,j,k,QMAGZ,3,2) = up(i,j,k,QMAGZ,3) - dt/(3.d0*dz)*&
 										(E(i,j+1,k+1,1) - E(i,j,k+1,1))
-				if(abs(uR(i,j,k,QMAGZ,3,2)).gt.1d-12.and.i.gt.0.and.j.gt.0.and.k.ge.0) then 
-					print *, "Non trivial Bz = ",uR(i,j,k,QMAGZ,3,2) , "i j k = ", i, j, k
-					print *, "Electric x",  E(i,j+1,k+1,1), E(i,j,k+1,1) 
-					pause
-				endif
 					
 				uR(i,j,k,QMAGX,3,1) = up(i,j,k,QMAGX,3) - dt/(6.d0*dz)*&
 									((E(i+1,j+1,k,3) - E(i+1,j,k,3)) + &
@@ -583,7 +578,7 @@ implicit none
 					print *, "Un+1/2  x= ", uL(i,j,k,:,1)
 					print *, "U in = ", um(i,j,k,:,1)
 					print *, "E", E(i,j+1,k+1,1) , E(i,j,k+1,1), E(i,j+1,k,1) , E(i,j,k,1),  E(i+1,j,k+1,2) , E(i,j,k+1,2), E(i+1,j,k,2), E(i,j,k,2)
-					pause
+				!	pause
 				endif
 				!Y-Direction
 				!Bx

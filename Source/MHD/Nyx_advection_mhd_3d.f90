@@ -168,17 +168,17 @@
                     courno,dx,dy,dz,dt,ngq,ngf,a_old,a_new)
 
 !Step Two, Interpolate Cell centered values to faces
-!	  call plm(q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
-!				 bxin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-!				 byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-!				 bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-!                 qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
-qm(:,:,:,:,1) = q
-qm(:,:,:,:,2) = q
-qm(:,:,:,:,3) = q
-qp(:,:,:,:,1) = q
-qp(:,:,:,:,2) = q
-qp(:,:,:,:,3) = q
+	  call plm(q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
+				 bxin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+				 byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+				 bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+                 qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
+!qm(:,:,:,:,1) = q
+!qm(:,:,:,:,2) = q
+!qm(:,:,:,:,3) = q
+!qp(:,:,:,:,1) = q
+!qp(:,:,:,:,2) = q
+!qp(:,:,:,:,3) = q
 flx = 0.d0
 !Step Three, Corner Couple and find the correct fluxes + electric fields
 	  call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &	
@@ -624,10 +624,17 @@ end subroutine fort_advance_mhd
 					v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
 					w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
 					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+					if(i.eq.12.and.j.eq.29.and.k.eq.0) then
+						print*, "rho out =", uout(i,j,k,1), "i,j,k =", i, j, k
+						print*, "rho in = ", uin(i,j,k,1)
+						print*, "flux x = ", flux(i+1,j,k,1,1)- flux(i,j,k,1,1)
+						print*, "flux y = ", flux(i,j+1,k,1,2)- flux(i,j,k,1,2)
+						print*, "flux z = ", flux(i,j,k+1,1,3)- flux(i,j,k,1,3)
+						pause
+					endif
 				enddo
 			enddo
 		enddo
-
 	end subroutine consup
 
 ! :::
@@ -686,7 +693,7 @@ end subroutine fort_advance_mhd
 						print *, "Bx = ", bxout(i,j,k), "i, j, k = ", i, j, k
 						print *, "Ez = ", E(i,j+1,k,3),  E(i,j,k,3)
 						print *, "Ey = ", E(i,j,k+1,2),  E(i,j,k,2)
-						pause
+					!	pause
 					endif
 					enddo
 				enddo
@@ -713,7 +720,7 @@ end subroutine fort_advance_mhd
 							print *, "Diff =", E(i,j+1,k,1) -  E(i,j,k,1)
 							print *, "Ey = ", E(i+1,j,k,2),  E(i,j,k,2)
 							print *, "Diff = ", E(i+1,j,k,2) -  E(i,j,k,2)
-						pause
+		!				pause
 					endif
 					enddo
 				enddo

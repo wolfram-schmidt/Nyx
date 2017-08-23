@@ -31,12 +31,6 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1-1
 				call hlldx(qp(i,j,k,:),qm(i+1,j,k,:),flx(i,j,k,:))
-				if(i.eq.3.and.j.eq.12.and.k.eq.3) then 
-					print*, "flux in x = ", flx(i,j,k,QMAGX)
-					print*, "qL = ", qp(i,j,k,:)
-					print*, "qR = ",qm(i+1,j,k,:)
-				!	pause
-				endif
 			enddo
 		enddo
 	enddo
@@ -53,12 +47,6 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldz(qp(i,j,k,:),qm(i,j,k+1,:),flx(i,j,k,:))
-				if(i.eq.3.and.j.eq.12.and.k.eq.3) then 
-					print*, "flux in z = ", flx(i,j,k,QMAGZ)
-					print*, "qL = ", qp(i,j,k,:)
-					print*, "qR = ",qm(i,j,k+1,:)
-				!	pause
-				endif
 			enddo
 		enddo
 	enddo
@@ -320,28 +308,59 @@ implicit none
 	UsR(QRHO) = qR(QRHO)*((sR - qR(QV))/(sR - sM))
 	!velocities
 	!X dir
-	UsL(QU)    = qL(QU) - qL(QMAGY)*qL(QMAGX)*((sM - qL(QV))/(qL(QRHO)*(sL - qL(QV))*(sL - sM) - qL(QMAGY)**2))
-	UsR(QU)    = qR(QU) - qR(QMAGY)*qR(QMAGX)*((sM - qR(QV))/(qR(QRHO)*(sR - qR(QV))*(sR - sM) - qR(QMAGY)**2))
+	if(abs(qL(QMAGY)*qL(QMAGX)*(sM - qL(QV))).le. 1d-14) then
+		UsL(QU) = qL(QU)
+	else
+		UsL(QU)    = qL(QU) - qL(QMAGY)*qL(QMAGX)*((sM - qL(QV))/(qL(QRHO)*(sL - qL(QV))*(sL - sM) - qL(QMAGY)**2))
+	endif
+	if(abs(qR(QMAGY)*qR(QMAGX)*(sM - qR(QV))).le. 1d-14) then
+		UsR(QU) = qR(QU)
+	else
+		UsR(QU)    = qR(QU) - qR(QMAGY)*qR(QMAGX)*((sM - qR(QV))/(qR(QRHO)*(sR - qR(QV))*(sR - sM) - qR(QMAGY)**2))
+	endif
 	!Y dir
 	UsL(QV)    = sM
 	UsR(QV)    = sM
 	!Z dir
-	UsL(QW)    = qL(QW) - qL(QMAGY)*qL(QMAGZ)*((sM - qL(QV))/(qL(QRHO)*(sL - qL(QV))*(sL - sM) - qL(QMAGY)**2))
-	UsR(QW)    = qR(QW) - qR(QMAGY)*qR(QMAGZ)*((sM - qR(QV))/(qR(QRHO)*(sR - qR(QV))*(sR - sM) - qL(QMAGY)**2))
-
+	if(abs(qL(QMAGY)*qL(QMAGZ)*(sM - qL(QV))).lt. 1d-14) then
+		UsL(QW)    = qL(QW)
+	else
+		UsL(QW)    = qL(QW) - qL(QMAGY)*qL(QMAGZ)*((sM - qL(QV))/(qL(QRHO)*(sL - qL(QV))*(sL - sM) - qL(QMAGY)**2))
+	endif
+	if(abs(qR(QMAGY)*qR(QMAGZ)*(sM - qR(QV))).lt. 1d-14) then
+		UsR(QW) = qR(QW)
+	else
+		UsR(QW)    = qR(QW) - qR(QMAGY)*qR(QMAGZ)*((sM - qR(QV))/(qR(QRHO)*(sR - qR(QV))*(sR - sM) - qL(QMAGY)**2))
+	endif
 	UsL(QU:QW) = UsL(QU:QW)*UsL(QRHO)
 	UsR(QU:QW) = UsR(QU:QW)*UsR(QRHO)
 	
 	!Magnetic Fields
 	!X dir
-	UsL(QMAGX) = qL(QMAGX)*(qL(QRHO)*(sL - qL(QV))**2 - qL(QMAGY)**2)/(qL(QRHO)*(sL - qL(QV))*(sL - sM) - qL(QMAGY)**2)
-	UsR(QMAGX) = qR(QMAGX)*(qR(QRHO)*(sR - qR(QV))**2 - qL(QMAGY)**2)/(qR(QRHO)*(sR - qR(QV))*(sR - sM) - qL(QMAGY)**2)
+	if(abs(qL(QMAGX)*(qL(QRHO)*(sL - qL(QV))**2 - qL(QMAGY)**2)).lt. 1d-14) then
+		UsL(QMAGX) = qL(QMAGX)
+	else
+		UsL(QMAGX) = qL(QMAGX)*(qL(QRHO)*(sL - qL(QV))**2 - qL(QMAGY)**2)/(qL(QRHO)*(sL - qL(QV))*(sL - sM) - qL(QMAGY)**2)
+	endif
+	if(abs(qR(QMAGX)*(qR(QRHO)*(sR - qR(QV))**2 - qR(QMAGY)**2)).lt.1d-14) then 
+		UsR(QMAGX) = qR(QMAGX)
+	else
+		UsR(QMAGX) = qR(QMAGX)*(qR(QRHO)*(sR - qR(QV))**2 - qR(QMAGY)**2)/(qR(QRHO)*(sR - qR(QV))*(sR - sM) - qR(QMAGY)**2)
+	endif
 	!Y dir
 	UsL(QMAGY) = qL(QMAGY)
 	UsR(QMAGY) = qL(QMAGY) 
 	!Z dir
-	UsL(QMAGZ) = qL(QMAGZ)*(qL(QRHO)*(sL - qL(QV))**2 - qL(QMAGY)**2)/(qL(QRHO)*(sL - qL(QV))*(sL - sM) - qL(QMAGY)**2)
-	UsR(QMAGZ) = qR(QMAGZ)*(qR(QRHO)*(sR - qR(QV))**2 - qL(QMAGY)**2)/(qR(QRHO)*(sR - qR(QV))*(sR - sM) - qL(QMAGY)**2)
+	if(abs(qL(QMAGZ)*(qL(QRHO)*(sL - qL(QV))**2 - qL(QMAGY)**2)).lt.1d-14) then
+		UsL(QMAGZ) = qL(QMAGZ)
+	else
+		UsL(QMAGZ) = qL(QMAGZ)*(qL(QRHO)*(sL - qL(QV))**2 - qL(QMAGY)**2)/(qL(QRHO)*(sL - qL(QV))*(sL - sM) - qL(QMAGY)**2)
+	endif
+	if(abs(qR(QMAGZ)*(qR(QRHO)*(sR - qR(QV))**2 - qL(QMAGY)**2)).lt.1d-14) then 
+		UsR(QMAGZ) = qR(QMAGZ)
+	else
+		UsR(QMAGZ) = qR(QMAGZ)*(qR(QRHO)*(sR - qR(QV))**2 - qL(QMAGY)**2)/(qR(QRHO)*(sR - qR(QV))*(sR - sM) - qL(QMAGY)**2)
+	endif
 	
 	!Energy *Stored in Pressure slot
 	UsL(QPRES) = (sL - qL(QV))*eL - ptL*qL(QV) + pst*sM + qL(QMAGY)*(dot_product(qL(QU:QW),qL(QMAGX:QMAGZ)) &
@@ -415,6 +434,22 @@ implicit none
 	flx = FR
 	choice = "FR"
 	endif
+	!do i = 1, QVAR
+		!if(isnan(flx(i))) then
+		!	write(*,*) "Flux y is nan in component", i
+!			write(*,*) "Flux = ", choice
+!			write(*,*) " = ", flx
+!			write(*,*) "FL = ", FL
+!			write(*,*) "FR = ", FR
+!			write(*,*) "QL = ", qL
+!			write(*,*) "QR = ", qR
+!			write(*,*) "UsL = ", UsL
+!			write(*,*) "UsR = ", UsR
+!			write(*,*) "UssL = ", UssL
+!			write(*,*) "UssR = ", UssR
+!			pause
+!		endif
+!	enddo
 !	flx = 0.5*(FL + FR) - 0.5*sR*(UR - UL)
 end subroutine hlldy
 

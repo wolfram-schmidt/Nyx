@@ -740,11 +740,10 @@ implicit none
 	
 	real(rt)				::Ecen
 	real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
-	real(rt)				::u_face ,v_face ,w_face
 	
 	integer					::i ,j ,k	
 
-	!E = 0.d0
+	E = 0.d0
 	do k = flx_l3+1,flx_h3-1
 		do j = flx_l2+1,flx_h2-1
 			do i = flx_l1+1,flx_h1-1
@@ -800,10 +799,13 @@ implicit none
 
 				E(i,j,k,1) = 0.25d0*(-flx(i,j,k-1,QMAGZ,2) - flx(i,j,k,QMAGZ,2) + flx(i,j-1,k,QMAGY,3) + flx(i,j,k,QMAGY,3))&
 							+ dd1 + dd2
-				if(j.eq.14.and.k.eq.3) then
-					print*, "E x = ", E(i,j,k,1), "Fluxes = ", flx(i,j,k-1,QMAGZ,2) , flx(i,j,k,QMAGZ,2) , flx(i,j-1,k,QMAGY,3) , flx(i,j,k,QMAGY,3)
+				if(isnan(E(i,j,k,1))) then
+					print*, "i,j,k = ", i, j, k
+					print*, "q bounds", q_l1, q_l2, q_l3, q_h1, q_h2, q_h3
+					print*, "flx bounds", flx_l1, flx_l2, flx_l3, flx_h1, flx_h2, flx_h3
+					print*, "E x is nan = ", E(i,j,k,1), "Fluxes = ", flx(i,j,k-1,QMAGZ,2) , flx(i,j,k,QMAGZ,2) , flx(i,j-1,k,QMAGY,3) , flx(i,j,k,QMAGY,3)
 					print*, "Derivatives 1", dd1, "Derivatives 2", dd2
-				!	pause
+					pause
 				endif
 !============================================= Ey i-1/2, j, k-1/2 ===========================================================================
 				call electric(q(i-1,j,k-1,:),Ecen,2)
@@ -904,7 +906,7 @@ implicit none
 					print*, "E z = ", E(i,j,k,3), "Fluxes = ", -flx(i,j,k,QMAGY,1), - flx(i,j-1,k,QMAGY,1), flx(i-1,j,k,QMAGX,2), flx(i,j,k,QMAGX,2)
 					print*, "Derivatives 1", dd1, "Derivatives 2", dd2
 					print*, "i, j, k = ", i, j, k
-					pause
+				!	pause
 				endif
 			enddo
 			E(flx_l1,j,k,1) = 0.25d0*(-flx(flx_l1,j,k-1,QMAGZ,2) - flx(flx_l1,j,k,QMAGZ,2) + flx(flx_l1,j-1,k,QMAGY,3) + flx(flx_l1,j,k,QMAGY,3))
@@ -987,6 +989,6 @@ implicit none
 	enddo
 
 	print*, "E z = ", E(3,11,3,3), "Fluxes = ", -flx(3,11,3,QMAGY,1), - flx(3,10,3,QMAGY,1), flx(2,11,3,QMAGX,2), flx(3,11,3,QMAGX,2)
-	pause
+	!pause
 end subroutine electric_edge
 end module electric_field
