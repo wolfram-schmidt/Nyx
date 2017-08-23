@@ -168,35 +168,21 @@
                     courno,dx,dy,dz,dt,ngq,ngf,a_old,a_new)
 
 !Step Two, Interpolate Cell centered values to faces
-	  call plm(q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
-				 bxin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-				 byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-				 bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-                 qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
-!write(*,*) "Bounds", q_l1,q_l2,q_l3,q_h1,q_h2,q_h3
-!qm(:,:,:,:,1) = q
-!qm(:,:,:,:,2) = q
-!qm(:,:,:,:,3) = q
-!qp(:,:,:,:,1) = q
-!qp(:,:,:,:,2) = q
-!qp(:,:,:,:,3) = q
+!	  call plm(q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
+!				 bxin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+!				 byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+!				 bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+!                 qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
+qm(:,:,:,:,1) = q
+qm(:,:,:,:,2) = q
+qm(:,:,:,:,3) = q
+qp(:,:,:,:,1) = q
+qp(:,:,:,:,2) = q
+qp(:,:,:,:,3) = q
 flx = 0.d0
 !Step Three, Corner Couple and find the correct fluxes + electric fields
 	  call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &	
 							flx, E, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, dx , dy, dz, dt)
-
-!	call hlld(qm(:,:,:,:,1),qp(:,:,:,:,1),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,1),&
-!			  q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, 1)
-	!y-dir	
-!	call hlld(qm(:,:,:,:,2),qp(:,:,:,:,2),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,2),&
-!			  q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, 2)
-	!z-dir
-!	call hlld(qm(:,:,:,:,3),qp(:,:,:,:,3),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,3),&
-!			  q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, 3)
-!	E = 0.d0
-!	call elec_1(E, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-!			flx, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3) 
-
 !Step Four, Conservative update
       call consup(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
                   uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
@@ -638,6 +624,13 @@ end subroutine fort_advance_mhd
 					v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
 					w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
 					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+					if(i.eq.3.and.j.eq.14.and.k.eq.3) then 
+						print *, "UMX = ", uout(i,j,k,UMX), "i, j, k = ", i, j, k
+						print *, "Flux in x = ", flux(i+1,j,k,UMX,1) , flux(i,j,k,UMX,1)
+						print *, "Flux in y = ", flux(i,j+1,k,UMX,2) , flux(i,j,k,UMX,2)
+						print *, "Flux in z = ", flux(i,j,k+1,UMX,3) , flux(i,j,k,UMX,3)
+						pause
+					endif
 				enddo
 			enddo
 		enddo
@@ -695,7 +688,7 @@ end subroutine fort_advance_mhd
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
-						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k+1,2) - E(i,j,k,2) - (E(i+1,j,k,3) - E(i,j,k,3)))
+						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k+1,2) - E(i,j,k,2) - (E(i,j+1,k,3) - E(i,j,k,3)))
 					enddo
 				enddo
 			enddo

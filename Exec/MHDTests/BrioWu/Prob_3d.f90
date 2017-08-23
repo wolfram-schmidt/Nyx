@@ -227,5 +227,4 @@
             enddo
          enddo
       enddo
-
       end subroutine fort_initdata

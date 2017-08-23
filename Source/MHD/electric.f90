@@ -744,7 +744,7 @@ implicit none
 	
 	integer					::i ,j ,k	
 
-
+	E = 0.d0
 	do k = flx_l3+1,flx_h3-1
 		do j = flx_l2+1,flx_h2-1
 			do i = flx_l1+1,flx_h1-1
@@ -770,6 +770,10 @@ implicit none
 					d2 = 0.5d0*(a+b)
 				endif
 				dd1 = 0.125d0*(d1 - d2)
+				if(i.eq.1.and.j.eq.15.and.k.eq.5) then 
+					print*,"First Derivatives", d1, d2, a, b, flx(i,j-1,k+1,QMAGY,3), Ecen
+					print*, "i,j-1,k+1", i, j-1, k+1
+				endif
 
 				call electric(q(i,j-1,k-1,:),Ecen,1)
 				a = 2.d0*(-flx(i,j,k-1,QMAGZ,2) - Ecen)
@@ -784,7 +788,7 @@ implicit none
 				endif
 
 				a = b 
-				b = 2.d0*(-flx(i,j+1,k-1,QRHO,2) - Ecen) 
+				b = 2.d0*(-flx(i,j+1,k-1,QMAGZ,2) - Ecen) 
 				if(q(i,j,k-1,QV).gt.0.d0) then
 					d2 = a
 				elseif(q(i,j,k-1,QV).lt. 0.d0) then
@@ -796,6 +800,13 @@ implicit none
 
 				E(i,j,k,1) = 0.25d0*(-flx(i,j,k-1,QMAGZ,2) - flx(i,j,k,QMAGZ,2) + flx(i,j-1,k,QMAGY,3) + flx(i,j,k,QMAGY,3))&
 							+ dd1 + dd2
+				if(abs(E(i,j,k,1)).gt.1d-12.and.i.gt.0.and.j.gt.0.and.k.ge.0) then 
+					print*, "i, j, k =", i, j, k
+					print*, "E x = ", E(i,j,k,1), "Fluxes = ", - flx(i,j,k-1,QMAGZ,2), - flx(i,j,k,QMAGZ,2) , flx(i,j-1,k,QMAGY,3) , flx(i,j,k,QMAGY,3)
+					print*, "Derivatives 1", dd1, "Derivatives 2", dd2
+					print*, 
+					pause
+				endif
 !============================================= Ey i-1/2, j, k-1/2 ===========================================================================
 				call electric(q(i-1,j,k-1,:),Ecen,2)
 				a = 2.d0*(-flx(i,j,k-1,QMAGZ,1) - Ecen)
@@ -832,9 +843,9 @@ implicit none
 				endif
 				a = b 
 				b = 2.d0*(flx(i-1,j,k+1,QMAGX,3) - Ecen) 
-				if(q(i-1,j,k,QV).gt.0.d0) then
+				if(q(i-1,j,k,QW).gt.0.d0) then
 					d2 = a
-				elseif(q(i-1,j,k,QV).lt. 0.d0) then
+				elseif(q(i-1,j,k,QW).lt. 0.d0) then
 					d2 = b
 				else 
 					d2 = 0.5d0*(a+b)
@@ -843,6 +854,11 @@ implicit none
 
 				E(i,j,k,2) = 0.25d0*(flx(i,j,k,QMAGZ,1) + flx(i,j,k-1,QMAGZ,1) - flx(i-1,j,k,QMAGX,3) + flx(i,j,k,QMAGX,3))&
 							+ dd1 + dd2
+				if(i.eq.4.and.j.eq.16.and.k.eq.3) then 
+					print*, "E y = ", E(i,j,k,2), "Fluxes = ", flx(i,j,k,QMAGZ,1), flx(i,j,k-1,QMAGZ,1), flx(i-1,j,k,QMAGX,3), flx(i,j,k,QMAGX,3)
+					print*, "Derivatives 1", dd1, "Derivatives 2", dd2
+					pause
+				endif
 
 !============================================= Ez i-1/2, j-1/2, k ===========================================================================
 				call electric(q(i-1,j-1,k,:),Ecen,3)
@@ -890,7 +906,7 @@ implicit none
 				endif
 				dd2 = 0.125*(d1 - d2)
 
-				E(i,j,k,2) = 0.25d0*(flx(i,j,k,QMAGZ,1) + flx(i,j,k-1,QMAGZ,1) - flx(i-1,j,k,QMAGX,3) - flx(i,j,k,QMAGX,3))&
+				E(i,j,k,3) = 0.25d0*(-flx(i,j,k,QMAGY,1) - flx(i,j,k-1,QMAGY,1) + flx(i-1,j,k,QMAGX,2) + flx(i,j,k,QMAGX,2))&
 							+ dd1 + dd2
 			enddo
 		enddo

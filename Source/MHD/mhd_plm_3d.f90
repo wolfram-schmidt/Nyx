@@ -162,11 +162,11 @@ contains
 				dQR(1:5) = 	temp(i+1,j,k,1:ibx-1) - temp(i,j,k,1:ibx-1)
 				dQR(6:7) = 	temp(i+1,j,k,ibx+1:8) - temp(i,j,k,ibx+1:8)				
 				do ii = 1,7
-					!call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
-					call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					!call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
 				enddo
 				call evals(lam, s(i,j,k,:), 1) !!X dir eigenvalues
-				call lvecx(leig,s(i,j,k,:))    !! left eigenvectors
+				call lvecx(leig,s(i,j,k,:))    !!left eigenvectors
 				call rvecx(reig,s(i,j,k,:))    !!right eigenvectors
 	!MHD Source Terms 
 				smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -186,26 +186,14 @@ contains
 				Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
 				Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Ip(i,j,k,QPRES,1)        = Ip(i,j,k,QPRES,1) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,1),Ip(i,j,k,QMAGX:QMAGZ,1))
-				if(isnan(Ip(i,j,k,QRHO,1))) then
-					write(*,*) "rho is nan x ", temp(i,j,k,1), summ(1), smhd(1), tbx(i+1,j,k), tbx(i,j,k)
-					write(*,*) "iterator", i, j, k
-					write(*,*) "limits ", "x ", s_l1,s_h1, "y ", s_l2,s_h2, "z ", s_l3, s_h3
-					do ii =1, 7
-						write(*,*) "leig = ", leig(ii,:)
-						write(*,*) "lam", lam(ii)
-						write(*,*) "reig = ", reig(:,ii)
-						pause
-					enddo					
-				endif
-
 		!Minus
 				summ = 0.d0
 				do ii = 1,7
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
-				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
+				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) - 0.5d0*dt_over_a*smhd(1:5)
 				Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
-				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) - 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QPRES,1)        = Im(i,j,k,QPRES,1) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1))
 				
 	!========================================= Y Direction ================================================				
@@ -223,8 +211,8 @@ contains
 				dQR(1:6) = 	temp(i,j+1,k,1:ibx) - temp(i,j,k,1:ibx)
 				dQR(7) = 	temp(i,j+1,k,ibz) - temp(i,j,k,ibz)				
 				do ii = 1,7
-					!call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
-					call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting						
+					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					!call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting						
 				enddo
 				call evals(lam, s(i,j,k,:), 2) !!Y dir eigenvalues
 				call lvecy(leig,s(i,j,k,:))    !!left eigenvectors
@@ -251,18 +239,10 @@ contains
 				do ii = 1,7
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
-				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				if(isnan(Im(i,j,k,QRHO,2))) then
-					write(*,*) "rho_y - nan at = ", i, j, k
-					write(*,*) "rho in", temp(i,j,k,1), "summ(1) =", summ(1), "mhd sources =", smhd(1)
-					write(*,*) "lam = ", lam(1) 
-					write(*,*) "leig =", leig(1,:)
-					write(*,*) "reig =", reig(:,1)
-					pause
-				endif
-				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
+				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) - 0.5d0*dt_over_a*smhd(6)
 				Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
-				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
+				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) - 0.5d0*dt_over_a*smhd(7)
 				Im(i,j,k,QPRES,2)       = Im(i,j,k,QPRES,2) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2))				
 	!========================================= Z Direction ================================================				
 				summ = 0.d0
@@ -277,16 +257,10 @@ contains
 				dQL(1:7) = 	temp(i,j,k,1:iby) - temp(i,j,k-1,1:iby) 
 				dQR(1:7) = 	temp(i,j,k+1,1:iby) - temp(i,j,k,1:iby)
 				do ii = 1,7
-					!call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
-					call minmod(dW(ii), dQL(ii), dQR(ii))
+					call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+					!call minmod(dW(ii), dQL(ii), dQR(ii))
 				enddo
 				call evals(lam, s(i,j,k,:), 3) !!Z dir eigenvalues
-				do ii = 1,7 
-					if(isnan(lam(ii))) then
-						write(*,*) "nan lambdas ", "s(i,j,k,:) = ", s(i,j,k,:)
-						pause
-					endif
-				enddo
 				call lvecz(leig,s(i,j,k,:))    !!left eigenvectors
 				call rvecz(reig,s(i,j,k,:))    !!right eigenvectors
 				!!Characteristic Tracing
@@ -310,14 +284,8 @@ contains
 				do ii = 1,7
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
-				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				if(isnan(Im(i,j,k,QRHO,3))) then
-					write(*,*) "rho - z is nan", temp(i,j,k,1), summ(1), smhd(1)
-					write(*,*) "leig = ", leig
-					write(*,*) "reig = ", reig
-					pause
-				endif
-				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) - 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 				Im(i,j,k,QPRES,3)       = Im(i,j,k,QPRES,3) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3))
 			enddo

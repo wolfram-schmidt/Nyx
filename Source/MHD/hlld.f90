@@ -11,7 +11,7 @@ subroutine hlld(qm,qp,qRd_l1,qRd_l2,qRd_l3,qRd_h1,qRd_h2,qRd_h3, &
                 flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 				dir)
  use amrex_fort_module, only : rt => amrex_real
- use meth_params_module, only: QVAR
+ use meth_params_module!, only: QVAR
 implicit none 
 
 	integer, intent(in)   :: qRd_l1,qRd_l2,qRd_l3,qRd_h1,qRd_h2,qRd_h3
@@ -31,6 +31,12 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1-1
 				call hlldx(qp(i,j,k,:),qm(i+1,j,k,:),flx(i,j,k,:))
+				if(i.eq.3.and.j.eq.14.and.k.eq.3) then 
+					print*, "flux in x = ", flx(i,j,k,UMX)
+					print*, "qL = ", qp(i,j,k,:)
+					print*, "qR = ",qm(i+1,j,k,:)
+					pause
+				endif
 			enddo
 		enddo
 	enddo
@@ -47,6 +53,12 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldz(qp(i,j,k,:),qm(i,j,k+1,:),flx(i,j,k,:))
+				if(i.eq.3.and.j.eq.14.and.k.eq.4) then 
+					print*, "flux in z = ", flx(i,j,k,UMX)
+					print*, "qL = ", qp(i,j,k,:)
+					print*, "qR = ",qm(i,j,k+1,:)
+					pause
+				endif
 			enddo
 		enddo
 	enddo
@@ -232,7 +244,7 @@ implicit none
 !			return
 !		endif
 !	enddo
-!	flx = 0.5*(FL + FR) - 0.5*sM*(UL - UR)
+!	flx = 0.5*(FL + FR) - 0.5*sR*(UR - UL)
 
 end subroutine hlldx
 
@@ -403,7 +415,7 @@ implicit none
 	flx = FR
 	choice = "FR"
 	endif
-!	flx = 0.5*(FL + FR) - 0.5*sM*(UL - UR)
+!	flx = 0.5*(FL + FR) - 0.5*sR*(UR - UL)
 end subroutine hlldy
 
 !============================================================= Z Direction =================================================================
@@ -575,7 +587,7 @@ implicit none
 	choice = "FR"
 	endif
 !	do i = 1, QVAR
-!		if(isnan(flx(i))) then
+!		if(abs(flx(UMX)).gt. 1.d-14) then
 !			write(*,*) "Flux is nan in", i, "component"
 !			write(*,*) "Flux = ", choice
 !			write(*,*) "FL = ", FL
@@ -590,7 +602,7 @@ implicit none
 !			return
 !		endif
 !	enddo
-!	flx = 0.5*(FL + FR) - 0.5*sM*(UL - UR)
+!	flx = 0.5*(FL + FR) - 0.5*sR*(UR - UL)
 end subroutine hlldz
 
 !====================================================== Fluxes ================================================================================

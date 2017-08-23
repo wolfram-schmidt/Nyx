@@ -37,14 +37,14 @@ implicit none
  
 	real(rt)			  :: um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !PtoC Vars
 	real(rt)			  :: up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
-	real(rt)			  :: cons_temp_L(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Conservative Vars
-	real(rt)			  :: cons_temp_R(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Conservative Vars
-	real(rt)			  :: cons_half_L(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !Flux Corrected Conservative Vars
-	real(rt)			  :: cons_half_R(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
-	real(rt)			  :: q_temp_L(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Primitive Vars
-	real(rt)			  :: q_temp_R(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Primitive Vars
-	real(rt)			  :: q_half_L(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !Flux Corrected Primitive Vars
-	real(rt)			  :: q_half_R(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !Flux Corrected Primitive Vars
+	real(rt)			  :: cons_temp_M(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Conservative Vars
+	real(rt)			  :: cons_temp_P(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Conservative Vars
+	real(rt)			  :: cons_half_M(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !Flux Corrected Conservative Vars
+	real(rt)			  :: cons_half_P(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+	real(rt)			  :: q_temp_M(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Primitive Vars
+	real(rt)			  :: q_temp_P(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2) !2D Temporary Primitive Vars
+	real(rt)			  :: q_half_M(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !Flux Corrected Primitive Vars
+	real(rt)			  :: q_half_P(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3) !Flux Corrected Primitive Vars
 	real(rt)			  :: flx1D(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3) !Flux1d for all directions
 	real(rt)			  :: flx2D(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3, 2) !Flux2d for all directions 2 perpendicular directions
 !	real(rt) 			  :: Etemp(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,3,4) !Temporary Electric Field
@@ -56,14 +56,14 @@ implicit none
 
 um = 0.d0
 up = 0.d0
-cons_temp_L = 0.d0
-cons_temp_R = 0.d0
-q_temp_L = 0.d0
-q_temp_R = 0.d0
-cons_half_L = 0.d0
-cons_half_R = 0.d0
-q_half_L = 0.d0
-q_half_R = 0.d0
+cons_temp_M = 0.d0
+cons_temp_P = 0.d0
+q_temp_M = 0.d0
+q_temp_P = 0.d0
+cons_half_M = 0.d0
+cons_half_P = 0.d0
+q_half_M = 0.d0
+q_half_P = 0.d0
 q2D = 0.d0
 flx1D = 0.d0
 flx2D = 0.d0
@@ -87,88 +87,77 @@ do i = 1,3
 enddo
 !Use "1D" fluxes To interpolate Temporary Edge Centered Electric Fields
 write(*,*) "Do Electric Field 1D"
-!	call elec_interp(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
-!			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 	call electric_edge(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 write(*,*) "Corner Couple Cons"
 !Corner Couple
-	call corner_couple(cons_temp_L, cons_temp_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+	call corner_couple(cons_temp_M, cons_temp_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 					   flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt) !Correct Conservative vars using Transverse Fluxes
 write(*,*) "Corner Couple Mag"
-	call corner_couple_mag(cons_temp_L, cons_temp_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+	call corner_couple_mag(cons_temp_M, cons_temp_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 						Etemp, dx, dy, dz, dt) !Correct Magnetic Vars using Etemp
 
 
 !Cons To Prim
 do i = 1,3
-	print *, "Cons to prim 2D", i, 1
-	print *, "L"
-	call ConsToPrim(q_temp_L(:,:,:,:,i,1), cons_temp_L(:,:,:,:,i,1), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
-	print *, "R"
-	call ConsToPrim(q_temp_R(:,:,:,:,i,1), cons_temp_R(:,:,:,:,i,1), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
-	print *, "Cons to prim 2D", i, 2
-	print *, "L"
-	call ConsToPrim(q_temp_L(:,:,:,:,i,2), cons_temp_L(:,:,:,:,i,2), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
-	print *, "R"
-	call ConsToPrim(q_temp_R(:,:,:,:,i,2), cons_temp_R(:,:,:,:,i,2), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_temp_M(:,:,:,:,i,1), cons_temp_M(:,:,:,:,i,1), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_temp_P(:,:,:,:,i,1), cons_temp_P(:,:,:,:,i,1), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_temp_M(:,:,:,:,i,2), cons_temp_M(:,:,:,:,i,2), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_temp_P(:,:,:,:,i,2), cons_temp_P(:,:,:,:,i,2), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 enddo
 
+print *, "Flux 2D"
 !Calculate Flux 2D
 do i = 1,2
+	print *, "x flux", i
 	!x-dir
-	call hlld(q_temp_L(:,:,:,:,1,i),q_temp_R(:,:,:,:,1,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,1,i),&
+	call hlld(q_temp_M(:,:,:,:,1,i),q_temp_P(:,:,:,:,1,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,1,i),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 1)
+	print *, "y flux", i
 	!y-dir	
-	call hlld(q_temp_L(:,:,:,:,2,i),q_temp_R(:,:,:,:,2,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,2,i),&
+	call hlld(q_temp_M(:,:,:,:,2,i),q_temp_P(:,:,:,:,2,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,2,i),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 2)
+	print *, "z flux", i
 	!z-dir
-	call hlld(q_temp_L(:,:,:,:,3,i),q_temp_R(:,:,:,:,3,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,3,i),&
+	call hlld(q_temp_M(:,:,:,:,3,i),q_temp_P(:,:,:,:,3,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx2D(:,:,:,:,3,i),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 3)
 enddo
 
 !Use Averaged 2D fluxes to interpolate temporary Edge Centered Electric Fields, reuse "flx1D"
 	flx1D(:,:,:,:,:) = 0.5d0*(flx2D(:,:,:,:,:,1) + flx2D(:,:,:,:,:,2))
-!	call elec_interp(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
-!			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 	call electric_edge(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 
 !Half Step conservative vars
-	call half_step(cons_half_L, cons_half_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+	call half_step(cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 			flx2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
-	call half_step_mag(cons_half_L, cons_half_R, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+	call half_step_mag(cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 			   Etemp, dx, dy, dz, dt)
 do i = 1,3
-	print *, "Cons To Prim Half", i
-	print *, "L"
-	call ConsToPrim(q_half_L(:,:,:,:,i), cons_half_L(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
-	print *, "R"
-	call ConsToPrim(q_half_R(:,:,:,:,i), cons_half_R(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_half_M(:,:,:,:,i), cons_half_M(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
+	call ConsToPrim(q_half_P(:,:,:,:,i), cons_half_P(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 enddo
 
 !Final Fluxes
-flx = 0.d0
+!flx = 0.d0
 	!x-dir
-	call hlld(q_half_L(:,:,:,:,1),q_half_R(:,:,:,:,1),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,1),&
+print *, "Flux Half Step"
+	call hlld(q_half_M(:,:,:,:,1),q_half_P(:,:,:,:,1),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,1),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 1)
 	!y-dir	
-	call hlld(q_half_L(:,:,:,:,2),q_half_R(:,:,:,:,2),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,2),&
+	call hlld(q_half_M(:,:,:,:,2),q_half_P(:,:,:,:,2),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,2),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 2)
 	!z-dir
-	call hlld(q_half_L(:,:,:,:,3),q_half_R(:,:,:,:,3),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,3),&
+	call hlld(q_half_M(:,:,:,:,3),q_half_P(:,:,:,:,3),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx(:,:,:,:,3),&
 			  flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, 3)
 
 	
 !Primitive update
 call prim_half(q2D,q,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx1D,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 !Final Electric Field Update
-!call elec_interp(elec, q2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
-!			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
-
-call electric_edge(Etemp, q, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
+call electric_edge(Etemp, q2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 
@@ -191,25 +180,13 @@ implicit none
  do k = q_l3,q_h3
  	 do j = q_l2,q_h2
  		 do i = q_l1, q_h1
-			if(q(i,j,k,QRHO).lt.small_dens) then
-				u(i,j,k,URHO) = small_dens
-                Print *,"prim rho less than small dens at"
-                print *, i, j, k
-                pause
-			else
-	 			u(i,j,k,URHO)  = q(i,j,k,QRHO)
-			endif
+			u(i,j,k,URHO)  = q(i,j,k,QRHO)
  			u(i,j,k,UMX)    = q(i,j,k,QRHO)*q(i,j,k,QU)
  			u(i,j,k,UMY)    = q(i,j,k,QRHO)*q(i,j,k,QV)
  			u(i,j,k,UMZ)    = q(i,j,k,QRHO)*q(i,j,k,QW)
 			u(i,j,k,UEDEN) = (q(i,j,k,QPRES)-0.5d0*(dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ))))/(gamma_minus_1) &
 							  + 0.5d0*q(i,j,k,QRHO)*dot_product(q(i,j,k,QU:QW),q(i,j,k,QU:QW)) &
 							  + 0.5d0*(dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ)))
-			if(u(i,j,k,UEDEN).le.0.d0) then
-				print *, "negative Energy at ",i,j,k, " pressure = ", q(i,j,k,QPRES), "velocities = ", q(i,j,k,QU:QW), "B = ", q(i,j,k,QMAGX:QMAGZ)
-				print *, "p/gamma-1 = ", (q(i,j,k,QPRES)-0.5d0*(dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ))))/(gamma_minus_1)
-				pause
-			endif
 			u(i,j,k,UEINT) = (q(i,j,k,QPRES) - 0.5d0*dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ)))/(gamma_minus_1)
 			u(i,j,k,QMAGX:QMAGZ) = q(i,j,k,QMAGX:QMAGZ)
 		 enddo
@@ -235,25 +212,11 @@ implicit none
  do k = q_l3,q_h3
  	 do j = q_l2,q_h2
  		 do i = q_l1, q_h1
-			if(u(i,j,k,QRHO).lt.small_dens) then
-			q(i,j,k,QRHO) = small_dens
-			    Print *,"cons rho less than small dens at"
-                print *, i, j, k
-                print *, "rho = ", u(i,j,k,QRHO)
-                pause
-			else
  			q(i,j,k,QRHO)  = u(i,j,k,URHO)
-			endif
  			q(i,j,k,QU)    = u(i,j,k,UMX)/q(i,j,k,QRHO)
  			q(i,j,k,QV)    = u(i,j,k,UMY)/q(i,j,k,QRHO)
  			q(i,j,k,QW)    = u(i,j,k,UMZ)/q(i,j,k,QRHO)
 			q(i,j,k,QPRES) = u(i,j,k,UEINT)*gamma_minus_1 + 0.5*dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ))
-			if(q(i,j,k,QPRES).le.0.d0) then
-				write(*,*) "Non positive Pressure! ", "Energy = ", u(i,j,k,UEINT), "B = ", q(i,j,k,QMAGX:QMAGZ)
-				write(*,*) "0.5|B|^2 = ", 0.5d0*dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ))
-				pause
-			   q(i,j,k,QPRES) = small_pres
-			endif
 			q(i,j,k,QREINT) = (q(i,j,k,QPRES) - 0.5d0**dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ)))/gamma_minus_1
 			q(i,j,k,QMAGX:QMAGZ) = u(i,j,k,QMAGX:QMAGZ)
 		 enddo
@@ -265,7 +228,7 @@ end subroutine ConsToPrim
 subroutine corner_couple(uL, uR, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 					   flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 use amrex_fort_module, only : rt => amrex_real
-use meth_params_module, only : QVAR, URHO, UEDEN, UEINT
+use meth_params_module
 
 implicit none
 	
@@ -279,7 +242,7 @@ implicit none
 	real(rt), intent(out)	::uL(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2)
 	real(rt), intent(out)	::uR(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3,2)
 
-	real(rt)				:: dx, dy, dz, dt
+	real(rt)				:: dx, dy, dz, dt, u, v, w
 	integer					:: i ,j ,k
 	
 
@@ -297,13 +260,77 @@ implicit none
 				uL(i,j,k,URHO:UEDEN,2,2) = um(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))! z corrected y
 				uL(i,j,k,URHO:UEDEN,3,1) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))! x corrected z
 				uL(i,j,k,URHO:UEDEN,3,2) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))! y corrected z
+
+				u = uL(i,j,k,UMX,1,1)/uL(i,j,k,URHO,1,1)
+				v = uL(i,j,k,UMY,1,1)/uL(i,j,k,URHO,1,1)
+				w = uL(i,j,k,UMZ,1,1)/uL(i,j,k,URHO,1,1)
+				uL(i,j,k,UEINT,1,1) = uL(i,j,k,UEDEN,1,1) - 0.5d0*uL(i,j,k,URHO,1,1)*(u**2 + v**2 + w**2)
+
+				u = uL(i,j,k,UMX,1,2)/uL(i,j,k,URHO,1,2)
+				v = uL(i,j,k,UMY,1,2)/uL(i,j,k,URHO,1,2)
+				w = uL(i,j,k,UMZ,1,2)/uL(i,j,k,URHO,1,2)
+				uL(i,j,k,UEINT,1,2) = uL(i,j,k,UEDEN,1,2) - 0.5d0*uL(i,j,k,URHO,1,2)*(u**2 + v**2 + w**2)
+			
+				u = uL(i,j,k,UMX,2,1)/uL(i,j,k,URHO,2,1)
+				v = uL(i,j,k,UMY,2,1)/uL(i,j,k,URHO,2,1)
+				w = uL(i,j,k,UMZ,2,1)/uL(i,j,k,URHO,2,1)
+				uL(i,j,k,UEINT,2,1) = uL(i,j,k,UEDEN,2,1) - 0.5d0*uL(i,j,k,URHO,2,1)*(u**2 + v**2 + w**2)
+
+				u = uL(i,j,k,UMX,2,2)/uL(i,j,k,URHO,2,2)
+				v = uL(i,j,k,UMY,2,2)/uL(i,j,k,URHO,2,2)
+				w = uL(i,j,k,UMZ,2,2)/uL(i,j,k,URHO,2,2)
+				uL(i,j,k,UEINT,2,2) = uL(i,j,k,UEDEN,2,2) - 0.5d0*uL(i,j,k,URHO,2,2)*(u**2 + v**2 + w**2)
+
+				u = uL(i,j,k,UMX,3,1)/uL(i,j,k,URHO,3,1)
+				v = uL(i,j,k,UMY,3,1)/uL(i,j,k,URHO,3,1)
+				w = uL(i,j,k,UMZ,3,1)/uL(i,j,k,URHO,3,1)
+				uL(i,j,k,UEINT,3,1) = uL(i,j,k,UEDEN,3,1) - 0.5d0*uL(i,j,k,URHO,3,1)*(u**2 + v**2 + w**2)
+
+				u = uL(i,j,k,UMX,3,2)/uL(i,j,k,URHO,3,2)
+				v = uL(i,j,k,UMY,3,2)/uL(i,j,k,URHO,3,2)
+				w = uL(i,j,k,UMZ,3,2)/uL(i,j,k,URHO,3,2)
+				uL(i,j,k,UEINT,3,2) = uL(i,j,k,UEDEN,3,2) - 0.5d0*uL(i,j,k,URHO,3,2)*(u**2 + v**2 + w**2)
+
+
+
 	!Right Corrected States
-				uR(i,j,k,URHO:UEDEN,1,1) = up(i,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))
-				uR(i,j,k,URHO:UEDEN,1,2) = up(i,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))
-				uR(i,j,k,URHO:UEDEN,2,1) = up(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))
-				uR(i,j,k,URHO:UEDEN,2,2) = up(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))
-				uR(i,j,k,URHO:UEDEN,3,1) = up(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))
-				uR(i,j,k,URHO:UEDEN,3,2) = up(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))
+				uR(i,j,k,URHO:UEDEN,1,1) = up(i+1,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))
+				uR(i,j,k,URHO:UEDEN,1,2) = up(i+1,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))
+				uR(i,j,k,URHO:UEDEN,2,1) = up(i,j+1,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))
+				uR(i,j,k,URHO:UEDEN,2,2) = up(i,j+1,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))
+				uR(i,j,k,URHO:UEDEN,3,1) = up(i,j,k+1,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))
+				uR(i,j,k,URHO:UEDEN,3,2) = up(i,j,k+1,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))
+				
+				u = uR(i,j,k,UMX,1,1)/uR(i,j,k,URHO,1,1)
+				v = uR(i,j,k,UMY,1,1)/uR(i,j,k,URHO,1,1)
+				w = uR(i,j,k,UMZ,1,1)/uR(i,j,k,URHO,1,1)
+				uR(i,j,k,UEINT,1,1) = uR(i,j,k,UEDEN,1,1) - 0.5d0*uR(i,j,k,URHO,1,1)*(u**2 + v**2 + w**2)
+
+				u = uR(i,j,k,UMX,1,2)/uR(i,j,k,URHO,1,2)
+				v = uR(i,j,k,UMY,1,2)/uR(i,j,k,URHO,1,2)
+				w = uR(i,j,k,UMZ,1,2)/uR(i,j,k,URHO,1,2)
+				uR(i,j,k,UEINT,1,2) = uR(i,j,k,UEDEN,1,2) - 0.5d0*uR(i,j,k,URHO,1,2)*(u**2 + v**2 + w**2)
+			
+				u = uR(i,j,k,UMX,2,1)/uR(i,j,k,URHO,2,1)
+				v = uR(i,j,k,UMY,2,1)/uR(i,j,k,URHO,2,1)
+				w = uR(i,j,k,UMZ,2,1)/uR(i,j,k,URHO,2,1)
+				uR(i,j,k,UEINT,2,1) = uR(i,j,k,UEDEN,2,1) - 0.5d0*uR(i,j,k,URHO,2,1)*(u**2 + v**2 + w**2)
+
+				u = uR(i,j,k,UMX,2,2)/uR(i,j,k,URHO,2,2)
+				v = uR(i,j,k,UMY,2,2)/uR(i,j,k,URHO,2,2)
+				w = uR(i,j,k,UMZ,2,2)/uR(i,j,k,URHO,2,2)
+				uR(i,j,k,UEINT,2,2) = uR(i,j,k,UEDEN,2,2) - 0.5d0*uR(i,j,k,URHO,2,2)*(u**2 + v**2 + w**2)
+
+				u = uR(i,j,k,UMX,3,1)/uR(i,j,k,URHO,3,1)
+				v = uR(i,j,k,UMY,3,1)/uR(i,j,k,URHO,3,1)
+				w = uR(i,j,k,UMZ,3,1)/uR(i,j,k,URHO,3,1)
+				uR(i,j,k,UEINT,3,1) = uR(i,j,k,UEDEN,3,1) - 0.5d0*uR(i,j,k,URHO,3,1)*(u**2 + v**2 + w**2)
+
+				u = uR(i,j,k,UMX,3,2)/uR(i,j,k,URHO,3,2)
+				v = uR(i,j,k,UMY,3,2)/uR(i,j,k,URHO,3,2)
+				w = uR(i,j,k,UMZ,3,2)/uR(i,j,k,URHO,3,2)
+				uR(i,j,k,UEINT,3,2) = uR(i,j,k,UEDEN,3,2) - 0.5d0*uR(i,j,k,URHO,3,2)*(u**2 + v**2 + w**2)
+
 			enddo
 		enddo
 	enddo
@@ -329,10 +356,9 @@ implicit none
 	real(rt)					::dx, dy, dz, dt
 	
 	integer						:: i ,j ,k
-	
-   	do k = q_l3,q_h3
-		do j = q_l2,q_h2
-			do i = q_l1,q_h1	
+   	do k = q_l3,q_h3-1
+		do j = q_l2,q_h2-1
+			do i = q_l1,q_h1-1	
 		!Left State
 				!X-direction 
 				!-> Affected by Y flux
@@ -381,6 +407,17 @@ implicit none
 									(E(i,j+1,k,3) - E(i,j,k,3)))
 
 				uL(i,j,k,QMAGX:QMAGY,3,2) = um(i,j,k,QMAGY:QMAGZ,3)
+				uL(i,j,k,UEINT,1,1) = uL(i,j,k,UEDEN,1,1) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGY,1,1),uL(i,j,k,QMAGX:QMAGY,1,1))
+
+				uL(i,j,k,UEINT,1,2) = uL(i,j,k,UEDEN,1,2) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGY,1,2),uL(i,j,k,QMAGX:QMAGY,1,2))
+
+				uL(i,j,k,UEINT,2,1) = uL(i,j,k,UEDEN,2,1) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGY,2,1),uL(i,j,k,QMAGX:QMAGY,2,1))
+
+				uL(i,j,k,UEINT,2,2) = uL(i,j,k,UEDEN,2,2) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGY,2,2),uL(i,j,k,QMAGX:QMAGY,2,2))
+
+				uL(i,j,k,UEINT,3,1) = uL(i,j,k,UEDEN,3,1) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGY,3,1),uL(i,j,k,QMAGX:QMAGY,3,1))
+
+				uL(i,j,k,UEINT,3,2) = uL(i,j,k,UEDEN,3,2) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGY,3,2),uL(i,j,k,QMAGX:QMAGY,3,2))
 		!Right State
 				!X-direction 
 				!-> Affected by Y flux
@@ -424,11 +461,29 @@ implicit none
 				!-> Affected by Y flux
 				uR(i,j,k,QMAGZ,3,2) = up(i,j,k,QMAGZ,3) - dt/(3.d0*dz)*&
 										(E(i,j+1,k+1,1) - E(i,j,k+1,1))
+				if(abs(uR(i,j,k,QMAGZ,3,2)).gt.1d-12.and.i.gt.0.and.j.gt.0.and.k.ge.0) then 
+					print *, "Non trivial Bz = ",uR(i,j,k,QMAGZ,3,2) , "i j k = ", i, j, k
+					print *, "Electric x",  E(i,j+1,k+1,1), E(i,j,k+1,1) 
+					pause
+				endif
+					
 				uR(i,j,k,QMAGX,3,1) = up(i,j,k,QMAGX,3) - dt/(6.d0*dz)*&
 									((E(i+1,j+1,k,3) - E(i+1,j,k,3)) + &
 									(E(i,j+1,k,3) - E(i,j,k,3)))
 
 				uR(i,j,k,QMAGX:QMAGY,3,2) = up(i,j,k,QMAGY:QMAGZ,3)
+
+				uR(i,j,k,UEINT,1,1) = uR(i,j,k,UEDEN,1,1) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGY,1,1),uR(i,j,k,QMAGX:QMAGY,1,1))
+
+				uR(i,j,k,UEINT,1,2) = uR(i,j,k,UEDEN,1,2) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGY,1,2),uR(i,j,k,QMAGX:QMAGY,1,2))
+
+				uR(i,j,k,UEINT,2,1) = uR(i,j,k,UEDEN,2,1) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGY,2,1),uR(i,j,k,QMAGX:QMAGY,2,1))
+
+				uR(i,j,k,UEINT,2,2) = uR(i,j,k,UEDEN,2,2) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGY,2,2),uR(i,j,k,QMAGX:QMAGY,2,2))
+
+				uR(i,j,k,UEINT,3,1) = uR(i,j,k,UEDEN,3,1) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGY,3,1),uR(i,j,k,QMAGX:QMAGY,3,1))
+
+				uR(i,j,k,UEINT,3,2) = uR(i,j,k,UEDEN,3,2) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGY,3,2),uR(i,j,k,QMAGX:QMAGY,3,2))
 			enddo
 		enddo
 	enddo
@@ -453,8 +508,8 @@ implicit none
 	real(rt), intent(out)	::uL(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 	real(rt), intent(out)	::uR(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 
-	real(rt)				:: dx, dy, dz, dt
-	integer					:: i ,j ,k
+	real(rt)				:: dx, dy, dz, dt, u, v, w
+	integer					:: i ,j ,k, n
 
 	uL = um
 	uR = up
@@ -462,19 +517,31 @@ implicit none
 		do j = flx_l2,flx_h2-1
 			do i = flx_l1,flx_h1-1
 !left state				
-				uL(i,j,k,URHO:UEDEN,1) = um(i,j,k,URHO:UEDEN,1) - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
-											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
-				uL(i,j,k,URHO:UEDEN,2) = um(i,j,k,URHO:UEDEN,2) - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
-											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
-				uL(i,j,k,URHO:UEDEN,3) = um(i,j,k,URHO:UEDEN,3) - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
-											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
+				uL(i+1,j,k,URHO:UEDEN,1) = um(i+1,j,k,URHO:UEDEN,1)! - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
+!											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
+				uL(i,j+1,k,URHO:UEDEN,2) = um(i,j+1,k,URHO:UEDEN,2)! - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
+!											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
+				uL(i,j,k+1,URHO:UEDEN,3) = um(i,j,k+1,URHO:UEDEN,3)! - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
+!											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
+				do n = 1,3
+					u = uL(i,j,k,UMX,n)/uL(i,j,k,URHO,n)
+					v = uL(i,j,k,UMY,n)/uL(i,j,k,URHO,n)
+					w = uL(i,j,k,UMZ,n)/uL(i,j,k,URHO,n)
+					uL(i,j,k,UEINT,n) = uL(i,j,k,UEDEN,n) - 0.5d0*uL(i,j,k,URHO,n)*(u**2 + v**2 + w**2)
+				enddo
 !right state				
-				uR(i,j,k,URHO:UEDEN,1) = up(i,j,k,URHO:UEDEN,1) - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
-											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
-				uR(i,j,k,URHO:UEDEN,2) = up(i,j,k,URHO:UEDEN,2) - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
-											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
-				uR(i,j,k,URHO:UEDEN,3) = up(i,j,k,URHO:UEDEN,3) - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
-											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
+				uR(i+1,j,k,URHO:UEDEN,1) = up(i+1,j,k,URHO:UEDEN,1)! - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
+!											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
+				uR(i,j+1,k,URHO:UEDEN,2) = up(i,j+1,k,URHO:UEDEN,2)! - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
+!											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
+				uR(i,j,k+1,URHO:UEDEN,3) = up(i,j,k+1,URHO:UEDEN,3)! - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
+!											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
+				do n = 1,3
+					u = uR(i,j,k,UMX,n)/uR(i,j,k,URHO,n)
+					v = uR(i,j,k,UMY,n)/uR(i,j,k,URHO,n)
+					w = uR(i,j,k,UMZ,n)/uR(i,j,k,URHO,n)
+					uR(i,j,k,UEINT,n) = uR(i,j,k,UEDEN,n) - 0.5d0*uR(i,j,k,URHO,n)*(u**2 + v**2 + w**2)
+				enddo
 			enddo
 		enddo
 	enddo
@@ -495,11 +562,11 @@ implicit none
 	real(rt), intent(in)    	::up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)	
 	real(rt), intent(in)		::E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,3)
 	real(rt)					:: dx, dy, dz, dt
-	integer						:: i ,j ,k
+	integer						:: i ,j ,k, n
 
-   	do k = q_l3,q_h3
-		do j = q_l2,q_h2
-			do i = q_l1,q_h1
+   	do k = q_l3,q_h3-1
+		do j = q_l2,q_h2-1
+			do i = q_l1,q_h1-1
 		!---------------------------------------left state-----------------------------------------------------
 				!X-Direction
 				!Bx
@@ -512,7 +579,13 @@ implicit none
 				!Bz
 				uL(i,j,k,QMAGZ,1) = um(i,j,k,QMAGZ,1) + 0.5d0*dt/dx*((E(i,j+1,k+1,1) - E(i,j,k+1,1)) &
 									+ (E(i,j+1,k,1) - E(i,j,k,1)) - (E(i+1,j,k+1,2) - E(i,j,k+1,2)) &
-									- (E(i+1,j,k,2) - E(i,j,k,2)))				
+									- (E(i+1,j,k,2) - E(i,j,k,2)))
+				if(i.eq.4.and.j.eq.14.and.k.eq.3) then 
+					print *, "Un+1/2  x= ", uL(i,j,k,:,1)
+					print *, "U in = ", um(i,j,k,:,1)
+					print *, "E", E(i,j+1,k+1,1) , E(i,j,k+1,1), E(i,j+1,k,1) , E(i,j,k,1),  E(i+1,j,k+1,2) , E(i,j,k+1,2), E(i+1,j,k,2), E(i,j,k,2)
+					pause
+				endif
 				!Y-Direction
 				!Bx
 				uL(i,j,k,QMAGX,2) = um(i,j,k,QMAGX,2) + 0.5d0*dt/dy*((E(i+1,j,k+1,2) - E(i+1,j,k,2)) &
@@ -537,6 +610,9 @@ implicit none
 				!Bz
 				uL(i,j,k,QMAGZ,3) = um(i,j,k,QMAGZ,3) - 0.5d0*dt/dz*((E(i,j+1,k,1) - E(i,j,k,1)) &
 									- (E(i+1,j,k,2) - E(i,j,k,2)))
+				do n = 1,3
+					uL(i,j,k,UEINT,n) = uL(i,j,k,UEDEN,n) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGY,n),uL(i,j,k,QMAGX:QMAGY,n))
+				enddo
 
 	!---------------------------------------right state-----------------------------------------------------
 				!X-Direction
@@ -574,7 +650,10 @@ implicit none
 									- (E(i,j,k+1,1) - E(i,j,k,1)))
 				!Bz
 				uR(i,j,k,QMAGZ,3) = up(i,j,k,QMAGZ,3) - 0.5d0*dt/dz*((E(i,j+1,k+1,1) - E(i,j,k+1,1)) &
-									- (E(i+1,j,k+1,2) - E(i,j,k+1,2)))								
+									- (E(i+1,j,k+1,2) - E(i,j,k+1,2)))			
+				do n = 1,3
+					uR(i,j,k,UEINT,n) = uR(i,j,k,UEDEN,n) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGY,n),uR(i,j,k,QMAGX:QMAGY,n))
+				enddo	
 			enddo
 		enddo
 	enddo
@@ -654,7 +733,7 @@ end subroutine qflux
 		do k = uout_l3,uout_h3
 			do j = uout_l2, uout_h2
 				do i = uout_l1,uout_h1
-					if(isnan(uout(i,j,k,n)).or.(abs(uout(i,j,k,n)).ge. 1d16)) then
+					if(isnan(uout(i,j,k,n)).or.(abs(uout(i,j,k,n)).ge. 1d14)) then
 						write(*,*) "Bad values ",  uout(i,j,k,:)
 						write(*,*) "Failure to converge ", "i, j, k, n = ", i, j, k, n
 						stop
@@ -680,7 +759,7 @@ end subroutine qflux
 		do k = uout_l3,uout_h3
 			do j = uout_l2, uout_h2
 				do i = uout_l1,uout_h1
-					if(isnan(uout(i,j,k)).or.(abs(uout(i,j,k)).ge. 1d16)) then
+					if(isnan(uout(i,j,k)).or.(abs(uout(i,j,k)).ge. 1d14)) then
 						write(*,*) "Bad values ",  uout(i,j,k)
 						write(*,*) "Failure to converge ", "i, j, k = ", i, j, k
 						stop
