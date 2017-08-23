@@ -157,9 +157,8 @@ print *, "Flux Half Step"
 !Primitive update
 call prim_half(q2D,q,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx1D,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 !Final Electric Field Update
-call electric_edge(Etemp, q2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
+call electric_edge(elec, q2D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
 			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
-
 
 end subroutine corner_transport
 
@@ -517,12 +516,12 @@ implicit none
 		do j = flx_l2,flx_h2-1
 			do i = flx_l1,flx_h1-1
 !left state				
-				uL(i+1,j,k,URHO:UEDEN,1) = um(i+1,j,k,URHO:UEDEN,1)! - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
-!											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
-				uL(i,j+1,k,URHO:UEDEN,2) = um(i,j+1,k,URHO:UEDEN,2)! - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
-!											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
-				uL(i,j,k+1,URHO:UEDEN,3) = um(i,j,k+1,URHO:UEDEN,3)! - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
-!											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
+				uL(i+1,j,k,URHO:UEDEN,1) = um(i+1,j,k,URHO:UEDEN,1) - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
+											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
+				uL(i,j+1,k,URHO:UEDEN,2) = um(i,j+1,k,URHO:UEDEN,2) - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
+											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
+				uL(i,j,k+1,URHO:UEDEN,3) = um(i,j,k+1,URHO:UEDEN,3) - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
+											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
 				do n = 1,3
 					u = uL(i,j,k,UMX,n)/uL(i,j,k,URHO,n)
 					v = uL(i,j,k,UMY,n)/uL(i,j,k,URHO,n)
@@ -530,12 +529,12 @@ implicit none
 					uL(i,j,k,UEINT,n) = uL(i,j,k,UEDEN,n) - 0.5d0*uL(i,j,k,URHO,n)*(u**2 + v**2 + w**2)
 				enddo
 !right state				
-				uR(i+1,j,k,URHO:UEDEN,1) = up(i+1,j,k,URHO:UEDEN,1)! - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
-!											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
-				uR(i,j+1,k,URHO:UEDEN,2) = up(i,j+1,k,URHO:UEDEN,2)! - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
-!											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
-				uR(i,j,k+1,URHO:UEDEN,3) = up(i,j,k+1,URHO:UEDEN,3)! - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
-!											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
+				uR(i+1,j,k,URHO:UEDEN,1) = up(i+1,j,k,URHO:UEDEN,1) - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
+											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
+				uR(i,j+1,k,URHO:UEDEN,2) = up(i,j+1,k,URHO:UEDEN,2) - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
+											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
+				uR(i,j,k+1,URHO:UEDEN,3) = up(i,j,k+1,URHO:UEDEN,3) - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
+											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
 				do n = 1,3
 					u = uR(i,j,k,UMX,n)/uR(i,j,k,URHO,n)
 					v = uR(i,j,k,UMY,n)/uR(i,j,k,URHO,n)

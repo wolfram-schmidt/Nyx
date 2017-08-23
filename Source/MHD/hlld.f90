@@ -31,11 +31,11 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1-1
 				call hlldx(qp(i,j,k,:),qm(i+1,j,k,:),flx(i,j,k,:))
-				if(i.eq.3.and.j.eq.14.and.k.eq.3) then 
-					print*, "flux in x = ", flx(i,j,k,UMX)
+				if(i.eq.3.and.j.eq.12.and.k.eq.3) then 
+					print*, "flux in x = ", flx(i,j,k,QMAGX)
 					print*, "qL = ", qp(i,j,k,:)
 					print*, "qR = ",qm(i+1,j,k,:)
-					pause
+				!	pause
 				endif
 			enddo
 		enddo
@@ -53,11 +53,11 @@ implicit none
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
 				call hlldz(qp(i,j,k,:),qm(i,j,k+1,:),flx(i,j,k,:))
-				if(i.eq.3.and.j.eq.14.and.k.eq.4) then 
-					print*, "flux in z = ", flx(i,j,k,UMX)
+				if(i.eq.3.and.j.eq.12.and.k.eq.3) then 
+					print*, "flux in z = ", flx(i,j,k,QMAGZ)
 					print*, "qL = ", qp(i,j,k,:)
 					print*, "qR = ",qm(i,j,k+1,:)
-					pause
+				!	pause
 				endif
 			enddo
 		enddo
