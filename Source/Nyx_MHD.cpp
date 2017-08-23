@@ -149,12 +149,14 @@ Nyx::just_the_mhd (Real time,
         FArrayBox& state     = S_old_tmp[mfi];
         FArrayBox& dstate    = D_old_tmp[mfi];
         FArrayBox& stateout  = S_new[mfi];
-		FArrayBox& Bx		 = Bx_old[mfi];
-		FArrayBox& By		 = By_old[mfi];
-		FArrayBox& Bz		 = Bz_old[mfi];
-		FArrayBox& Bxout	 = Bx_new[mfi];
-		FArrayBox& Byout	 = By_new[mfi];
-		FArrayBox& Bzout	 = Bz_new[mfi];		
+
+	FArrayBox& Bx		 = Bx_old[mfi];
+	FArrayBox& By		 = By_old[mfi];
+	FArrayBox& Bz		 = Bz_old[mfi];
+
+	FArrayBox& Bxout	 = Bx_new[mfi];
+	FArrayBox& Byout	 = By_new[mfi];
+	FArrayBox& Bzout	 = Bz_new[mfi];		
 
 #ifdef SHEAR_IMPROVED
         FArrayBox& am_tmp = AveMom_tmp[mfi];
