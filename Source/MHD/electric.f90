@@ -244,7 +244,7 @@ implicit none
 
         real(rt), intent(out)   :: E(ez_l1:ez_h1,ez_l2:ez_h2,ez_l3:ez_h3)
 	
-	real(rt)		:: Ecen
+	real(rt)		:: Ecen, u_face, v_face
 	real(rt)		:: a ,b ,d1 ,d2 ,dd1 ,dd2 
 
 	integer			:: i ,j ,k	
@@ -254,20 +254,22 @@ implicit none
         print *,"WORK LO IN EZ ", work_lo(:)
         print *,"WORK HI IN EZ ", work_hi(:)
 
+! ====  Ez i-1/2, j-1/2, k ====
+
 	do k = work_lo(3), work_hi(3)
 		do j = work_lo(2), work_hi(2)
 			do i = work_lo(1), work_hi(1)
 
-!============================================= Ez i-1/2, j-1/2, k ===========================================================================
 				call electric(q(i-1,j-1,k,:),Ecen,3)
 				a = 2.d0*(-flxx(i,j-1,k,QMAGY) - Ecen)
 
 				call electric(q(i,j-1,k,:),Ecen,3)
 				b = 2.d0*(Ecen + flxx(i,j-1,k,QMAGY))
 
-				if(flxx(i,j-1,k,QRHO).gt. 0.d0) then
+				u_face = flxx(i,j-1,k,QRHO)
+				if (u_face.gt. 0.d0) then
 					d1 = a
-				elseif(flxx(i,j-1,k,QRHO).lt. 0.d0) then
+				elseif (u_face.lt. 0.d0) then
 					d1 = b
 				else 
 					d1 = 0.5d0*(a+b)
@@ -276,9 +278,10 @@ implicit none
 				a = b
 				b = 2.d0*(-flxx(i+1,j-1,k,QMAGY) - Ecen)
 
-				if(q(i,j-1,k,QU).gt. 0.d0) then
+				u_face = q(i,j-1,k,QU)
+				if (u_face.gt. 0.d0) then
 					d2 = a
-				elseif(q(i,j-1,k,QU).lt. 0.d0) then
+				elseif (u_face.lt. 0.d0) then
 					d2 = b
 				else
 					d2 = 0.5d0*(a+b)
@@ -291,16 +294,23 @@ implicit none
 				call electric(q(i-1,j,k,:),Ecen,3)
 				b = 2.d0*(Ecen - flxy(i-1,j,k,QMAGX))
 
-				if(flxy(i-1,j,k,QRHO).gt. 0.d0) then
+				v_face = flxy(i-1,j,k,QRHO)
+				if (v_face.gt. 0.d0) then
 					d1 = a
-				elseif(flxy(i-1,j,k,QRHO).lt. 0.d0) then
+				elseif (v_face.lt. 0.d0) then
 					d1 = b
 				else
 					d1 = 0.5d0*(a+b)
 				endif
+				if (i.eq.-2.and.j.ge.28.and.k.eq.-2) then
+				   print *,'A B ', j, a, b
+				end if
 
 				a = b 
 				b = 2.d0*(flxy(i-1,j+1,k,QMAGX) - Ecen) 
+				if (i.eq.-2.and.j.ge.28.and.k.eq.-2) then
+				   print *,'B2 ', j, b, flxy(i-1,j+1,k,QMAGX), Ecen
+				end if
 
 				if(q(i-1,j,k,QV).gt.0.d0) then
 					d2 = a
@@ -310,6 +320,9 @@ implicit none
 					d2 = 0.5d0*(a+b)
 				endif
 				dd2 = 0.125*(d1 - d2)
+				if (i.eq.-2.and.j.ge.28.and.k.eq.-2) then
+				   print *,'DD2 ', j, d1, d2
+				end if
 
 				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
                                                    +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2
@@ -318,6 +331,7 @@ implicit none
                                 if (abs(E(i,j,k)).gt.0.) print *,"FX ", flxx(i,j-1,k,QMAGY),flxx(i,j,k,QMAGY) 
                                 if (abs(E(i,j,k)).gt.0.) print *,"FY ", flxy(i,j-1,k,QMAGX),flxy(i,j,k,QMAGX) 
                                 if (abs(E(i,j,k)).gt.0.) print *,"DD1/2 ", dd1, dd2
+                                if (abs(E(i,j,k)).gt.0.) stop
 
 			enddo
 		enddo

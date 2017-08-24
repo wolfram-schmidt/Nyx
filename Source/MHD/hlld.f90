@@ -222,6 +222,10 @@ implicit none
 	choice = "FR"
 	endif
 
+        if (abs(flx(QU)) .gt. 0.) print *,'BAD FLX(QU) IN HLLDX ',i,j,k,flx(QU) 
+        if (abs(flx(QV)) .gt. 0.) print *,'BAD FLX(QV) IN HLLDX ',i,j,k,flx(QV) 
+        if (abs(flx(QW)) .gt. 0.) print *,'BAD FLX(QW) IN HLLDX ',i,j,k,flx(QW) 
+
 !		if (i.ge.15 .and. i.le.18 .and. j.eq.-3 .and. k.eq.-2) then
 !			write(*,*) "Flux at i = ", i
 !			write(*,*) "Flux = ", choice
@@ -262,14 +266,15 @@ implicit none
 	real(rt), intent(in)  :: qR(QVAR)
 	real(rt), intent(inout) :: flx(QVAR)
 
-	real(rt)			  :: cfL, cfR, sL, sR, sM, ssL, ssR, pst, caL, cayL
-	real(rt) 			  :: caR, cayR, asL, asR, ptL, ptR, eL, eR
-	real(rt)			  :: FL(QVAR), FR(QVAR)
-    real(rt)              :: uL(QVAR), uR(QVAR)
-	real(rt)			  :: UsL(QVAR), FsL(QVAR)
-	real(rt)			  :: UsR(QVAR), FsR(QVAR)
-	real(rt)			  :: UssL(QVAR), FssL(QVAR)
-	real(rt)			  :: UssR(QVAR), FssR(QVAR)
+	real(rt)	  :: cfL, cfR, sL, sR, sM, ssL, ssR, pst, caL, cayL
+	real(rt) 	  :: caR, cayR, asL, asR, ptL, ptR, eL, eR
+	real(rt)	  :: FL(QVAR), FR(QVAR)
+        real(rt)          :: uL(QVAR), uR(QVAR)
+	real(rt)	  :: UsL(QVAR), FsL(QVAR)
+	real(rt)	  :: UsR(QVAR), FsR(QVAR)
+	real(rt)	  :: UssL(QVAR), FssL(QVAR)
+	real(rt)	  :: UssR(QVAR), FssR(QVAR)
+
 	character(len=10)	  :: choice
 !Riemann solve
 
@@ -285,10 +290,21 @@ implicit none
 	FssL = 0.d0
 	FssR = 0.d0
 
-    call PToC(qL,uL)
-    call PToC(qR,uR)
-	call primtofluxy(qL, FL)
-	call primtofluxy(qR, FR)
+       call PToC(qL,uL)
+       call PToC(qR,uR)
+
+       call primtofluxy(i,j,k,qL, FL)
+       call primtofluxy(i,j,k,qR, FR)
+
+       if (i.eq.-3.and.j.ge.28.and.k.eq.-3) then
+          print *,'CALLING PRIMTO FLUX WITH J = ',j
+          print *,' QL ', qL
+          print *,' QR ', qR
+          print *,' FL ', FL
+          print *,' FR ', FR
+          if (j.ge.32) stop
+       end if
+
 	eL   = (qL(QPRES) -0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)) &
 			+ 0.5d0*dot_product(qL(QU:QW),qL(QU:QW))*qL(QRHO)
 	eR   = (qR(QPRES) -0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)))/(gamma_minus_1) + 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)) &
@@ -444,23 +460,27 @@ implicit none
 	flx = FR
 	choice = "FR"
 	endif
-	!do i = 1, QVAR
-		!if(isnan(flx(i))) then
-		!	write(*,*) "Flux y is nan in component", i
-!			write(*,*) "Flux = ", choice
-!			write(*,*) " = ", flx
-!			write(*,*) "FL = ", FL
-!			write(*,*) "FR = ", FR
-!			write(*,*) "QL = ", qL
-!			write(*,*) "QR = ", qR
-!			write(*,*) "UsL = ", UsL
-!			write(*,*) "UsR = ", UsR
-!			write(*,*) "UssL = ", UssL
-!			write(*,*) "UssR = ", UssR
-!			pause
-!		endif
-!	enddo
-!	flx = 0.5*(FL + FR) - 0.5*sR*(UR - UL)
+
+        if (i.eq.-3.and.j.ge.28.and.k.eq.-2) then
+ 			write(*,*) "Flux at j = ",j
+ 			write(*,*) "Flux = ", choice
+ 			write(*,*) "QL = ", QL(QMAGX)
+ 			write(*,*) "QR = ", QR(QMAGX)
+ 			write(*,*) "FL = ", FL(QMAGX)
+ 			write(*,*) "FR = ", FR(QMAGX)
+ 			write(*,*) "QL = ", qL(QMAGX)
+ 			write(*,*) "QR = ", qR(QMAGX)
+ 			write(*,*) "UsL = ", UsL(QMAGX)
+ 			write(*,*) "UsR = ", UsR(QMAGX)
+ 			write(*,*) "UssL = ", UssL(QMAGX)
+ 			write(*,*) "UssR = ", UssR(QMAGX)
+ 			write(*,*) " "
+       endif
+
+        if (abs(flx(QU)) .gt. 0.) print *,'BAD FLX(QU) IN HLLDY ',i,j,k,flx(QU) 
+        if (abs(flx(QV)) .gt. 0.) print *,'BAD FLX(QV) IN HLLDY ',i,j,k,flx(QV) 
+        if (abs(flx(QW)) .gt. 0.) print *,'BAD FLX(QW) IN HLLDY ',i,j,k,flx(QW) 
+ 
 end subroutine hlldy
 
 !============================================================= Z Direction =================================================================
@@ -648,6 +668,10 @@ implicit none
 !		endif
 !	enddo
 !	flx = 0.5*(FL + FR) - 0.5*sR*(UR - UL)
+
+        if (abs(flx(QU)) .gt. 0.) print *,'BAD FLX(QU) IN HLLDZ ',i,j,k,flx(QU) 
+        if (abs(flx(QV)) .gt. 0.) print *,'BAD FLX(QV) IN HLLDZ ',i,j,k,flx(QV) 
+        if (abs(flx(QW)) .gt. 0.) print *,'BAD FLX(QW) IN HLLDZ ',i,j,k,flx(QW) 
 end subroutine hlldz
 
 !====================================================== Fluxes ================================================================================
@@ -679,13 +703,14 @@ end subroutine primtofluxx
 
 !-------------------------------------- Y Direction ------------------------------------------------------------
 
-subroutine primtofluxy(Q, F)
+subroutine primtofluxy(i,j,k,Q, F)
  use amrex_fort_module, only : rt => amrex_real
  use meth_params_module
 implicit none
 
 	real(rt), intent(in)  :: Q(QVAR)
 	real(rt), intent(out) :: F(QVAR)
+	integer :: i,j,k
 	real(rt)			  :: e
 
 	F = 0.d0
@@ -699,6 +724,14 @@ implicit none
 	F(QMAGX) = Q(QV)*Q(QMAGX) - Q(QMAGY)*Q(QU)
 	F(QMAGY) = 0.d0
 	F(QMAGZ) = Q(QV)*Q(QMAGZ) - Q(QMAGY)*Q(QW)
+
+        if (abs(F(QMAGX)) .gt. 0.) then
+           print *,'BAD BX AT ', i,j,k
+           print *,'Q(QU)   = ', Q(QU)
+           print *,'Q(QV)   = ', Q(QV)
+           print *,'Q(MAGX) = ', Q(QMAGX)
+           print *,'Q(MAGY) = ', Q(QMAGY)
+        end if
 
 end subroutine primtofluxy
 
