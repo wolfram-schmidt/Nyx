@@ -28,43 +28,34 @@ implicit none
  if(dir.eq.1) then
 	do k = flx_l3, flx_h3
 		do j = flx_l2, flx_h2
-			do i = flx_l1, flx_h1-1
-				call hlldx(qp(i,j,k,:),qm(i+1,j,k,:),flx(i+1,j,k,:))
+			do i = flx_l1-1, flx_h1-1
+				call hlldx(i,j,k,qp(i,j,k,:),qm(i+1,j,k,:),flx(i+1,j,k,:))
 			enddo
-			call primtofluxx(qm(flx_l1,j,k,:),flx(flx_l1,j,k,:))
 		enddo
 	enddo
+
  elseif(dir.eq.2) then
+
 	do k = flx_l3, flx_h3
-		do j = flx_l2, flx_h2-1
+		do j = flx_l2-1, flx_h2-1
 			do i = flx_l1, flx_h1
-				call hlldy(qp(i,j,k,:),qm(i,j+1,k,:),flx(i,j+1,k,:))
+				call hlldy(i,j,k,qp(i,j,k,:),qm(i,j+1,k,:),flx(i,j+1,k,:))
 			enddo
-		enddo
-	enddo
-	do k = flx_l3, flx_h3
-		do i = flx_l1, flx_h1
-			call primtofluxy(qm(i,flx_l2,k,:),flx(i,flx_l2,k,:))
 		enddo
 	enddo
  else 
-	do k = flx_l3, flx_h3-1
+	do k = flx_l3-1, flx_h3-1
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
-				call hlldz(qp(i,j,k,:),qm(i,j,k+1,:),flx(i,j,k+1,:))
+				call hlldz(i,j,k,qp(i,j,k,:),qm(i,j,k+1,:),flx(i,j,k+1,:))
 			enddo
-		enddo
-	enddo
-	do j = flx_l2, flx_h2
-		do i = flx_l1, flx_h1
-			call primtofluxz(qm(i,j,flx_l3,:), flx(i,j,flx_l3,:))
 		enddo
 	enddo
  endif
 end subroutine hlld
 
 !================================================= X Direction =======================================================
-subroutine hlldx(qL,qR,flx)
+subroutine hlldx(i,j,k,qL,qR,flx)
 
 !Main assumption, the normal velocity/Mag field is constant in the Riemann fan, and is sM/Bx respectively. 
 !Total Pressure is constant throughout the Riemann fan, pst!
@@ -73,6 +64,7 @@ subroutine hlldx(qL,qR,flx)
  use meth_params_module
 
 implicit none
+	integer , intent(in)  :: i,j,k
 	real(rt), intent(in)  :: qL(QVAR)
 	real(rt), intent(in)  :: qR(QVAR)
 	real(rt), intent(inout) :: flx(QVAR)
@@ -85,7 +77,6 @@ implicit none
 	real(rt)			  :: UsR(QVAR), FsR(QVAR)
 	real(rt)			  :: UssL(QVAR), FssL(QVAR)
 	real(rt)			  :: UssR(QVAR), FssR(QVAR)
-	integer				  :: i
 	character(len=10)	  :: choice
 !Riemann solve
 	flx = 0.d0
@@ -118,10 +109,12 @@ implicit none
 	!Catch the fastest waves, brah
 	cfL  = sqrt(0.5d0*((asL + caL) + sqrt((asL + caL)**2 - 4.0d0*asL*caxL)))
 	cfR  = sqrt(0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*caxR)))
+
 	!Riemann Speeds
-	sL   = min(qL(QU) - cfL,qR(QU) - cfR)
+	sL   = min(qL(QU) - cfL, qR(QU) - cfR)
 	sR 	 = max(qL(QU) + cfL,qR(QU) + cfR)
 	sM   = ((sR - qR(QU))*qR(QRHO)*qR(QU) - (sL - qL(QU))*qL(QRHO)*qL(QU) - qR(QPRES) + qL(QPRES))/((sR - qR(QU))*qR(QRHO) - (sL - qL(QU))*qL(QRHO))
+
 	!Pressures in the Riemann Fan
 	ptL  = qL(QPRES)
 	ptR  = qR(QPRES)
@@ -150,9 +143,11 @@ implicit none
 	!X dir
 	UsL(QMAGX) = qL(QMAGX)
 	UsR(QMAGX) = qL(QMAGX) 
+
 	!Y dir
 	UsL(QMAGY) = qL(QMAGY)*(qL(QRHO)*(sL - qL(QU))**2 - qL(QMAGX)**2)/(qL(QRHO)*(sL - qL(QU))*(sL - sM) - qL(QMAGX)**2)
 	UsR(QMAGY) = qR(QMAGY)*(qR(QRHO)*(sR - qR(QU))**2 - qR(QMAGX)**2)/(qR(QRHO)*(sR - qR(QU))*(sR - sM) - qR(QMAGX)**2)
+
 	!Z dir
 	UsL(QMAGZ) = qL(QMAGZ)*(qL(QRHO)*(sL - qL(QU))**2 - qL(QMAGX)**2)/(qL(QRHO)*(sL - qL(QU))*(sL - sM) - qL(QMAGX)**2)
 	UsR(QMAGZ) = qR(QMAGZ)*(qR(QRHO)*(sR - qR(QU))**2 - qR(QMAGX)**2)/(qR(QRHO)*(sR - qR(QU))*(sR - sM) - qR(QMAGX)**2)
@@ -226,29 +221,34 @@ implicit none
 	flx = FR
 	choice = "FR"
 	endif
-!	do i = 1, QVAR
-!		if(isnan(flx(i))) then
-!			write(*,*) "Flux is nan in", i, "component"
+
+!		if (i.ge.15 .and. i.le.18 .and. j.eq.-3 .and. k.eq.-2) then
+!			write(*,*) "Flux at i = ", i
 !			write(*,*) "Flux = ", choice
-!			write(*,*) "FL = ", FL
-!			write(*,*) "FR = ", FR
-!			write(*,*) "QL = ", qL
-!			write(*,*) "QR = ", qRs
-!			write(*,*) "UsL = ", UsL
-!			write(*,*) "UsR = ", UsR
-!			write(*,*) "UssL = ", UssL
-!			write(*,*) "UssR = ", UssR
-!			pause
-!			return
+!			write(*,*) "FL = ", FL(QMAGY)
+!			write(*,*) " sL = ",  sL
+!			write(*,*) " sR = ",  sR
+!			write(*,*) "QLmag = ", qL(QMAGX)
+!			write(*,*) " QR(QU) = ",  qR(QU)
+!			write(*,*) " QL(QRHO) = ",  qL(QRHO)
+!			write(*,*) " QR(QRHO) = ",  qR(QRHO)
+!			write(*,*) " QL(MAGY) = ",  qL(QMAGY)
+!			write(*,*) " QR(MAGY) = ",  qR(QMAGY)
+!			write(*,*) " QL(PRES) = ",  qL(QPRES)
+!			write(*,*) " QR(PRES) = ",  qR(QPRES)
+!			write(*,*) " ssL = ", ssL
+!			write(*,*) " uL = ",  uL(QMAGY) 
+!			write(*,*) " sR = ",  sR
+!			write(*,*) " sM = ",  sM
+!			write(*,*) "UssL = ", UssL(QRHO)
+!			write(*,*) "UssR = ", UssR(QRHO)
 !		endif
-!	enddo
-!	flx = 0.5*(FL + FR) - 0.5*sR*(UR - UL)
 
 end subroutine hlldx
 
 !============================================================= Y Direction =================================================================
 
-subroutine hlldy(qL,qR,flx)
+subroutine hlldy(i,j,k,qL,qR,flx)
 
 !Main assumption, the normal velocity/Mag field is constant in the Riemann fan, and is sM/By respectively. 
 !Total Pressure is constant throughout the Riemann fan, pst!
@@ -257,6 +257,7 @@ subroutine hlldy(qL,qR,flx)
  use meth_params_module
 
 implicit none
+	integer , intent(in)  :: i,j,k
 	real(rt), intent(in)  :: qL(QVAR)
 	real(rt), intent(in)  :: qR(QVAR)
 	real(rt), intent(inout) :: flx(QVAR)
@@ -269,7 +270,6 @@ implicit none
 	real(rt)			  :: UsR(QVAR), FsR(QVAR)
 	real(rt)			  :: UssL(QVAR), FssL(QVAR)
 	real(rt)			  :: UssR(QVAR), FssR(QVAR)
-	integer				  :: i
 	character(len=10)	  :: choice
 !Riemann solve
 
@@ -465,7 +465,7 @@ end subroutine hlldy
 
 !============================================================= Z Direction =================================================================
 
-subroutine hlldz(qL,qR,flx)
+subroutine hlldz(i,j,k,qL,qR,flx)
 
 !Main assumption, the normal velocity/Mag field is constant in the Riemann fan, and is sM/Bz respectively. 
 !Total Pressure is constant throughout the Riemann fan, pst!
@@ -474,6 +474,7 @@ subroutine hlldz(qL,qR,flx)
  use meth_params_module
 
 implicit none
+	integer , intent(in)  :: i,j,k
 	real(rt), intent(in)  :: qL(QVAR)
 	real(rt), intent(in)  :: qR(QVAR)
 	real(rt), intent(inout) :: flx(QVAR)
@@ -486,7 +487,6 @@ implicit none
 	real(rt)			  :: UsR(QVAR), FsR(QVAR)
 	real(rt)			  :: UssL(QVAR), FssL(QVAR)
 	real(rt)			  :: UssR(QVAR), FssR(QVAR)
-	integer				  :: i
 	character(len=10)	  :: choice
 
 !Riemann solve

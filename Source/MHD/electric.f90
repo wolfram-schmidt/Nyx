@@ -251,6 +251,9 @@ implicit none
 
 	E = 0.d0
 
+        print *,"WORK LO IN EZ ", work_lo(:)
+        print *,"WORK HI IN EZ ", work_hi(:)
+
 	do k = work_lo(3), work_hi(3)
 		do j = work_lo(2), work_hi(2)
 			do i = work_lo(1), work_hi(1)
@@ -310,6 +313,12 @@ implicit none
 
 				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
                                                    +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2
+
+                                if (abs(E(i,j,k)).gt.0.) print *,"EZ ", i,j,k,E(i,j,k)
+                                if (abs(E(i,j,k)).gt.0.) print *,"FX ", flxx(i,j-1,k,QMAGY),flxx(i,j,k,QMAGY) 
+                                if (abs(E(i,j,k)).gt.0.) print *,"FY ", flxy(i,j-1,k,QMAGX),flxy(i,j,k,QMAGX) 
+                                if (abs(E(i,j,k)).gt.0.) print *,"DD1/2 ", dd1, dd2
+
 			enddo
 		enddo
 	enddo

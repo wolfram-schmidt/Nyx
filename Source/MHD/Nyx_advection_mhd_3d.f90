@@ -391,9 +391,10 @@ end subroutine fort_advance_mhd
       integer srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3
 
       real(rt) :: uin(uin_l1:uin_h1,uin_l2:uin_h2,uin_l3:uin_h3,NTHERM)
-	  real(rt) :: bx(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
+      real(rt) :: bx(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
       real(rt) :: by(byin_l1:byin_h1, byin_l2:byin_h2, byin_l3:byin_h3)
       real(rt) :: bz(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
+
       real(rt) :: q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR) !Contains Cell Centered Mag Field
       real(rt) :: c(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) :: csml(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
@@ -478,58 +479,29 @@ end subroutine fort_advance_mhd
 
       small_pres_over_dens = small_pres / small_dens
 	  !Calculate Cell Centered Magnetic Field x
-      do k = bxin_l3, bxin_h3 -1
-         do j = bxin_l2, bxin_h2 -1
-            do i = bxin_l1, bxin_h1 -1
-					q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
-				end do
-				    q(bxin_h1,j,k,QMAGX) = bx(bxin_h1,j,k)
-			end do
-			    q(bxin_h1,bxin_h2,k,QMAGX) = bx(bxin_h1,bxin_h2,k)
-		end do
-      q(bxin_h1,bxin_h2,bxin_h3,QMAGX) = bx(bxin_h1,bxin_h2,bxin_h3)
-      do k = byin_l3, byin_h3 -1
-         do j = byin_l2, byin_h2 -1
-            do i = byin_l1, byin_h1 -1
-					q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
-				end do
-				q(byin_h1,j,k,QMAGY) = by(byin_h1,j,k)
-			end do
-			q(byin_h1,byin_h2,k,QMAGY) = by(byin_h1,byin_h2,k)
-		end do
-		q(byin_h1,byin_h2,byin_h3,QMAGY) = by(byin_h1,byin_h2,byin_h3)
-      do k = bzin_l3, bzin_h3 -1
-         do j = bzin_l2, bzin_h2 -1
-            do i = bzin_l1, bzin_h1 -1
-					q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
-				end do
-				q(bzin_h1,j,k,QMAGZ) = bz(bzin_h1,j,k)
-			end do
-			q(bzin_h1,bzin_h2,k,QMAGZ) = bz(bzin_h1,bzin_h2,k)			
-		end do
-       q(bzin_h1,bzin_h2,bzin_h3,QMAGZ) = bz(bzin_h1,bzin_h2,bzin_h3)
-       			
-	   q(q_l1:bxin_l1,:,:, QMAGX) = bx(bxin_l1,bxin_l2,bxin_l3)
-	   q(bxin_h1:q_h1,:,:, QMAGX) = bx(bxin_h1,bxin_h2,bxin_h3)
-   	   q(:,q_l2:bxin_l2,:, QMAGX) = bx(bxin_l1,bxin_l2,bxin_l3)
-	   q(:,bxin_h2:q_h2,:, QMAGX) = bx(bxin_h1,bxin_h2,bxin_h3)
-   	   q(:,:,q_l3:bxin_l3, QMAGX) = bx(bxin_l1,bxin_l2,bxin_l3)
-	   q(:,:,bxin_h3:q_h3, QMAGX) = bx(bxin_h1,bxin_h2,bxin_h3)
 
-   	   q(q_l1:byin_l1,:,:, QMAGY) = by(byin_l1,byin_l2,byin_l3)
-	   q(byin_h1:q_h1,:,:, QMAGY) = by(byin_h1,byin_h2,byin_h3)
-   	   q(:,q_l2:byin_l2,:, QMAGY) = by(byin_l1,byin_l2,byin_l3)
-	   q(:,byin_h2:q_h2,:, QMAGY) = by(byin_h1,byin_h2,byin_h3)
-   	   q(:,:,q_l3:byin_l3, QMAGY) = by(byin_l1,byin_l2,byin_l3)
-	   q(:,:,byin_h3:q_h3, QMAGY) = by(byin_h1,byin_h2,byin_h3)
+         do k = loq(3),hiq(3)
+            do j = loq(2),hiq(2)
+               do i = loq(1),hiq(1)-1
+		q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
+	    end do
+	end do
+     end do
+         do k = loq(3),hiq(3)
+            do j = loq(2),hiq(2)-1
+               do i = loq(1),hiq(1)
+		q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
+	    end do
+	end do
+     end do
+         do k = loq(3),hiq(3)-1
+            do j = loq(2),hiq(2)
+               do i = loq(1),hiq(1)
+		q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
+	    end do
+	end do
+     end do
 
-   	   q(q_l1:bzin_l1,:,:, QMAGZ) = bz(bzin_l1,bzin_l2,bzin_l3)
-	   q(bzin_h1:q_h1,:,:, QMAGZ) = bz(bzin_h1,bzin_h2,bzin_h3)
-   	   q(:,q_l2:bzin_l2,:, QMAGZ) = bz(bzin_l1,bzin_l2,bzin_l3)
-	   q(:,bzin_h2:q_h2,:, QMAGZ) = bz(bzin_h1,bzin_h2,bzin_h3)
-   	   q(:,:,q_l3:bzin_l3, QMAGZ) = bz(bzin_l1,bzin_l2,bzin_l3)
-	   q(:,:,bzin_h3:q_h3, QMAGZ) = bz(bzin_h1,bzin_h2,bzin_h3)
-	   
       ! Get p, T, c, csml using q state
       do k = loq(3), hiq(3)
          do j = loq(2), hiq(2)
@@ -739,89 +711,90 @@ end subroutine fort_advance_mhd
 ! ::: 
 
 	subroutine magup(bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
-		 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
-		 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
-		 bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
-		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
-		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
-		 uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-                 Ex,ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
-                 Ey,ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
-                 Ez,ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
-		 lo, hi, dx, dy, dz, dt, a_old, a_new)
+		         byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+        		 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
+        		 bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
+        		 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
+        		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
+        		 uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
+        		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
+                         Ex,ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
+                         Ey,ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
+                         Ez,ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
+        		 lo, hi, dx, dy, dz, dt, a_old, a_new)
 
      use amrex_fort_module, only : rt => amrex_real
      use meth_params_module!, only : QVAR, NVAR, UEINT
 
 	implicit none
 	
-		integer, intent(in)   :: bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3
-		integer, intent(in)   :: byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3
-		integer, intent(in)   :: bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
-		integer, intent(in)   :: bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
-		integer, intent(in)   :: byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
-		integer, intent(in)   :: bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
-		integer, intent(in)	  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
-		integer, intent(in)   :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
-                integer, intent(in)   ::  ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3
-                integer, intent(in)   ::  ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3
-                integer, intent(in)   ::  ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3
-		integer, intent(in)   :: lo(3), hi(3)
+	integer, intent(in)   :: bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3
+	integer, intent(in)   :: byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3
+	integer, intent(in)   :: bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
+	integer, intent(in)   :: bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
+	integer, intent(in)   :: byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
+	integer, intent(in)   :: bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
+	integer, intent(in)	  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
+	integer, intent(in)   :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
+        integer, intent(in)   ::  ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3
+        integer, intent(in)   ::  ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3
+        integer, intent(in)   ::  ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3
+	integer, intent(in)   :: lo(3), hi(3)
 
-		real(rt), intent(in)  :: bxin(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
-		real(rt), intent(in)  :: byin(byin_l1:byin_h1, byin_l2:byin_h2, byin_l3:byin_h3)
-		real(rt), intent(in)  :: bzin(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
-		real(rt), intent(in)  :: src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, QVAR)
+	real(rt), intent(in)  :: bxin(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
+	real(rt), intent(in)  :: byin(byin_l1:byin_h1, byin_l2:byin_h2, byin_l3:byin_h3)
+	real(rt), intent(in)  :: bzin(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
+	real(rt), intent(in)  :: src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, QVAR)
 
-                real(rt), intent(in) ::  Ex(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3)
-                real(rt), intent(in) ::  Ey(ey_l1:ey_h1,ey_l2:ey_h2, ey_l3:ey_h3)
-                real(rt), intent(in) ::  Ez(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3)
+        real(rt), intent(in) ::  Ex(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3)
+        real(rt), intent(in) ::  Ey(ey_l1:ey_h1,ey_l2:ey_h2, ey_l3:ey_h3)
+        real(rt), intent(in) ::  Ez(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3)
 
-		real(rt), intent(in)  :: dx, dy, dz, dt, a_old, a_new
+	real(rt), intent(in)  :: dx, dy, dz, dt, a_old, a_new
 
-		real(rt), intent(inout) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
+	real(rt), intent(inout) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
 
-		real(rt), intent(out) :: bxout(bxout_l1:bxout_h1, bxout_l2:bxout_h2, bxout_l3:bxout_h3)
-		real(rt), intent(out) :: byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
-		real(rt), intent(out) :: bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
+	real(rt), intent(out) :: bxout(bxout_l1:bxout_h1, bxout_l2:bxout_h2, bxout_l3:bxout_h3)
+	real(rt), intent(out) :: byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
+	real(rt), intent(out) :: bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
 
-		integer				  :: i, j, k
+	integer				  :: i, j, k
 		
 		
-		!***** TO DO ***** SOURCES
-		!-------------------------------- bx --------------------------------------------------
-			do k = lo(3), hi(3)
-				do j = lo(2), hi(2)
-					do i = lo(1), hi(1)
-						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(Ey(i,j,k+1) - Ey(i,j,k) - (Ez(i,j+1,k) - Ez(i,j,k)))
-					enddo
-				enddo
-			enddo
+	!***** TO DO ***** SOURCES
+	!-------------------------------- bx --------------------------------------------------
+	do k = lo(3), hi(3)
+	do j = lo(2), hi(2)
+	do i = lo(1), hi(1)+1
+		bxout(i,j,k) = bxin(i,j,k) - dt/dx*(Ey(i,j,k+1) - Ey(i,j,k) - (Ez(i,j+1,k) - Ez(i,j,k)))
+	enddo
+	enddo
+	enddo
 
-		!------------------------------- by --------------------------------------------------
-			do k = lo(3), hi(3)
-				do j = lo(2), hi(2)
-					do i = lo(1), hi(1)
-						byout(i,j,k) = byin(i,j,k) - dt/dy*(Ez(i+1,j,k) - Ez(i,j,k) - (Ex(i,j,k+1) - Ex(i,j,k)))
-					enddo
-				enddo
-			enddo
-		!------------------------------- bz --------------------------------------------------
-			do k = lo(3), hi(3)
-				do j = lo(2), hi(2)
-					do i = lo(1), hi(1)
-						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(Ex(i,j+1,k) - Ex(i,j,k) - (Ey(i+1,j,k) - Ey(i,j,k)))
-					enddo
-				enddo
-			enddo
-		!-------------------------------- Internal Energy ----------------------------------------------------
-			do k = lo(3), hi(3)
-				do j = lo(2), hi(2)
-					do i = lo(1), hi(1)
-						uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*((0.5d0*(bxout(i+1,j,k) + bxout(i,j,k)))**2 + &
-											(0.5d0*(byout(i,j+1,k) + byout(i,j,k)))**2 + (0.5d0*(bzout(i,j,k+1) + bzout(i,j,k)))**2)
-					enddo
-				enddo
-			enddo			
+	!------------------------------- by --------------------------------------------------
+	do k = lo(3), hi(3)
+	do j = lo(2), hi(2)+1
+	do i = lo(1), hi(1)
+		byout(i,j,k) = byin(i,j,k) - dt/dy*(Ez(i+1,j,k) - Ez(i,j,k) - (Ex(i,j,k+1) - Ex(i,j,k)))
+	enddo
+	enddo
+	enddo
+	!------------------------------- bz --------------------------------------------------
+	do k = lo(3), hi(3)+1
+	do j = lo(2), hi(2)
+	do i = lo(1), hi(1)
+		bzout(i,j,k) = bzin(i,j,k) - dt/dz*(Ex(i,j+1,k) - Ex(i,j,k) - (Ey(i+1,j,k) - Ey(i,j,k)))
+	enddo
+	enddo
+	enddo
+	!-------------------------------- Internal Energy ----------------------------------------------------
+	do k = lo(3), hi(3)
+	do j = lo(2), hi(2)
+	do i = lo(1), hi(1)
+		uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*((0.5d0*(bxout(i+1,j,k) + bxout(i,j,k)))**2 + &
+						       (0.5d0*(byout(i,j+1,k) + byout(i,j,k)))**2 + (0.5d0*(bzout(i,j,k+1) + bzout(i,j,k)))**2)
+	enddo
+	enddo
+	enddo			
+
 	end subroutine magup
