@@ -293,12 +293,12 @@ implicit none
 
 
 	!Right Corrected States
-				uR(i,j,k,URHO:UEDEN,1,1) = up(i+1,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))
-				uR(i,j,k,URHO:UEDEN,1,2) = up(i+1,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))
-				uR(i,j,k,URHO:UEDEN,2,1) = up(i,j+1,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))
-				uR(i,j,k,URHO:UEDEN,2,2) = up(i,j+1,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))
-				uR(i,j,k,URHO:UEDEN,3,1) = up(i,j,k+1,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))
-				uR(i,j,k,URHO:UEDEN,3,2) = up(i,j,k+1,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))
+				uR(i,j,k,URHO:UEDEN,1,1) = up(i,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))
+				uR(i,j,k,URHO:UEDEN,1,2) = up(i,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))
+				uR(i,j,k,URHO:UEDEN,2,1) = up(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))
+				uR(i,j,k,URHO:UEDEN,2,2) = up(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flx(i,j,k+1,URHO:UEDEN,3) - flx(i,j,k,URHO:UEDEN,3))
+				uR(i,j,k,URHO:UEDEN,3,1) = up(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i+1,j,k,URHO:UEDEN,1) - flx(i,j,k,URHO:UEDEN,1))
+				uR(i,j,k,URHO:UEDEN,3,2) = up(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flx(i,j+1,k,URHO:UEDEN,2) - flx(i,j,k,URHO:UEDEN,2))
 				
 				u = uR(i,j,k,UMX,1,1)/uR(i,j,k,URHO,1,1)
 				v = uR(i,j,k,UMY,1,1)/uR(i,j,k,URHO,1,1)
@@ -511,11 +511,11 @@ implicit none
 		do j = flx_l2,flx_h2-1
 			do i = flx_l1,flx_h1-1
 !left state				
-				uL(i+1,j,k,URHO:UEDEN,1) = um(i+1,j,k,URHO:UEDEN,1) - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
+				uL(i,j,k,URHO:UEDEN,1) = um(i,j,k,URHO:UEDEN,1) - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
 											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
-				uL(i,j+1,k,URHO:UEDEN,2) = um(i,j+1,k,URHO:UEDEN,2) - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
+				uL(i,j,k,URHO:UEDEN,2) = um(i,j,k,URHO:UEDEN,2) - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
 											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
-				uL(i,j,k+1,URHO:UEDEN,3) = um(i,j,k+1,URHO:UEDEN,3) - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
+				uL(i,j,k,URHO:UEDEN,3) = um(i,j,k,URHO:UEDEN,3) - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
 											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
 				do n = 1,3
 					u = uL(i,j,k,UMX,n)/uL(i,j,k,URHO,n)
@@ -524,11 +524,11 @@ implicit none
 					uL(i,j,k,UEINT,n) = uL(i,j,k,UEDEN,n) - 0.5d0*uL(i,j,k,URHO,n)*(u**2 + v**2 + w**2)
 				enddo
 !right state				
-				uR(i+1,j,k,URHO:UEDEN,1) = up(i+1,j,k,URHO:UEDEN,1) - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
+				uR(i,j,k,URHO:UEDEN,1) = up(i,j,k,URHO:UEDEN,1) - 0.5d0*dt/dx*(flx(i,j+1,k,URHO:UEDEN,2,2) - flx(i,j,k,URHO:UEDEN,2,2)) &
 											- 0.5d0*dt/dx*(flx(i,j,k+1,URHO:UEDEN,3,2) - flx(i,j,k,URHO:UEDEN,3,2))
-				uR(i,j+1,k,URHO:UEDEN,2) = up(i,j+1,k,URHO:UEDEN,2) - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
+				uR(i,j,k,URHO:UEDEN,2) = up(i,j,k,URHO:UEDEN,2) - 0.5d0*dt/dy*(flx(i+1,j,k,URHO:UEDEN,1,2) - flx(i,j,k,URHO:UEDEN,1,2)) &
 											- 0.5d0*dt/dy*(flx(i,j,k+1,URHO:UEDEN,3,1) - flx(i,j,k,URHO:UEDEN,3,1))
-				uR(i,j,k+1,URHO:UEDEN,3) = up(i,j,k+1,URHO:UEDEN,3) - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
+				uR(i,j,k,URHO:UEDEN,3) = up(i,j,k,URHO:UEDEN,3) - 0.5d0*dt/dz*(flx(i+1,j,k,URHO:UEDEN,1,1) - flx(i,j,k,URHO:UEDEN,1,1)) &
 											- 0.5d0*dt/dz*(flx(i,j+1,k,URHO:UEDEN,2,1) - flx(i,j,k,URHO:UEDEN,2,1))
 				do n = 1,3
 					u = uR(i,j,k,UMX,n)/uR(i,j,k,URHO,n)

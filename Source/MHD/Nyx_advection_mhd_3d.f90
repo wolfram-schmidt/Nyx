@@ -158,9 +158,9 @@
 
 !Step One, Calculate Primitives based on conservatives
 	  call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3,&
-					bxin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)), lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-					byin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)), lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-					bzin(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3)), lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+				   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+				   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+				   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
                     q , c , csml, flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
                     src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                     srcQ, srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
@@ -624,14 +624,6 @@ end subroutine fort_advance_mhd
 					v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
 					w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
 					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
-					if(i.eq.12.and.j.eq.29.and.k.eq.0) then
-						print*, "rho out =", uout(i,j,k,1), "i,j,k =", i, j, k
-						print*, "rho in = ", uin(i,j,k,1)
-						print*, "flux x = ", flux(i+1,j,k,1,1)- flux(i,j,k,1,1)
-						print*, "flux y = ", flux(i,j+1,k,1,2)- flux(i,j,k,1,2)
-						print*, "flux z = ", flux(i,j,k+1,1,3)- flux(i,j,k,1,3)
-						pause
-					endif
 				enddo
 			enddo
 		enddo

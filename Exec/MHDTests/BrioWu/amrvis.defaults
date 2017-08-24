@@ -1,4 +1,4 @@
-palette               /home/almgren/bin/Palette
+palette               Palette
 initialderived        density
 initialscale          1
 numberformat          %8.6e

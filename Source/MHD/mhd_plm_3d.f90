@@ -143,7 +143,7 @@ contains
 	ibx = 6
 	iby = 7
 	ibz = 8
-	!PLM
+	!============================================== PLM ================================================================
 	do k = s_l3, s_h3
 		do j = s_l2, s_h2
 			do i = s_l1, s_h1
@@ -263,6 +263,7 @@ contains
 				call evals(lam, s(i,j,k,:), 3) !!Z dir eigenvalues
 				call lvecz(leig,s(i,j,k,:))    !!left eigenvectors
 				call rvecz(reig,s(i,j,k,:))    !!right eigenvectors
+
 				!!Characteristic Tracing
 				do ii = 1,7
 						summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
