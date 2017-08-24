@@ -101,7 +101,7 @@ Nyx::just_the_mhd (Real time,
 #ifndef NO_OLD_SRC
         get_old_source(prev_time, dt, ext_src_old);
 #endif //#ifndef NO_OLD_SRC
-        ext_src_old.FillBoundary();
+        ext_src_old.FillBoundary(geom.periodicity());
     }
 
     // Define the gravity vector so we can pass this to ca_umdrv.
@@ -130,8 +130,21 @@ Nyx::just_the_mhd (Real time,
 
     // Create FAB for extended grid values (including boundaries) and fill.
     MultiFab S_old_tmp(S_old.boxArray(), S_old.DistributionMap(), NUM_STATE, NUM_GROW);
-	std::cout<<S_old.boxArray()<<std::endl;
     FillPatch(*this, S_old_tmp, NUM_GROW, time, State_Type, 0, NUM_STATE);
+
+    MultiFab Bx_old_tmp(Bx_old.boxArray(), Bx_old.DistributionMap(), 1, NUM_GROW);
+    Bx_old_tmp.copy(Bx_old);
+
+    MultiFab By_old_tmp(By_old.boxArray(), By_old.DistributionMap(), 1, NUM_GROW);
+    By_old_tmp.copy(By_old);
+
+    MultiFab Bz_old_tmp(Bz_old.boxArray(), Bz_old.DistributionMap(), 1, NUM_GROW);
+    Bz_old_tmp.copy(Bz_old);
+
+    FillPatch(*this, Bx_old_tmp, NUM_GROW, time, Mag_Type_x, 0, 1);
+    FillPatch(*this, By_old_tmp, NUM_GROW, time, Mag_Type_y, 0, 1);
+    FillPatch(*this, Bz_old_tmp, NUM_GROW, time, Mag_Type_z, 0, 1);
+
     MultiFab D_old_tmp(D_old.boxArray(), D_old.DistributionMap(), 2, NUM_GROW);
     FillPatch(*this, D_old_tmp, NUM_GROW, time, DiagEOS_Type, 0, 2);
 
@@ -153,9 +166,9 @@ Nyx::just_the_mhd (Real time,
         FArrayBox& dstate    = D_old_tmp[mfi];
         FArrayBox& stateout  = S_new[mfi];
 
-	FArrayBox& Bx		 = Bx_old[mfi];
-	FArrayBox& By		 = By_old[mfi];
-	FArrayBox& Bz		 = Bz_old[mfi];
+	FArrayBox& Bx		 = Bx_old_tmp[mfi];
+	FArrayBox& By		 = By_old_tmp[mfi];
+	FArrayBox& Bz		 = Bz_old_tmp[mfi];
 
 	FArrayBox& Bxout	 = Bx_new[mfi];
 	FArrayBox& Byout	 = By_new[mfi];
