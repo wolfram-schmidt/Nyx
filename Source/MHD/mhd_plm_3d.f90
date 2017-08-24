@@ -34,7 +34,7 @@ contains
     real(rt), intent(in   ) ::      s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QVAR) !Primitive Vars
     real(rt), intent(in   ) ::      bx(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3)	!Face Centered Magnetic Fields
     real(rt), intent(in   ) ::      by(byl1:byh1, byl2:byh2, byl3:byh3)
-    real(rt), intent(in   ) ::      bz(bzl1:bxh1, bzl2:bxh2, bzl3:bzh3)
+    real(rt), intent(in   ) ::      bz(bzl1:bzh1, bzl2:bzh2, bzl3:bzh3)
 
     real(rt), intent(out) :: 		Ip(ilo1:ihi1,ilo2:ihi2,ilo3:ihi3,QVAR,3)
     real(rt), intent(out) :: 		Im(ilo1:ihi1,ilo2:ihi2,ilo3:ihi3,QVAR,3)
@@ -62,7 +62,7 @@ contains
 		temp(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3,6:8) = s(:,:,:,QMAGX:QMAGZ) !Mag vars Cell Centered
 		tbx(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3) = bx(:,:,:) !Face Centered
 		tby(byl1:byh1, byl2:byh2, byl3:byh3) = by(:,:,:)
-		tbz(bzl1:bxh1, bzl2:bxh2, bzl3:bzh3) = bz(:,:,:)
+		tbz(bzl1:bzh1, bzl2:bzh2, bzl3:bzh3) = bz(:,:,:)
 !		write(*,*) bz
 !		pause
 !-------------------- Fill Boundaries ---------------------------------------------------
@@ -176,6 +176,7 @@ contains
 				smhd(6) = temp(i,j,k,3)
 				smhd(7) = temp(i,j,k,4)
 				smhd 	= smhd*(tbx(i+1,j,k) - tbx(i,j,k))/dx !cross-talk of normal magnetic field direction
+		!		smhd = 0.d0
 	!Interpolate
 		!Plus
 					!!Using HLLD so sum over all eigenvalues
@@ -191,9 +192,9 @@ contains
 				do ii = 1,7
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
-				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) - 0.5d0*dt_over_a*smhd(1:5)
+				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 				Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
-				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) - 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QPRES,1)        = Im(i,j,k,QPRES,1) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1))
 				
 	!========================================= Y Direction ================================================				
@@ -229,6 +230,7 @@ contains
 				smhd(6) = temp(i,j,k,2)
 				smhd(7) = temp(i,j,k,4)
 				smhd 	= smhd*(tby(i,j+1,k) - tby(i,j,k))/dy !cross-talk of normal magnetic field direction
+			!	smhd = 0.d0
 	!Interpolate
 				Ip(i,j,k,QRHO:QPRES,2) 	= temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
@@ -239,10 +241,10 @@ contains
 				do ii = 1,7
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
-				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) - 0.5d0*dt_over_a*smhd(6)
+				Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
 				Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
-				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) - 0.5d0*dt_over_a*smhd(7)
+				Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
 				Im(i,j,k,QPRES,2)       = Im(i,j,k,QPRES,2) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2))				
 	!========================================= Z Direction ================================================				
 				summ = 0.d0
@@ -276,6 +278,7 @@ contains
 				smhd(6) = temp(i,j,k,2)
 				smhd(7) = temp(i,j,k,3)
 				smhd 	= smhd*(tbz(i,j,k+1) - tbz(i,j,k))/dz !cross-talk of normal magnetic field direction
+			!	smhd = 0.d0
 	!Interpolate
 				Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
@@ -285,8 +288,8 @@ contains
 				do ii = 1,7
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
-				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) - 0.5d0*dt_over_a*smhd(1:5) !!GAS
-				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) - 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+				Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 				Im(i,j,k,QPRES,3)       = Im(i,j,k,QPRES,3) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3))
 			enddo

@@ -169,9 +169,9 @@
 
 !Step Two, Interpolate Cell centered values to faces
 	  call plm(q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
-				 bxin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-				 byin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
-				 bzin, lo(1), lo(2), lo(3), hi(1), hi(2), hi(3), &
+				 bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+				 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+				 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
                  qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
 !qm(:,:,:,:,1) = q
 !qm(:,:,:,:,2) = q
@@ -620,6 +620,13 @@ end subroutine fort_advance_mhd
 					uout(i,j,k,URHO:UEDEN) = uin(i,j,k,URHO:UEDEN) - dt/dx*(flux(i+1,j,k,URHO:UEDEN,1) - flux(i,j,k,URHO:UEDEN,1)) &
 											 - dt/dy*(flux(i,j+1,k,URHO:UEDEN,2) - flux(i,j,k,URHO:UEDEN,2)) &
 											 - dt/dz*(flux(i,j,k+1,URHO:UEDEN,3) - flux(i,j,k,URHO:UEDEN,3)) !Add source terms later
+					if(i.eq.13.and.j.eq.31.and.k.eq.15) then 
+						print*, "rho out = ", uout(i,j,k,URHO), "i,j,k =", i, j, k 
+						print*, "flux x = ", flux(i+1,j,k,URHO,1), flux(i,j,k,URHO,1)
+						print*, "flux y = ", flux(i,j+1,k,URHO,2), flux(i,j,k,URHO,2)
+						print*, "flux z = ", flux(i,j,k+1,URHO,3), flux(i,j,k,URHO,3)
+						pause
+					endif
 					u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
 					v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
 					w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)

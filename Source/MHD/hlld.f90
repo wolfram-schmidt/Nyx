@@ -24,8 +24,7 @@ implicit none
 	
 	integer				  :: i, j, k
 
- flx = 0.d0 
-
+ !flx = 0.d0 
  if(dir.eq.1) then
 	do k = flx_l3, flx_h3
 		do j = flx_l2, flx_h2

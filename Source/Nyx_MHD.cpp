@@ -114,10 +114,13 @@ Nyx::just_the_mhd (Real time,
 #endif
 
     MultiFab fluxes[BL_SPACEDIM];
+	MultiFab electric[BL_SPACEDIM];
     for (int j = 0; j < BL_SPACEDIM; j++)
     {
         fluxes[j].define(getEdgeBoxArray(j), dmap, NUM_STATE, 0);
         fluxes[j].setVal(0.0);
+		electric[j].define(getEdgeBoxArray(j),dmap,1 , 0);
+		electric[j].setVal(0.0);
     }
 
     BL_ASSERT(NUM_GROW == 4);
@@ -139,7 +142,7 @@ Nyx::just_the_mhd (Real time,
 #pragma omp parallel
 #endif
        {
-       FArrayBox flux[BL_SPACEDIM], u_gdnv[BL_SPACEDIM];
+       FArrayBox flux[BL_SPACEDIM], u_gdnv[BL_SPACEDIM], E[BL_SPACEDIM];
        Real cflLoc = -1.e+200;
 	for (MFIter mfi(S_old_tmp,false); mfi.isValid(); ++mfi)
        //for (MFIter mfi(S_old_tmp,true); mfi.isValid(); ++mfi)
@@ -169,6 +172,7 @@ Nyx::just_the_mhd (Real time,
         for (int i = 0; i < BL_SPACEDIM ; i++) {
             const Box &bxtmp = amrex::surroundingNodes(bx, i);
             flux[i].resize(bxtmp, NUM_STATE);
+            E[i].resize(bxtmp);
             u_gdnv[i].resize(amrex::grow(bxtmp, 1), 1);
             u_gdnv[i].setVal(1.e200);
         }
@@ -192,12 +196,16 @@ Nyx::just_the_mhd (Real time,
              BL_TO_FORTRAN(flux[0]),
              BL_TO_FORTRAN(flux[1]),
              BL_TO_FORTRAN(flux[2]),
+             BL_TO_FORTRAN(E[0]),
+             BL_TO_FORTRAN(E[1]),
+             BL_TO_FORTRAN(E[2]),
              &cflLoc, &a_old, &a_new, &se, &ske, &print_fortran_warnings, &do_grav);
-	std::cout<<"Done with Fort_Advace"<<std::endl;
+
         for (int i = 0; i < BL_SPACEDIM; ++i) {
           fluxes[i][mfi].copy(flux[i], mfi.nodaltilebox(i));
+		  electric[i][mfi].copy(E[i], mfi.nodaltilebox(i));
         }
-	std::cout<<"Copied Fluxes"<<std::endl;
+
          e_added += se;
         ke_added += ske;
        } // end of MFIter loop
@@ -219,11 +227,13 @@ Nyx::just_the_mhd (Real time,
          if (current) {
            for (int i = 0; i < BL_SPACEDIM ; i++) {
              current->FineAdd(fluxes[i], i, 0, 0, NUM_STATE, 1);
+			///DO Electric Stuff
            }
          }
          if (fine) {
            for (int i = 0; i < BL_SPACEDIM ; i++) {
 	         fine->CrseInit(fluxes[i],i,0,0,NUM_STATE,-1.,FluxRegister::ADD);
+			///DO Electric Stuff
            }
          }
        }
