@@ -158,7 +158,7 @@ print *, "Flux Half Step"
 call prim_half(q2D,q,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,flx1D,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, dx, dy, dz, dt)
 !Final Electric Field Update
 call electric_edge(elec, q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-			flx1D, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
+			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 end subroutine corner_transport
 

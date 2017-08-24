@@ -30,24 +30,35 @@ implicit none
 	do k = flx_l3, flx_h3
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1-1
-				call hlldx(qp(i,j,k,:),qm(i+1,j,k,:),flx(i,j,k,:))
+				call hlldx(qp(i,j,k,:),qm(i+1,j,k,:),flx(i+1,j,k,:))
 			enddo
+			call primtofluxx(qm(flx_l1,j,k,:),flx(flx_l1,j,k,:))
 		enddo
 	enddo
  elseif(dir.eq.2) then
 	do k = flx_l3, flx_h3
 		do j = flx_l2, flx_h2-1
 			do i = flx_l1, flx_h1
-				call hlldy(qp(i,j,k,:),qm(i,j+1,k,:),flx(i,j,k,:))
+				call hlldy(qp(i,j,k,:),qm(i,j+1,k,:),flx(i,j+1,k,:))
 			enddo
+		enddo
+	enddo
+	do k = flx_l3, flx_h3
+		do i = flx_l1, flx_h1
+			call primtofluxy(qm(i,flx_l2,k,:),flx(i,flx_l2,k,:))
 		enddo
 	enddo
  else 
 	do k = flx_l3, flx_h3-1
 		do j = flx_l2, flx_h2
 			do i = flx_l1, flx_h1
-				call hlldz(qp(i,j,k,:),qm(i,j,k+1,:),flx(i,j,k,:))
+				call hlldz(qp(i,j,k,:),qm(i,j,k+1,:),flx(i,j,k+1,:))
 			enddo
+		enddo
+	enddo
+	do j = flx_l2, flx_h2
+		do i = flx_l1, flx_h1
+			call primtofluxz(qm(i,j,flx_l3,:), flx(i,j,flx_l3,:))
 		enddo
 	enddo
  endif

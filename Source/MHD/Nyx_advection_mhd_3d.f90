@@ -204,7 +204,7 @@ flx = 0.d0
 	  flux2(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,URHO:UEDEN) = flx(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,URHO:UEDEN,2)
 	  flux3(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,URHO:UEDEN) = flx(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,URHO:UEDEN,3)
 
-      ! We are done with these here so can go ahead and free up the space.
+      ! We are done with these here so can go ahead and free up the space
       call bl_deallocate(q)
       call bl_deallocate(flatn)
       call bl_deallocate(c)
@@ -681,12 +681,6 @@ end subroutine fort_advance_mhd
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k+1,2) - E(i,j,k,2) - (E(i,j+1,k,3) - E(i,j,k,3)))
-						if(j.eq.11.and.k.eq.3) then 
-						print *, "Bx = ", bxout(i,j,k), "i, j, k = ", i, j, k
-						print *, "Ez = ", E(i,j+1,k,3),  E(i,j,k,3)
-						print *, "Ey = ", E(i,j,k+1,2),  E(i,j,k,2)
-					!	pause
-					endif
 					enddo
 				enddo
 			enddo
@@ -699,21 +693,11 @@ end subroutine fort_advance_mhd
 					enddo
 				enddo
 			enddo
-!			pause
 		!------------------------------- bz --------------------------------------------------
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
 						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j+1,k,1) - E(i,j,k,1) - (E(i+1,j,k,2) - E(i,j,k,2)))
-						if(j.eq.11.and.k.eq.3) then 
-							print *, "Bz in = ", bzin(i,j,k)
-							print *, "Bz out = ", bzout(i,j,k), "i, j, k = ", i, j, k
-							print *, "Ex = ", E(i,j+1,k,1),  E(i,j,k,1)
-							print *, "Diff =", E(i,j+1,k,1) -  E(i,j,k,1)
-							print *, "Ey = ", E(i+1,j,k,2),  E(i,j,k,2)
-							print *, "Diff = ", E(i+1,j,k,2) -  E(i,j,k,2)
-		!				pause
-					endif
 					enddo
 				enddo
 			enddo
@@ -723,9 +707,7 @@ end subroutine fort_advance_mhd
 					do i = lo(1), hi(1)
 						uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*((0.5d0*(bxout(i+1,j,k) + bxout(i,j,k)))**2 + &
 											(0.5d0*(byout(i,j+1,k) + byout(i,j,k)))**2 + (0.5d0*(bzout(i,j,k+1) + bzout(i,j,k)))**2)
-						!write(*,*) "internal energy = ", uout(i,j,k,UEINT), "total energy = ", uout(i,j,k,UEDEN)
 					enddo
 				enddo
 			enddo			
-	!		pause
 	end subroutine magup
