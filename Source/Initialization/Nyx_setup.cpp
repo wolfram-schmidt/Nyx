@@ -320,13 +320,6 @@ Nyx::hydro_setup()
     cnt++;
     set_scalar_bc(bc, phys_bc);  bcs[cnt] = bc;  name[cnt] = "rho_e";
 
-#if 0
-    cnt++;
-    set_y_vel_bc(bc, phys_bc);  bcs[cnt] = bc;  name[cnt] = "B_y";
-    cnt++;
-    set_z_vel_bc(bc, phys_bc);  bcs[cnt] = bc;  name[cnt] = "B_z";
-    cnt++;
-#endif
     for (int i = 0; i < NumAdv; ++i)
     {
         cnt++;
@@ -410,6 +403,14 @@ Nyx::hydro_setup()
                           BndryFunc(generic_fill));
     desc_lst.setComponent(DiagEOS_Type, 1, "Ne", bc,
                           BndryFunc(generic_fill));
+
+    desc_lst.setComponent(Mag_Type_x, 0, "b_x", bc,
+                          BndryFunc(generic_fill));
+    desc_lst.setComponent(Mag_Type_y, 0, "b_y", bc,
+                          BndryFunc(generic_fill));
+    desc_lst.setComponent(Mag_Type_z, 0, "b_z", bc,
+                          BndryFunc(generic_fill));
+
 #ifdef GRAVITY
     if (do_grav)
     {
