@@ -21,6 +21,9 @@
            flux1,flux1_l1,flux1_l2,flux1_l3,flux1_h1,flux1_h2,flux1_h3, &
            flux2,flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3, &
            flux3,flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3, &
+           Ex,ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
+           Ey,ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
+           Ez,ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
            courno,a_old,a_new,e_added,ke_added,print_fortran_warnings,do_grav) &
            bind(C, name="fort_advance_mhd")
 
@@ -52,10 +55,14 @@
       integer ugdnvy_l1,ugdnvy_l2,ugdnvy_l3,ugdnvy_h1,ugdnvy_h2,ugdnvy_h3
       integer ugdnvz_l1,ugdnvz_l2,ugdnvz_l3,ugdnvz_h1,ugdnvz_h2,ugdnvz_h3
       integer flux1_l1,flux1_l2,flux1_l3,flux1_h1,flux1_h2,flux1_h3
-	  integer flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3
-	  integer flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3
+      integer flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3
+      integer flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3
+      integer ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3
+      integer ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3
+      integer ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3
       integer src_l1,src_l2,src_l3,src_h1,src_h2,src_h3
       integer gv_l1,gv_l2,gv_l3,gv_h1,gv_h2,gv_h3
+
       real(rt)  uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3,  NVAR)
       real(rt)  uout(uout_l1:uout_h1, uout_l2:uout_h2, uout_l3:uout_h3, NVAR)
       real(rt)  bxin(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
@@ -69,12 +76,26 @@
       real(rt) ugdnvy(ugdnvy_l1:ugdnvy_h1,ugdnvy_l2:ugdnvy_h2,ugdnvy_l3:ugdnvy_h3)
       real(rt) ugdnvz(ugdnvz_l1:ugdnvz_h1,ugdnvz_l2:ugdnvz_h2,ugdnvz_l3:ugdnvz_h3)
       real(rt)  grav( gv_l1:gv_h1, gv_l2:gv_h2, gv_l3:gv_h3, 3)
-      real(rt)  flux1(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,NVAR)
-	  real(rt)  flux2(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,NVAR)
-	  real(rt)  flux3(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,NVAR)
+
+      real(rt), intent(inout) ::  flux1(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,NVAR)
+      real(rt), intent(inout) ::  flux2(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,NVAR)
+      real(rt), intent(inout) ::  flux3(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,NVAR)
+
+      real(rt), intent(inout) ::  Ex(ex_l1:ex_h1,ex_l2:ex_h2,ex_l3:ex_h3)
+      real(rt), intent(inout) ::  Ey(ey_l1:ey_h1,ey_l2:ey_h2,ey_l3:ey_h3)
+      real(rt), intent(inout) ::  Ez(ez_l1:ez_h1,ez_l2:ez_h2,ez_l3:ez_h3)
+
       real(rt)  delta(3),dt,time,courno
       real(rt)  a_old, a_new
       real(rt)  e_added,ke_added
+
+      integer flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
+      integer flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
+      integer flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
+
+      integer extemp_l1,extemp_l2,extemp_l3,extemp_h1,extemp_h2,extemp_h3
+      integer eytemp_l1,eytemp_l2,eytemp_l3,eytemp_h1,eytemp_h2,eytemp_h3
+      integer eztemp_l1,eztemp_l2,eztemp_l3,eztemp_h1,eztemp_h2,eztemp_h3
 
       ! Automatic arrays for workspace
       real(rt), pointer :: q(:,:,:,:)
@@ -84,8 +105,15 @@
  !     real(rt), pointer :: div(:,:,:)
  !     real(rt), pointer :: pdivu(:,:,:)
       real(rt), pointer :: srcQ(:,:,:,:)
-	  real(rt), allocatable :: E(:,:,:,:)
-	  real(rt), allocatable :: flx(:,:,:,:,:)
+
+      real(rt), allocatable :: flxx(:,:,:,:)
+      real(rt), allocatable :: flxy(:,:,:,:)
+      real(rt), allocatable :: flxz(:,:,:,:)
+
+      real(rt), allocatable :: Extemp(:,:,:)
+      real(rt), allocatable :: Eytemp(:,:,:)
+      real(rt), allocatable :: Eztemp(:,:,:)
+
 	  real(rt), allocatable :: qp(:,:,:,:,:)
 	  real(rt), allocatable :: qm(:,:,:,:,:)
 
@@ -105,6 +133,7 @@
       q_h1 = hi(1)+NHYP
       q_h2 = hi(2)+NHYP
       q_h3 = hi(3)+NHYP
+
       srcq_l1 = lo(1)-1
       srcq_l2 = lo(2)-1
       srcq_l3 = lo(3)-1
@@ -116,13 +145,62 @@
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
       call bl_allocate(     c, lo-NHYP, hi+NHYP      )
       call bl_allocate(  csml, lo-NHYP, hi+NHYP      )
-	  call bl_allocate(  srcQ, lo-1, hi+1, QVAR)
-	  allocate(	E(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3, 3))
-	  allocate( flx(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
-	  allocate( qp(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
-	  allocate( qm(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR , 3))
-	  q = 0.d0
+      call bl_allocate(  srcQ, lo-1, hi+1, QVAR)
 
+      flxx_l1 = lo(1)-3
+      flxx_l2 = lo(2)-3
+      flxx_l3 = lo(3)-3
+      flxx_h1 = hi(1)+4
+      flxx_h2 = hi(2)+3
+      flxx_h3 = hi(3)+3
+
+      flxy_l1 = lo(1)-3
+      flxy_l2 = lo(2)-3
+      flxy_l3 = lo(3)-3
+      flxy_h1 = hi(1)+3
+      flxy_h2 = hi(2)+4
+      flxy_h3 = hi(3)+3
+
+      flxz_l1 = lo(1)-3
+      flxz_l2 = lo(2)-3
+      flxz_l3 = lo(3)-3
+      flxz_h1 = hi(1)+3
+      flxz_h2 = hi(2)+3
+      flxz_h3 = hi(3)+4
+
+      extemp_l1 = lo(1)-3
+      extemp_l2 = lo(2)-3
+      extemp_l3 = lo(3)-3
+      extemp_h1 = hi(1)+3
+      extemp_h2 = hi(2)+4
+      extemp_h3 = hi(3)+4
+
+      eytemp_l1 = lo(1)-3
+      eytemp_l2 = lo(2)-3
+      eytemp_l3 = lo(3)-3
+      eytemp_h1 = hi(1)+4
+      eytemp_h2 = hi(2)+3
+      eytemp_h3 = hi(3)+4
+
+      eztemp_l1 = lo(1)-3
+      eztemp_l2 = lo(2)-3
+      eztemp_l3 = lo(3)-3
+      eztemp_h1 = hi(1)+4
+      eztemp_h2 = hi(2)+4
+      eztemp_h3 = hi(3)+3
+
+      allocate(flxx(flxx_l1:flxx_h1,flxx_l2:flxx_h2,flxx_l3:flxx_h3,QVAR))
+      allocate(flxy(flxy_l1:flxy_h1,flxy_l2:flxy_h2,flxy_l3:flxy_h3,QVAR))
+      allocate(flxz(flxz_l1:flxz_h1,flxz_l2:flxz_h2,flxz_l3:flxz_h3,QVAR))
+
+      allocate(Extemp(extemp_l1:extemp_h1,extemp_l2:extemp_h2,extemp_l3:extemp_h3))
+      allocate(Eytemp(eytemp_l1:eytemp_h1,eytemp_l2:eytemp_h2,eytemp_l3:eytemp_h3))
+      allocate(Eztemp(eztemp_l1:eztemp_h1,eztemp_l2:eztemp_h2,eztemp_l3:eztemp_h3))
+
+      allocate(  qp(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR, 3))
+      allocate(  qm(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR, 3))
+
+      q = 0.d0
 
 !Allocation Hacks
     do k = bxout_l3, bxout_h3
@@ -152,43 +230,56 @@
             enddo
         enddo
     enddo
-      dx = delta(1)
-      dy = delta(2)
-      dz = delta(3)
+    dx = delta(1)
+    dy = delta(2)
+    dz = delta(3)
 
 !Step One, Calculate Primitives based on conservatives
-	  call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3,&
-				   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
-				   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
-				   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
-                    q , c , csml, flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
-                    src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
-                    srcQ, srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
-                    grav,gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
-                    courno,dx,dy,dz,dt,ngq,ngf,a_old,a_new)
+    call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3,&
+	  	 bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+		 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+		 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
+                 q , c , csml, flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
+                 src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
+                 srcQ, srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
+                 grav,gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
+                 courno,dx,dy,dz,dt,ngq,ngf,a_old,a_new)
 
 !Step Two, Interpolate Cell centered values to faces
 	  call plm(q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
-				 bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
-				 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
-				 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
-                 qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt ,a_old)
+	  	   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+		   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+		   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
+                   qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
 !qm(:,:,:,:,1) = q
 !qm(:,:,:,:,2) = q
 !qm(:,:,:,:,3) = q
 !qp(:,:,:,:,1) = q
 !qp(:,:,:,:,2) = q
 !qp(:,:,:,:,3) = q
-flx = 0.d0
+
+flxx = 0.d0
+flxy = 0.d0
+flxz = 0.d0
+
 !Step Three, Corner Couple and find the correct fluxes + electric fields
 	  call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &	
-							flx, E, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, dx , dy, dz, dt)
+				flxx,flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
+				flxy,flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
+				flxz,flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
+                                Extemp, extemp_l1,extemp_l2,extemp_l3,extemp_h1,extemp_h2,extemp_h3, &
+                                Eytemp, eytemp_l1,eytemp_l2,eytemp_l3,eytemp_h1,eytemp_h2,eytemp_h3, &
+                                Eztemp, eztemp_l1,eztemp_l2,eztemp_l3,eztemp_h1,eztemp_h2,eztemp_h3, &
+                                dx , dy, dz, dt)
 !Step Four, Conservative update
-      call consup(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
+      call consup(uin,  uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
                   uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
                   src ,src_l1 ,src_l2 ,src_l3 ,src_h1 ,src_h2 ,src_h3, &
-                  flx , q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, &
+		  flxx,flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
+		  flxy,flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
+		  flxz,flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
                   lo ,hi ,dx ,dy ,dz ,dt ,a_old ,a_new)
+
 !Step Five Magnetic Update
      call magup(bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
 		 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
@@ -198,11 +289,18 @@ flx = 0.d0
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
 		 uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-		 E,q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3,lo, hi, dx, dy, dz, dt, a_old, a_new)
+                 Extemp, extemp_l1,extemp_l2,extemp_l3,extemp_h1,extemp_h2,extemp_h3, &
+                 Eytemp, eytemp_l1,eytemp_l2,eytemp_l3,eytemp_h1,eytemp_h2,eytemp_h3, &
+                 Eztemp, eztemp_l1,eztemp_l2,eztemp_l3,eztemp_h1,eztemp_h2,eztemp_h3, &
+		 lo, hi, dx, dy, dz, dt, a_old, a_new)
 
-	  flux1(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,URHO:UEDEN) = flx(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,URHO:UEDEN,1)
-	  flux2(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,URHO:UEDEN) = flx(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,URHO:UEDEN,2)
-	  flux3(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,URHO:UEDEN) = flx(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,URHO:UEDEN,3)
+	  flux1(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,URHO:UEDEN) = flxx(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,URHO:UEDEN)
+	  flux2(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,URHO:UEDEN) = flxy(flux2_l1:flux2_h1,flux2_l2:flux2_h2, flux2_l3:flux2_h3,URHO:UEDEN)
+	  flux3(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,URHO:UEDEN) = flxz(flux3_l1:flux3_h1,flux3_l2:flux3_h2, flux3_l3:flux3_h3,URHO:UEDEN)
+
+	  Ex(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3) = Extemp(ex_l1:ex_h1,ex_l2:ex_h2,ex_l3:ex_h3)
+	  Ey(ey_l1:ey_h1,ey_l2:ey_h2, ey_l3:ey_h3) = Eytemp(ey_l1:ey_h1,ey_l2:ey_h2,ey_l3:ey_h3)
+	  Ez(ez_l1:ez_h1,ez_l2:ez_h2, ez_l3:ez_h3) = Eztemp(ez_l1:ez_h1,ez_l2:ez_h2,ez_l3:ez_h3)
 
       ! We are done with these here so can go ahead and free up the space
       call bl_deallocate(q)
@@ -212,11 +310,12 @@ flx = 0.d0
 !      call bl_deallocate(div)
       call bl_deallocate(srcQ)
 !     call bl_deallocate(pdivu)
+
 	  deallocate(qm)
 	  deallocate(qp)
-	  deallocate(flx)
-	  deallocate(E)
 
+      deallocate(flxx,flxy,flxz)
+      deallocate(Extemp,Eytemp,Eztemp)
 
       ! Enforce the density >= small_dens.  Make sure we do this immediately after consup.
       call enforce_minimum_density(uin, uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
@@ -587,10 +686,12 @@ end subroutine fort_advance_mhd
 ! ::: 
 
 	subroutine consup(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
-                  uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-                  src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-                  flux,flux_l1,flux_l2,flux_l3,flux_h1,flux_h2,flux_h3, &
-                  lo,hi,dx,dy,dz,dt,a_old,a_new)
+                          uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
+                          src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
+		          fluxx,flux1_l1,flux1_l2,flux1_l3,flux1_h1,flux1_h2,flux1_h3, &
+                          fluxy,flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3, &
+                          fluxz,flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3, &
+                          lo,hi,dx,dy,dz,dt,a_old,a_new)
 
      use amrex_fort_module, only : rt => amrex_real
      use meth_params_module, only : QVAR, QRHO, UMX,UMY,UMZ, QPRES, NVAR, URHO, UEDEN, UEINT
@@ -599,13 +700,17 @@ end subroutine fort_advance_mhd
 
  	  integer,  intent(in)  :: uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3
 	  integer,  intent(in)  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
-      integer,  intent(in)  :: flux_l1,flux_l2,flux_l3,flux_h1,flux_h2,flux_h3
+          integer,  intent(in)  :: flux1_l1,flux1_l2,flux1_l3,flux1_h1,flux1_h2,flux1_h3
+          integer,  intent(in)  :: flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3
+          integer,  intent(in)  :: flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3
 	  integer,  intent(in)  :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
 	  integer, intent(in) 	:: lo(3), hi(3)
 
 	  real(rt), intent(in)  :: uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3, NVAR)
 	  real(rt), intent(in)  :: src(src_l1:src_h1,src_l2:src_h2,src_l3:src_h3, NVAR)
-	  real(rt), intent(in)  :: flux(flux_l1:flux_h1,flux_l2:flux_h2,flux_l3:flux_h3,QVAR,3)
+	  real(rt), intent(in)  :: fluxx(flux1_l1:flux1_h1,flux1_l2:flux1_h2,flux1_l3:flux1_h3,QVAR)
+	  real(rt), intent(in)  :: fluxy(flux2_l1:flux2_h1,flux2_l2:flux2_h2,flux2_l3:flux2_h3,QVAR)
+	  real(rt), intent(in)  :: fluxz(flux3_l1:flux3_h1,flux3_l2:flux3_h2,flux3_l3:flux3_h3,QVAR)
 	  real(rt), intent(in) 	:: dx,dy,dz,dt,a_old, a_new 
 	  real(rt), intent(out) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
 	  real(rt)				:: u, v, w
@@ -615,24 +720,17 @@ end subroutine fort_advance_mhd
 	 uout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:) = 0.d0
 	  !****TO DO ******* SOURCES
 		do k = lo(3), hi(3)
-			do j = lo(2), hi(2)
-				do i = lo(1), hi(1)
-					uout(i,j,k,URHO:UEDEN) = uin(i,j,k,URHO:UEDEN) - dt/dx*(flux(i+1,j,k,URHO:UEDEN,1) - flux(i,j,k,URHO:UEDEN,1)) &
-											 - dt/dy*(flux(i,j+1,k,URHO:UEDEN,2) - flux(i,j,k,URHO:UEDEN,2)) &
-											 - dt/dz*(flux(i,j,k+1,URHO:UEDEN,3) - flux(i,j,k,URHO:UEDEN,3)) !Add source terms later
-					if(i.eq.13.and.j.eq.31.and.k.eq.15) then 
-						print*, "rho out = ", uout(i,j,k,URHO), "i,j,k =", i, j, k 
-						print*, "flux x = ", flux(i+1,j,k,URHO,1), flux(i,j,k,URHO,1)
-						print*, "flux y = ", flux(i,j+1,k,URHO,2), flux(i,j,k,URHO,2)
-						print*, "flux z = ", flux(i,j,k+1,URHO,3), flux(i,j,k,URHO,3)
-						pause
-					endif
-					u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
-					v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
-					w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
-					uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
-				enddo
-			enddo
+		do j = lo(2), hi(2)
+		do i = lo(1), hi(1)
+		   uout(i,j,k,URHO:UEDEN) = uin(i,j,k,URHO:UEDEN) - dt/dx*(fluxx(i+1,j,k,URHO:UEDEN) - fluxx(i,j,k,URHO:UEDEN)) &
+		 						  - dt/dy*(fluxy(i,j+1,k,URHO:UEDEN) - fluxy(i,j,k,URHO:UEDEN)) &
+		 						  - dt/dz*(fluxz(i,j,k+1,URHO:UEDEN) - fluxz(i,j,k,URHO:UEDEN)) !Add source terms later
+		   u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
+		   v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
+   		   w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
+		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+		enddo
+		enddo
 		enddo
 	end subroutine consup
 
@@ -648,7 +746,10 @@ end subroutine fort_advance_mhd
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
 		 uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-		 E,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,lo, hi, dx, dy, dz, dt, a_old, a_new)
+                 Ex,ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
+                 Ey,ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
+                 Ez,ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
+		 lo, hi, dx, dy, dz, dt, a_old, a_new)
 
      use amrex_fort_module, only : rt => amrex_real
      use meth_params_module!, only : QVAR, NVAR, UEINT
@@ -663,14 +764,20 @@ end subroutine fort_advance_mhd
 		integer, intent(in)   :: bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
 		integer, intent(in)	  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
 		integer, intent(in)   :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
-		integer, intent(in)   :: q_l1, q_l2,q_l3 ,q_h1,q_h2, q_h3
+                integer, intent(in)   ::  ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3
+                integer, intent(in)   ::  ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3
+                integer, intent(in)   ::  ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3
 		integer, intent(in)   :: lo(3), hi(3)
 
 		real(rt), intent(in)  :: bxin(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
 		real(rt), intent(in)  :: byin(byin_l1:byin_h1, byin_l2:byin_h2, byin_l3:byin_h3)
 		real(rt), intent(in)  :: bzin(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
 		real(rt), intent(in)  :: src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, QVAR)
-		real(rt), intent(in)  :: E(q_l1:q_h1, q_l2:q_h2, q_l3:q_h3, 3) 
+
+                real(rt), intent(in) ::  Ex(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3)
+                real(rt), intent(in) ::  Ey(ey_l1:ey_h1,ey_l2:ey_h2, ey_l3:ey_h3)
+                real(rt), intent(in) ::  Ez(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3)
+
 		real(rt), intent(in)  :: dx, dy, dz, dt, a_old, a_new
 
 		real(rt), intent(inout) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
@@ -687,7 +794,7 @@ end subroutine fort_advance_mhd
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
-						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(E(i,j,k+1,2) - E(i,j,k,2) - (E(i,j+1,k,3) - E(i,j,k,3)))
+						bxout(i,j,k) = bxin(i,j,k) - dt/dx*(Ey(i,j,k+1) - Ey(i,j,k) - (Ez(i,j+1,k) - Ez(i,j,k)))
 					enddo
 				enddo
 			enddo
@@ -696,7 +803,7 @@ end subroutine fort_advance_mhd
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
-						byout(i,j,k) = byin(i,j,k) - dt/dy*(E(i+1,j,k,3) - E(i,j,k,3) - (E(i,j,k+1,1) - E(i,j,k,1)))
+						byout(i,j,k) = byin(i,j,k) - dt/dy*(Ez(i+1,j,k) - Ez(i,j,k) - (Ex(i,j,k+1) - Ex(i,j,k)))
 					enddo
 				enddo
 			enddo
@@ -704,7 +811,7 @@ end subroutine fort_advance_mhd
 			do k = lo(3), hi(3)
 				do j = lo(2), hi(2)
 					do i = lo(1), hi(1)
-						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(E(i,j+1,k,1) - E(i,j,k,1) - (E(i+1,j,k,2) - E(i,j,k,2)))
+						bzout(i,j,k) = bzin(i,j,k) - dt/dz*(Ex(i,j+1,k) - Ex(i,j,k) - (Ey(i+1,j,k) - Ey(i,j,k)))
 					enddo
 				enddo
 			enddo

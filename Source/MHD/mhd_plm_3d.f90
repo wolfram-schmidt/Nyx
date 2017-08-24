@@ -1,15 +1,18 @@
 module mhd_plm_module
+
 !Module that gives a piecewise linear interpolation for the primitive variables 
 !They are projected onto the characteristic variables for tracing. 
 
-use meth_params_module
-implicit none
+   use amrex_fort_module, only : rt => amrex_real
+   use meth_params_module
+   implicit none
 
-  private vanleer, lvecx, lvecy, lvecz, rvecx, rvecy, rvecz, evals
+   private vanleer, lvecx, lvecy, lvecz, rvecx, rvecy, rvecz, evals
 
-  public plm 
+   public plm 
 
 contains 
+
   !
   ! characteristics based on u
   !
@@ -17,15 +20,15 @@ contains
   ! This is called from within threaded loops in advance_mhd_tile so *no* OMP here ...
   !===========================================================================
 
-	subroutine plm(s,s_l1,s_l2,s_l3,s_h1,s_h2,s_h3,&	
-				   bx, bxl1, bxl2, bxl3, bxh1, bxh2, bxh3, &
-				   by, byl1, byl2, byl3, byh1, byh2, byh3, &
-				   bz, bzl1, bzl2, bzl3, bzh1, bzh2, bzh3, &
-                   Ip,Im, ilo1,ilo2,ilo3,ihi1,ihi2,ihi3,dx,dy,dz,dt,a_old)
-    use amrex_fort_module, only : rt => amrex_real
+   subroutine plm(s,s_l1,s_l2,s_l3,s_h1,s_h2,s_h3,&	
+		  bx, bxl1, bxl2, bxl3, bxh1, bxh2, bxh3, &
+		  by, byl1, byl2, byl3, byh1, byh2, byh3, &
+		  bz, bzl1, bzl2, bzl3, bzh1, bzh2, bzh3, &
+                  Ip,Im, ilo1,ilo2,ilo3,ihi1,ihi2,ihi3,dx,dy,dz,dt,a_old)
 
-	implicit none
-	integer	, intent(in   ) ::  	s_l1, s_l2, s_l3, s_h1, s_h2, s_h3
+
+    implicit none
+    integer , intent(in   ) ::  	s_l1, s_l2, s_l3, s_h1, s_h2, s_h3
     integer , intent(in   ) ::  	ilo1,ilo2,ilo3,ihi1,ihi2,ihi3
     integer , intent(in   ) ::  	bxl1, bxl2, bxl3, bxh1, bxh2, bxh3	
     integer , intent(in   ) ::  	byl1, byl2, byl3, byh1, byh2, byh3
@@ -41,17 +44,18 @@ contains
 
     real(rt), intent(in   ) :: 		dx,dy,dz,dt,a_old
 
-	real(rt) 				:: 		dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7)
-	real(rt)				:: 		temp(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1,8), smhd(7)
-	real(rt)				::      tbx(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
-	real(rt)				::      tby(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
-	real(rt)				::      tbz(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
-    real(rt)				:: 		dt_over_a
-    integer          		:: 		ii,ibx,iby,ibz, i , j, k
+    real(rt) 				:: 	dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7)
+    real(rt)				:: 	temp(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1,8), smhd(7)
+    real(rt)				::      tbx(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
+    real(rt)				::      tby(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
+    real(rt)				::      tbz(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
+    real(rt)				:: 	dt_over_a
+    integer          		        ::	ii,ibx,iby,ibz, i , j, k
 
     dt_over_a = dt / a_old
-	Ip = 0.d0
-	Im = 0.d0
+    Ip = 0.d0
+    Im = 0.d0
+
 !------------------------workspace variables---------------------------------------------
 		tbx = 0.d0
 		tby = 0.d0
@@ -97,12 +101,12 @@ contains
 			if(i.lt.byl1) then
 				tby(i,byl2:byh2, byl3:byh3) = by(byl1,byl2:byh2, byl3:byh3)
 			elseif(i.gt.byh1) then
-				tby(i,byl2:byh2, byl3:byh3) = by(byh1,byl2:byh2, bxl3:byh3)
+				tby(i,byl2:byh2, byl3:byh3) = by(byh1,byl2:byh2, byl3:byh3)
 			endif			
 			if(i.lt.bzl1) then
 				tbz(i,bzl2:bzh2, bzl3:bzh3) = bz(bzl1,bzl2:bzh2, bzl3:bzh3)
 			elseif(i.gt.bzh1) then
-				tbz(i,bzl2:bzh2, bzl3:bzh3) = bz(bzh1,bzl2:bzh2, bxl3:bzh3)
+				tbz(i,bzl2:bzh2, bzl3:bzh3) = bz(bzh1,bzl2:bzh2, bzl3:bzh3)
 			endif				
 		enddo
 		do j = s_l2-1,s_h2+1
@@ -176,7 +180,6 @@ contains
 				smhd(6) = temp(i,j,k,3)
 				smhd(7) = temp(i,j,k,4)
 				smhd 	= smhd*(tbx(i+1,j,k) - tbx(i,j,k))/dx !cross-talk of normal magnetic field direction
-		!		smhd = 0.d0
 	!Interpolate
 		!Plus
 					!!Using HLLD so sum over all eigenvalues
@@ -192,9 +195,9 @@ contains
 				do ii = 1,7
 						summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
 				enddo
-				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
+				Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 				Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
-				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
+				Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 				Im(i,j,k,QPRES,1)        = Im(i,j,k,QPRES,1) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1))
 				
 	!========================================= Y Direction ================================================				
@@ -230,7 +233,6 @@ contains
 				smhd(6) = temp(i,j,k,2)
 				smhd(7) = temp(i,j,k,4)
 				smhd 	= smhd*(tby(i,j+1,k) - tby(i,j,k))/dy !cross-talk of normal magnetic field direction
-			!	smhd = 0.d0
 	!Interpolate
 				Ip(i,j,k,QRHO:QPRES,2) 	= temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
@@ -278,7 +280,6 @@ contains
 				smhd(6) = temp(i,j,k,2)
 				smhd(7) = temp(i,j,k,3)
 				smhd 	= smhd*(tbz(i,j,k+1) - tbz(i,j,k))/dz !cross-talk of normal magnetic field direction
-			!	smhd = 0.d0
 	!Interpolate
 				Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 				Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
@@ -319,6 +320,7 @@ contains
 	elseif(abs(WL).lt.abs(WR).and.WR*WL.gt.0.d0) then
 		dW = WL
 	endif
+
 	end subroutine
 
 

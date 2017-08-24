@@ -26,717 +26,30 @@ implicit none
  
 end subroutine electric
 
+subroutine electric_edge_x(work_lo, work_hi, &
+                           q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+                           E, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
+                           flxy, flxy_l1 , flxy_l2 , flxy_l3 , flxy_h1 , flxy_h2 , flxy_h3, &
+                           flxz, flxz_l1 , flxz_l2 , flxz_l3 , flxz_h1 , flxz_h2 , flxz_h3)
 
-!=============== Interpolate the Cell Centered/Face Centered Magnetic Field Vars to Get Edge Centered Electric Field Variables ==================
-
-subroutine elec_interp(E, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
-
-use amrex_fort_module, only : rt => amrex_real
-use meth_params_module
-
-implicit none
-	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
-	integer, intent(in)		::flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
-	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
-	real(rt), intent(in) 	::flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)
-
-	real(rt), intent(out)	::E(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,3,4) !12 Edges total
-	
-	real(rt)				::Ecen
-	real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
-	real(rt)				::u_face ,v_face ,w_face
-	
-	integer					::i ,j ,k	
-	E = 0.d0
-!Interpolate Electric Fields to edges
-	do k = flx_l3+1,flx_h3-2
-		do j = flx_l2+1,flx_h2-2
-			do i = flx_l1+1,flx_h1-2
-!-----------------------------------Calculate Edge 1 := i + 1/2, j, k - 1/2 -------------------------------------------
-		!Ey 	
-		        !x-derivative
-		        u_face = flx(i+1,j,k-1,QRHO,1)	
-		        call electric(q(i,j,k-1,:),Ecen,2)
-		        a = 2.d0*(flx(i+1,j,k-1,QMAGZ,1) - Ecen)
-		        call electric(q(i+1,j,k-1,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i+1,j,k-1,QMAGZ,1))
-		        if(u_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(u_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i+2,j,k-1,QMAGZ,1) - Ecen)
-                u_face = q(i+1,j,k-1,QU)
-                if(u_face.gt. 0.d0) then
-                    d2 = b
-                elseif(u_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !z-derivative
-                w_face = flx(i,j,k,QRHO,3)
-                call electric(q(i,j,k-1,:),Ecen,3)
-                a = 2.d0*(flx(i,j,k,QMAGY,1) - Ecen)
-                call electric(q(i,j,k,:),Ecen,3)
-                b = 2.d0*(Ecen - flx(i,j,k,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d1 = a
-                elseif(w_face.lt. 0.d0) then
-                    d1 = b
-                else 
-                    d1 = 0.5d0*(a + b)
-                endif
-                
-                w_face = q(i,j,k,QW)
-                a = 2.d0*(Ecen - flx(i,j,k+1,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d2 = b
-                elseif(w_face.gt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ey
-                E(i,j,k,2,1) = 0.25d0*(flx(i+1,j,k-1,QMAGZ,1) + flx(i+1,j,k,QMAGZ,1) &
-                                + flx(i,j,k,QMAGX,3) + flx(i+1,j,k,QMAGX,3)) + dd1 + dd2  
-                                
-!-----------------------------------Calculate Edge 2 := i, j + 1/2, k - 1/2 -------------------------------------------
-         !Ex
-		        !y-derivative
-		        v_face = flx(i,j+1,k-1,QRHO,2)	
-		        call electric(q(i,j,k-1,:),Ecen,2)
-		        a = 2.d0*(flx(i,j+1,k-1,QMAGZ,2) - Ecen)
-		        call electric(q(i,j+1,k-1,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j+1,k-1,QMAGZ,2))
-		        if(v_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(v_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i,j+2,k-1,QMAGZ,2) - Ecen)
-                v_face = q(i,j+1,k-1,QV)
-                if(v_face.gt. 0.d0) then
-                    d2 = b
-                elseif(v_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !z-derivative
-                w_face = flx(i,j,k,QRHO,3)
-                call electric(q(i,j,k-1,:),Ecen,3)
-                a = 2.d0*(flx(i,j,k,QMAGY,3) - Ecen)
-                call electric(q(i,j,k,:),Ecen,3)
-                b = 2.d0*(Ecen - flx(i,j,k,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d1 = a
-                elseif(w_face.lt. 0.d0) then
-                    d1 = b
-                else 
-                    d1 = 0.5d0*(a + b)
-                endif
-                
-                w_face = q(i,j,k,QW)
-                a = 2.d0*(Ecen - flx(i,j,k+1,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d2 = b
-                elseif(w_face.gt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ex
-                E(i,j,k,1,1) = 0.25d0*(flx(i,j+1,k-1,QMAGZ,2) + flx(i,j+1,k,QMAGZ,2) &
-                                + flx(i,j,k,QMAGX,3) + flx(i,j+1,k,QMAGX,3)) + dd1 + dd2  
-                                
-
-!-----------------------------------Calculate Edge 3 := i - 1/2, j, k - 1/2 -------------------------------------------
- 		!Ey 	
-		        !x-derivative
-		        u_face = flx(i,j,k-1,QRHO,1)	
-		        call electric(q(i-1,j,k-1,:),Ecen,2)
-		        a = 2.d0*(flx(i,j,k-1,QMAGZ,1) - Ecen)
-		        call electric(q(i,j,k-1,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j,k-1,QMAGZ,1))
-		        if(u_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(u_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i+1,j,k-1,QMAGZ,1) - Ecen)
-                u_face = q(i,j,k-1,QU)
-                if(u_face.gt. 0.d0) then
-                    d2 = b
-                elseif(u_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !z-derivative
-                w_face = flx(i,j,k,QRHO,3)
-                call electric(q(i,j,k-1,:),Ecen,3)
-                a = 2.d0*(flx(i,j,k,QMAGY,1) - Ecen)
-                call electric(q(i,j,k,:),Ecen,3)
-                b = 2.d0*(Ecen - flx(i,j,k,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d1 = a
-                elseif(w_face.lt. 0.d0) then
-                    d1 = b
-                else 
-                    d1 = 0.5d0*(a + b)
-                endif
-                
-                w_face = q(i-1,j,k,QW)
-                a = 2.d0*(Ecen - flx(i,j,k+1,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d2 = b
-                elseif(w_face.gt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ey
-                E(i,j,k,2,2) = 0.25d0*(flx(i,j,k-1,QMAGZ,1) + flx(i,j,k,QMAGZ,1) &
-                                + flx(i-1,j,k,QMAGX,3) + flx(i,j,k,QMAGX,3)) + dd1 + dd2
-                                
-!-----------------------------------Calculate Edge 4 := i, j - 1/2, k - 1/2 -------------------------------------------
-         !Ex
-		        !y-derivative
-		        v_face = flx(i,j,k-1,QRHO,2)	
-		        call electric(q(i,j,k-1,:),Ecen,2)
-		        a = 2.d0*(flx(i,j,k-1,QMAGZ,2) - Ecen)
-		        call electric(q(i,j,k-1,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j,k-1,QMAGZ,2))
-		        if(v_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(v_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i,j+1,k-1,QMAGZ,2) - Ecen)
-                v_face = q(i,j,k-1,QV)
-                if(v_face.gt. 0.d0) then
-                    d2 = b
-                elseif(v_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !z-derivative
-                w_face = flx(i,j-1,k,QRHO,3)
-                call electric(q(i,j-1,k-1,:),Ecen,3)
-                a = 2.d0*(flx(i,j-1,k,QMAGY,3) - Ecen)
-                call electric(q(i,j-1,k,:),Ecen,3)
-                b = 2.d0*(Ecen - flx(i,j-1,k,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d1 = a
-                elseif(w_face.lt. 0.d0) then
-                    d1 = b
-                else 
-                    d1 = 0.5d0*(a + b)
-                endif
-                
-                w_face = q(i,j-1,k,QW)
-                a = 2.d0*(Ecen - flx(i,j-1,k+1,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d2 = b
-                elseif(w_face.gt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ex
-                E(i,j,k,1,2) = 0.25d0*(flx(i,j,k-1,QMAGZ,2) + flx(i,j,k,QMAGZ,2) &
-                                + flx(i,j-1,k,QMAGX,3) + flx(i,j,k,QMAGX,3)) + dd1 + dd2   
-
-!-----------------------------------Calculate Edge 5 := i + 1/2, j - 1/2, k -------------------------------------------
-         !Ez
-		        !y-derivative
-		        v_face = flx(i,j,k,QRHO,2)	
-		        call electric(q(i,j-1,k,:),Ecen,2)
-		        a = 2.d0*(flx(i,j,k,QMAGX,2) - Ecen) !-3/4
-		        call electric(q(i,j,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j,k,QMAGX,3)) !-1/4
-		        if(v_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(v_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i,j+1,k,QMAGX,2) - Ecen) !1/4
-                v_face = q(i,j,k,QV)
-                if(v_face.gt. 0.d0) then
-                    d2 = b
-                elseif(v_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !x-derivative
-		        u_face = flx(i+1,j-1,k,QRHO,1)	
-		        call electric(q(i,j-1,k,:),Ecen,2)
-		        a = 2.d0*(flx(i+1,j-1,k,QMAGY,1) - Ecen) ! 1/4
-		        call electric(q(i+1,j-1,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i+1,j-1,k,QMAGY,1)) ! 3/4
-		        if(u_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(u_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i+2,j,k,QMAGY,1) - Ecen)
-                u_face = q(i+1,j,k,QU)
-                if(u_face.gt. 0.d0) then
-                    d2 = b
-                elseif(u_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)  
-                !Edge centered Ez
-                E(i,j,k,3,1) = 0.25d0*(flx(i+1,j-1,k,QMAGX,2) + flx(i+1,j,k,QMAGX,2) &
-                                + flx(i+1,j,k,QMAGY,1) + flx(i,j,k,QMAGY,1)) + dd1 + dd2  
-
-!-----------------------------------Calculate Edge 6 := i + 1/2, j + 1/2, k -------------------------------------------
-         !Ez
-		        !y-derivative
-		        v_face = flx(i,j+1,k,QRHO,2)	
-		        call electric(q(i,j,k,:),Ecen,2)
-		        a = 2.d0*(flx(i,j+1,k,QMAGX,2) - Ecen) !1/4
-		        call electric(q(i,j+1,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j+1,k,QMAGX,3)) !3/4
-		        if(v_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(v_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i,j+2,k,QMAGX,2) - Ecen) !5/4
-                v_face = q(i,j+1,k,QV)
-                if(v_face.gt. 0.d0) then
-                    d2 = b
-                elseif(v_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !x-derivative
-		        u_face = flx(i+1,j,k,QRHO,1)	
-		        call electric(q(i,j,k,:),Ecen,2)
-		        a = 2.d0*(flx(i+1,j,k,QMAGY,1) - Ecen) ! 1/4
-		        call electric(q(i+1,j,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i+1,j,k,QMAGY,1)) ! 3/4
-		        if(u_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(u_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i+2,j,k,QMAGY,1) - Ecen)
-                u_face = q(i+1,j,k,QU)
-                if(u_face.gt. 0.d0) then
-                    d2 = b
-                elseif(u_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)  
-                !Edge centered Ez
-                E(i,j,k,3,2) = 0.25d0*(flx(i+1,j+1,k,QMAGX,2) + flx(i,j+1,k,QMAGX,2) &
-                                + flx(i+1,j+1,k,QMAGY,1) + flx(i+1,j,k,QMAGY,1)) + dd1 + dd2  
-!-----------------------------------Calculate Edge 7 := i - 1/2, j + 1/2, k -------------------------------------------
-         !Ez
-		        !y-derivative
-		        v_face = flx(i-1,j+1,k,QRHO,2)	
-		        call electric(q(i-1,j,k,:),Ecen,2)
-		        a = 2.d0*(flx(i-1,j+1,k,QMAGX,2) - Ecen) !1/4
-		        call electric(q(i-1,j+1,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j+1,k,QMAGX,3)) !3/4
-		        if(v_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(v_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i-1,j+2,k,QMAGX,2) - Ecen) !5/4
-                v_face = q(i-1,j+1,k,QV)
-                if(v_face.gt. 0.d0) then
-                    d2 = b
-                elseif(v_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !x-derivative
-		        u_face = flx(i,j,k,QRHO,1)	
-		        call electric(q(i-1,j,k,:),Ecen,2)
-		        a = 2.d0*(flx(i,j,k,QMAGY,1) - Ecen) ! -3/4
-		        call electric(q(i,j,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j,k,QMAGY,1)) ! -1/4
-		        if(u_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(u_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i+1,j,k,QMAGY,1) - Ecen)! 1/4
-                u_face = q(i,j,k,QU)
-                if(u_face.gt. 0.d0) then
-                    d2 = b
-                elseif(u_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)  
-                !Edge centered Ez
-                E(i,j,k,3,3) = 0.25d0*(flx(i-1,j+1,k,QMAGX,2) + flx(i,j+1,k,QMAGX,2) &
-                                + flx(i-1,j+1,k,QMAGY,1) + flx(i-1,j,k,QMAGY,1)) + dd1 + dd2  			
-!-----------------------------------Calculate Edge 8 := i - 1/2, j - 1/2, k -------------------------------------------
-         !Ez
-		        !y-derivative
-		        v_face = flx(i-1,j,k,QRHO,2)	
-		        call electric(q(i-1,j-1,k,:),Ecen,2)
-		        a = 2.d0*(flx(i-1,j,k,QMAGX,2) - Ecen) !-3/4
-		        call electric(q(i-1,j,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i-1,j,k,QMAGX,3)) !-1/4
-		        if(v_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(v_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i-1,j+1,k,QMAGX,2) - Ecen) !1/4
-                v_face = q(i-1,j+1,k,QV)
-                if(v_face.gt. 0.d0) then
-                    d2 = b
-                elseif(v_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !x-derivative
-		        u_face = flx(i,j-1,k,QRHO,1)	
-		        call electric(q(i-1,j,k-1,:),Ecen,2)
-		        a = 2.d0*(flx(i,j-1,k,QMAGY,1) - Ecen) ! -3/4
-		        call electric(q(i,j-1,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j-1,k,QMAGY,1)) ! -1/4
-		        if(u_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(u_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i+1,j-1,k,QMAGY,1) - Ecen)! 1/4
-                u_face = q(i,j-1,k,QU)
-                if(u_face.gt. 0.d0) then
-                    d2 = b
-                elseif(u_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)  
-                !Edge centered Ez
-                E(i,j,k,3,4) = 0.25d0*(flx(i-1,j-1,k,QMAGX,2) + flx(i,j-1,k,QMAGX,2) &
-                                + flx(i-1,j-1,k,QMAGY,1) + flx(i-1,j,k,QMAGY,1)) + dd1 + dd2  	
-
-!-----------------------------------Calculate Edge 9 := i, j - 1/2, k + 1/2 -------------------------------------------
-         !Ex
-		        !y-derivative
-		        v_face = flx(i,j,k,QRHO,2)	
-		        call electric(q(i,j-1,k,:),Ecen,2)
-		        a = 2.d0*(flx(i,j,k,QMAGZ,2) - Ecen) !-3/4
-		        call electric(q(i,j,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j,k,QMAGZ,2)) !-1/4
-		        if(v_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(v_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i,j+1,k,QMAGZ,2) - Ecen) !1/4
-                v_face = q(i,j,k,QV)
-                if(v_face.gt. 0.d0) then
-                    d2 = b
-                elseif(v_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !z-derivative
-                w_face = flx(i,j-1,k+1,QRHO,3)
-                call electric(q(i,j-1,k,:),Ecen,3)
-                a = 2.d0*(flx(i,j-1,k+1,QMAGY,3) - Ecen) !1/4
-                call electric(q(i,j-1,k+1,:),Ecen,3)
-                b = 2.d0*(Ecen - flx(i,j-1,k+1,QMAGX,3)) !3/4
-                if(w_face.gt. 0.d0) then
-                    d1 = a
-                elseif(w_face.lt. 0.d0) then
-                    d1 = b
-                else 
-                    d1 = 0.5d0*(a + b)
-                endif
-                
-                w_face = q(i,j-1,k+1,QW)
-                a = 2.d0*(Ecen - flx(i,j-1,k+1,QMAGX,3)) !5/4
-                if(w_face.gt. 0.d0) then
-                    d2 = b
-                elseif(w_face.gt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ex
-                E(i,j,k,1,3) = 0.25d0*(flx(i,j,k+1,QMAGZ,2) + flx(i,j,k,QMAGZ,2) &
-                                + flx(i,j-1,k+1,QMAGX,3) + flx(i,j,k+1,QMAGX,3)) + dd1 + dd2  
-
-!-----------------------------------Calculate Edge 10 := i + 1/2, j, k + 1/2 -------------------------------------------
-		!Ey 	
-		        !x-derivative
-		        u_face = flx(i+1,j,k,QRHO,1)	
-		        call electric(q(i,j,k,:),Ecen,2)
-		        a = 2.d0*(flx(i+1,j,k,QMAGZ,1) - Ecen)
-		        call electric(q(i+1,j,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i+1,j,k,QMAGZ,1))
-		        if(u_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(u_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i+2,j,k,QMAGZ,1) - Ecen)
-                u_face = q(i+1,j,k,QU)
-                if(u_face.gt. 0.d0) then
-                    d2 = b
-                elseif(u_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !z-derivative
-                w_face = flx(i,j,k+1,QRHO,3)
-                call electric(q(i,j,k,:),Ecen,3)
-                a = 2.d0*(flx(i,j,k+1,QMAGY,1) - Ecen) !1/4
-                call electric(q(i,j,k+1,:),Ecen,3)
-                b = 2.d0*(Ecen - flx(i,j,k+1,QMAGX,3)) !3/4
-                if(w_face.gt. 0.d0) then
-                    d1 = a
-                elseif(w_face.lt. 0.d0) then
-                    d1 = b
-                else 
-                    d1 = 0.5d0*(a + b)
-                endif
-                
-                w_face = q(i,j,k+1,QW)
-                a = 2.d0*(Ecen - flx(i,j,k+2,QMAGX,3)) !5/4
-                if(w_face.gt. 0.d0) then
-                    d2 = b
-                elseif(w_face.gt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ey
-                E(i,j,k,2,3) = 0.25d0*(flx(i+1,j,k,QMAGZ,1) + flx(i+1,j,k+1,QMAGZ,1) &
-                                + flx(i,j,k+1,QMAGX,3) + flx(i+1,j,k+1,QMAGX,3)) + dd1 + dd2   
-
-!-----------------------------------Calculate Edge 11 := i, j + 1/2, k + 1/2 -------------------------------------------
-         !Ex
-		        !y-derivative
-		        v_face = flx(i,j+1,k,QRHO,2)	
-		        call electric(q(i,j,k,:),Ecen,2)
-		        a = 2.d0*(flx(i,j+1,k,QMAGZ,2) - Ecen)
-		        call electric(q(i,j+1,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j+1,k,QMAGZ,2))
-		        if(v_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(v_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i,j+2,k,QMAGZ,2) - Ecen)
-                v_face = q(i,j+1,k,QV)
-                if(v_face.gt. 0.d0) then
-                    d2 = b
-                elseif(v_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !z-derivative
-                w_face = flx(i,j,k+1,QRHO,3)
-                call electric(q(i,j,k,:),Ecen,3)
-                a = 2.d0*(flx(i,j,k+1,QMAGY,3) - Ecen)
-                call electric(q(i,j,k+1,:),Ecen,3)
-                b = 2.d0*(Ecen - flx(i,j,k+1,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d1 = a
-                elseif(w_face.lt. 0.d0) then
-                    d1 = b
-                else 
-                    d1 = 0.5d0*(a + b)
-                endif
-                
-                w_face = q(i,j,k+1,QW)
-                a = 2.d0*(Ecen - flx(i,j,k+1,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d2 = b
-                elseif(w_face.gt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ex
-                E(i,j,k,1,4) = 0.25d0*(flx(i,j+1,k+1,QMAGZ,2) + flx(i,j+1,k,QMAGZ,2) &
-                                + flx(i,j,k+1,QMAGX,3) + flx(i,j+1,k+1,QMAGX,3)) + dd1 + dd2  
-
-!-----------------------------------Calculate Edge 12 := i - 1/2, j, k + 1/2 -------------------------------------------                                
- 		!Ey 	
-		        !x-derivative
-		        u_face = flx(i,j,k,QRHO,1)	
-		        call electric(q(i-1,j,k,:),Ecen,2)
-		        a = 2.d0*(flx(i,j,k,QMAGZ,1) - Ecen)
-		        call electric(q(i,j,k,:),Ecen,2)
-		        b = 2.d0*(Ecen - flx(i,j,k,QMAGZ,1))
-		        if(u_face.gt. 0.d0) then
-		            d1 = a
-		        elseif(u_face.lt. 0.d0) then
-		            d1 = b
-		        else 
-		            d1 = 0.5d0*(a + b)
-		        endif
-                a = 2.d0*(flx(i+1,j,k,QMAGZ,1) - Ecen)
-                u_face = q(i,j,k,QU)
-                if(u_face.gt. 0.d0) then
-                    d2 = b
-                elseif(u_face.lt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd1 = 0.125d0*(d1 - d2)   
-                
-                !z-derivative
-                w_face = flx(i-1,j,k+1,QRHO,3)
-                call electric(q(i-1,j,k,:),Ecen,3)
-                a = 2.d0*(flx(i-1,j,k+1,QMAGY,1) - Ecen)
-                call electric(q(i-1,j,k+1,:),Ecen,3)
-                b = 2.d0*(Ecen - flx(i-1,j,k+1,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d1 = a
-                elseif(w_face.lt. 0.d0) then
-                    d1 = b
-                else 
-                    d1 = 0.5d0*(a + b)
-                endif
-                
-                w_face = q(i-1,j,k+1,QW)
-                a = 2.d0*(Ecen - flx(i-1,j,k+1,QMAGX,3))
-                if(w_face.gt. 0.d0) then
-                    d2 = b
-                elseif(w_face.gt. 0.d0) then
-                    d2 = a
-                else
-                    d2 = 0.5d0*(a + b)
-                endif
-                !double derivative
-                dd2 = 0.125d0*(d1 - d2)
-                !Edge centered Ey
-                E(i,j,k,2,4) = 0.25d0*(flx(i,j,k+1,QMAGZ,1) + flx(i,j,k,QMAGZ,1) &
-                                + flx(i-1,j,k+1,QMAGX,3) + flx(i,j,k+1,QMAGX,3)) + dd1 + dd2
-			enddo
-		enddo
-	enddo
-end subroutine elec_interp	
-
-subroutine electric_edge(E, q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-			flx, flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3)
 
 use amrex_fort_module, only : rt => amrex_real
 use meth_params_module
 
 implicit none
-	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
-	integer, intent(in)		::flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
-	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
-	real(rt), intent(in) 	::flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR,3)
+	integer, intent(in)   :: work_lo(3), work_hi(3)
+	integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	integer, intent(in)   :: ex_l1,ex_l2,ex_l3,ex_h1,ex_h2, ex_h3
 
-	real(rt), intent(out)	::E(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,3)
+        integer, intent(in)   :: flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
+        integer, intent(in)   :: flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
+
+	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
+
+        real(rt), intent(in) :: flxy(flxy_l1:flxy_h1,flxy_l2:flxy_h2,flxy_l3:flxy_h3,QVAR) 
+        real(rt), intent(in) :: flxz(flxz_l1:flxz_h1,flxz_l2:flxz_h2,flxz_l3:flxz_h3,QVAR)
+
+	real(rt), intent(out)	:: E(ex_l1:ex_h1,ex_l2:ex_h2,ex_l3:ex_h3)
 	
 	real(rt)				::Ecen
 	real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
@@ -744,23 +57,26 @@ implicit none
 	integer					::i ,j ,k	
 
 	E = 0.d0
-	do k = flx_l3+1,flx_h3-1
-		do j = flx_l2+1,flx_h2-1
-			do i = flx_l1+1,flx_h1-1
+	do k = work_lo(3), work_hi(3)
+		do j = work_lo(2), work_hi(2)
+			do i = work_lo(1), work_hi(1)
+
 !============================================= Ex i, j -1/2, k -1/2 ===========================================================================
 				call electric(q(i,j-1,k-1,:),Ecen,1)
-				a = 2.d0*(flx(i,j-1,k,QMAGY,3) - Ecen)
+				a = 2.d0*(flxz(i,j-1,k,QMAGY) - Ecen)
+
 				call electric(q(i,j-1,k,:),Ecen,1)
-				b = 2.d0*(Ecen - flx(i,j-1,k,QMAGY,3))
-				if(flx(i,j-1,k,QRHO,3).gt. 0.d0) then
+				b = 2.d0*(Ecen - flxz(i,j-1,k,QMAGY))
+
+				if(flxz(i,j-1,k,QRHO).gt. 0.d0) then
 					d1 = a
-				elseif(flx(i,j-1,k,QRHO,3).lt. 0.d0) then
+				elseif(flxz(i,j-1,k,QRHO).lt. 0.d0) then
 					d1 = b
 				else
 					d1 = 0.5d0*(a+b)
 				endif
 				a = b
-				b = 2.d0*(flx(i,j-1,k+1,QMAGY,3) - Ecen)
+				b = 2.d0*(flxz(i,j-1,k+1,QMAGY) - Ecen)
 				if(q(i,j-1,k,QW).gt. 0.d0) then
 					d2 = a
 				elseif(q(i,j-1,k,QW).lt. 0.d0) then
@@ -770,24 +86,27 @@ implicit none
 				endif
 				dd1 = 0.125d0*(d1 - d2)
 				if(i.eq.1.and.j.eq.15.and.k.eq.5) then 
-					print*,"First Derivatives", d1, d2, a, b, flx(i,j-1,k+1,QMAGY,3), Ecen
+					print*,"First Derivatives", d1, d2, a, b, flxz(i,j-1,k+1,QMAGY), Ecen
 					print*, "i,j-1,k+1", i, j-1, k+1
 				endif
 
 				call electric(q(i,j-1,k-1,:),Ecen,1)
-				a = 2.d0*(-flx(i,j,k-1,QMAGZ,2) - Ecen)
+				a = 2.d0*(-flxy(i,j,k-1,QMAGZ) - Ecen)
+
 				call electric(q(i,j,k-1,:),Ecen,1)
-				b = 2.d0*(Ecen + flx(i,j,k-1,QMAGZ,2))
-				if(flx(i,j,k-1,QRHO,2).gt. 0.d0) then
+				b = 2.d0*(Ecen + flxy(i,j,k-1,QMAGZ))
+
+				if(flxy(i,j,k-1,QRHO).gt. 0.d0) then
 					d1 = a
-				elseif(flx(i,j,k-1,QRHO,2).lt. 0.d0) then
+				elseif(flxy(i,j,k-1,QRHO).lt. 0.d0) then
 					d1 = b
 				else
 					d1 = 0.5d0*(a+b)
 				endif
 
 				a = b 
-				b = 2.d0*(-flx(i,j+1,k-1,QMAGZ,2) - Ecen) 
+				b = 2.d0*(-flxy(i,j+1,k-1,QMAGZ) - Ecen) 
+
 				if(q(i,j,k-1,QV).gt.0.d0) then
 					d2 = a
 				elseif(q(i,j,k-1,QV).lt. 0.d0) then
@@ -797,30 +116,69 @@ implicit none
 				endif
 				dd2 = 0.125*(d1 - d2)
 
-				E(i,j,k,1) = 0.25d0*(-flx(i,j,k-1,QMAGZ,2) - flx(i,j,k,QMAGZ,2) + flx(i,j-1,k,QMAGY,3) + flx(i,j,k,QMAGY,3))&
-							+ dd1 + dd2
-				if(isnan(E(i,j,k,1))) then
-					print*, "i,j,k = ", i, j, k
-					print*, "q bounds", q_l1, q_l2, q_l3, q_h1, q_h2, q_h3
-					print*, "flx bounds", flx_l1, flx_l2, flx_l3, flx_h1, flx_h2, flx_h3
-					print*, "E x is nan = ", E(i,j,k,1), "Fluxes = ", flx(i,j,k-1,QMAGZ,2) , flx(i,j,k,QMAGZ,2) , flx(i,j-1,k,QMAGY,3) , flx(i,j,k,QMAGY,3)
-					print*, "Derivatives 1", dd1, "Derivatives 2", dd2
-					pause
-				endif
+				E(i,j,k) = 0.25d0*(-flxy(i,j,k-1,QMAGZ) - flxy(i,j,k,QMAGZ) + &
+                                                    flxz(i,j-1,k,QMAGY) + flxz(i,j,k,QMAGY)) + dd1 + dd2
+
+			enddo
+		enddo
+	enddo
+	
+end subroutine electric_edge_x
+
+subroutine electric_edge_y(work_lo, work_hi, &
+                           q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+                           E, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
+                           flxx, flxx_l1 , flxx_l2 , flxx_l3 , flxx_h1 , flxx_h2 , flxx_h3, &
+                           flxz, flxz_l1 , flxz_l2 , flxz_l3 , flxz_h1 , flxz_h2 , flxz_h3)
+
+
+use amrex_fort_module, only : rt => amrex_real
+use meth_params_module
+
+implicit none
+
+	integer, intent(in)   :: work_lo(3), work_hi(3)
+	integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	integer, intent(in)   :: ey_l1,ey_l2,ey_l3,ey_h1,ey_h2, ey_h3
+        integer, intent(in)   :: flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
+        integer, intent(in)   :: flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
+
+	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
+
+        real(rt), intent(in) :: flxx(flxx_l1:flxx_h1,flxx_l2:flxx_h2,flxx_l3:flxx_h3,QVAR)
+        real(rt), intent(in) :: flxz(flxz_l1:flxz_h1,flxz_l2:flxz_h2,flxz_l3:flxz_h3,QVAR)
+
+	real(rt), intent(out)	:: E(ey_l1:ey_h1,ey_l2:ey_h2,ey_l3:ey_h3)
+	
+	real(rt)				::Ecen
+	real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
+	
+	integer					::i ,j ,k	
+
+	E = 0.d0
+	do k = work_lo(3), work_hi(3)
+		do j = work_lo(2), work_hi(2)
+			do i = work_lo(1), work_hi(1)
+
 !============================================= Ey i-1/2, j, k-1/2 ===========================================================================
+
 				call electric(q(i-1,j,k-1,:),Ecen,2)
-				a = 2.d0*(-flx(i,j,k-1,QMAGZ,1) - Ecen)
+				a = 2.d0*(-flxx(i,j,k-1,QMAGZ) - Ecen)
+
 				call electric(q(i,j,k-1,:),Ecen,2)
-				b = 2.d0*(Ecen - flx(i,j,k-1,QMAGZ,1))
-				if(flx(i,j,k-1,QRHO,1).gt. 0.d0) then
+				b = 2.d0*(Ecen - flxx(i,j,k-1,QMAGZ))
+
+				if(flxx(i,j,k-1,QRHO).gt. 0.d0) then
 					d1 = a
-				elseif(flx(i,j,k-1,QRHO,1).lt. 0.d0) then
+				elseif(flxx(i,j,k-1,QRHO).lt. 0.d0) then
 					d1 = b
 				else
 					d1 = 0.5d0*(a+b)
 				endif
+
 				a = b
-				b = 2.d0*(flx(i+1,j,k-1,QMAGZ,1) - Ecen)
+				b = 2.d0*(flxx(i+1,j,k-1,QMAGZ) - Ecen)
+
 				if(q(i,j,k-1,QU).gt. 0.d0) then
 					d2 = a
 				elseif(q(i,j,k-1,QU).lt. 0.d0) then
@@ -831,18 +189,20 @@ implicit none
 				dd1 = 0.125d0*(d1 - d2)
 
 				call electric(q(i-1,j,k-1,:),Ecen,2)
-				a = 2.d0*(flx(i-1,j,k,QMAGX,3) - Ecen)
-    			call electric(q(i-1,j,k,:),Ecen,2)
-				b = 2.d0*(Ecen - flx(i-1,j,k,QMAGX,3))
-				if(flx(i-1,j,k,QRHO,3).gt. 0.d0) then
+				a = 2.d0*(flxz(i-1,j,k,QMAGX) - Ecen)
+
+    			        call electric(q(i-1,j,k,:),Ecen,2)
+				b = 2.d0*(Ecen - flxz(i-1,j,k,QMAGX))
+
+				if(flxz(i-1,j,k,QRHO).gt. 0.d0) then
 					d1 = a
-				elseif(flx(i-1,j,k,QRHO,3).lt. 0.d0) then
+				elseif(flxz(i-1,j,k,QRHO).lt. 0.d0) then
 					d1 = b
 				else
 					d1 = 0.5d0*(a+b)
 				endif
 				a = b 
-				b = 2.d0*(flx(i-1,j,k+1,QMAGX,3) - Ecen) 
+				b = 2.d0*(flxz(i-1,j,k+1,QMAGX) - Ecen) 
 				if(q(i-1,j,k,QW).gt.0.d0) then
 					d2 = a
 				elseif(q(i-1,j,k,QW).lt. 0.d0) then
@@ -852,22 +212,67 @@ implicit none
 				endif
 				dd2 = 0.125*(d1 - d2)
 
-				E(i,j,k,2) = 0.25d0*(flx(i,j,k,QMAGZ,1) + flx(i,j,k-1,QMAGZ,1) - flx(i-1,j,k,QMAGX,3) - flx(i,j,k,QMAGX,3))&
-							+ dd1 + dd2
+				E(i,j,k) = 0.25d0*( flxx(i,j,k-1,QMAGZ) + flxx(i,j,k,QMAGZ) &
+                                                   -flxz(i-1,j,k,QMAGX) - flxz(i,j,k,QMAGX))  + dd1 + dd2
+			enddo
+		enddo
+	enddo
+
+end subroutine electric_edge_y
+
+subroutine electric_edge_z(work_lo, work_hi, &
+                           q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+                           E, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
+                           flxx, flxx_l1 , flxx_l2 , flxx_l3 , flxx_h1 , flxx_h2 , flxx_h3, &
+                           flxy, flxy_l1 , flxy_l2 , flxy_l3 , flxy_h1 , flxy_h2 , flxy_h3)
+
+use amrex_fort_module, only : rt => amrex_real
+use meth_params_module
+
+implicit none
+	integer, intent(in)   :: work_lo(3), work_hi(3)
+        integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+        integer, intent(in)   :: ez_l1,ez_l2,ez_l3,ez_h1,ez_h2, ez_h3
+
+        integer, intent(in)   :: flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
+        integer, intent(in)   :: flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
+
+        real(rt), intent(in)    ::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
+
+        real(rt), intent(in) :: flxx(flxx_l1:flxx_h1,flxx_l2:flxx_h2,flxx_l3:flxx_h3,QVAR)
+        real(rt), intent(in) :: flxy(flxy_l1:flxy_h1,flxy_l2:flxy_h2,flxy_l3:flxy_h3,QVAR)
+
+        real(rt), intent(out)   :: E(ez_l1:ez_h1,ez_l2:ez_h2,ez_l3:ez_h3)
+	
+	real(rt)		:: Ecen
+	real(rt)		:: a ,b ,d1 ,d2 ,dd1 ,dd2 
+
+	integer			:: i ,j ,k	
+
+	E = 0.d0
+
+	do k = work_lo(3), work_hi(3)
+		do j = work_lo(2), work_hi(2)
+			do i = work_lo(1), work_hi(1)
+
 !============================================= Ez i-1/2, j-1/2, k ===========================================================================
 				call electric(q(i-1,j-1,k,:),Ecen,3)
-				a = 2.d0*(-flx(i,j-1,k,QMAGY,1) - Ecen)
+				a = 2.d0*(-flxx(i,j-1,k,QMAGY) - Ecen)
+
 				call electric(q(i,j-1,k,:),Ecen,3)
-				b = 2.d0*(Ecen + flx(i,j-1,k,QMAGY,1))
-				if(flx(i,j-1,k,QRHO,1).gt. 0.d0) then
+				b = 2.d0*(Ecen + flxx(i,j-1,k,QMAGY))
+
+				if(flxx(i,j-1,k,QRHO).gt. 0.d0) then
 					d1 = a
-				elseif(flx(i,j-1,k,QRHO,1).lt. 0.d0) then
+				elseif(flxx(i,j-1,k,QRHO).lt. 0.d0) then
 					d1 = b
 				else 
 					d1 = 0.5d0*(a+b)
 				endif
+
 				a = b
-				b = 2.d0*(-flx(i+1,j-1,k,QMAGY,1) - Ecen)
+				b = 2.d0*(-flxx(i+1,j-1,k,QMAGY) - Ecen)
+
 				if(q(i,j-1,k,QU).gt. 0.d0) then
 					d2 = a
 				elseif(q(i,j-1,k,QU).lt. 0.d0) then
@@ -878,19 +283,22 @@ implicit none
 				dd1 = 0.125d0*(d1 - d2)
 
 				call electric(q(i-1,j-1,k,:),Ecen,3)
-				a = 2.d0*(flx(i-1,j,k,QMAGX,2) - Ecen)
+				a = 2.d0*(flxy(i-1,j,k,QMAGX) - Ecen)
+
 				call electric(q(i-1,j,k,:),Ecen,3)
-				b = 2.d0*(Ecen - flx(i-1,j,k,QMAGX,2))
-				if(flx(i-1,j,k,QRHO,2).gt. 0.d0) then
+				b = 2.d0*(Ecen - flxy(i-1,j,k,QMAGX))
+
+				if(flxy(i-1,j,k,QRHO).gt. 0.d0) then
 					d1 = a
-				elseif(flx(i-1,j,k,QRHO,2).lt. 0.d0) then
+				elseif(flxy(i-1,j,k,QRHO).lt. 0.d0) then
 					d1 = b
 				else
 					d1 = 0.5d0*(a+b)
 				endif
 
 				a = b 
-				b = 2.d0*(flx(i-1,j+1,k,QMAGX,2) - Ecen) 
+				b = 2.d0*(flxy(i-1,j+1,k,QMAGX) - Ecen) 
+
 				if(q(i-1,j,k,QV).gt.0.d0) then
 					d2 = a
 				elseif(q(i-1,j,k,QV).lt. 0.d0) then
@@ -900,95 +308,12 @@ implicit none
 				endif
 				dd2 = 0.125*(d1 - d2)
 
-				E(i,j,k,3) = 0.25d0*(-flx(i,j,k,QMAGY,1) - flx(i,j-1,k,QMAGY,1) + flx(i-1,j,k,QMAGX,2) + flx(i,j,k,QMAGX,2))&
-							+ dd1 + dd2
-				if(i.eq.3.and.j.eq.11.and.k.eq.3) then
-					print*, "E z = ", E(i,j,k,3), "Fluxes = ", -flx(i,j,k,QMAGY,1), - flx(i,j-1,k,QMAGY,1), flx(i-1,j,k,QMAGX,2), flx(i,j,k,QMAGX,2)
-					print*, "Derivatives 1", dd1, "Derivatives 2", dd2
-					print*, "i, j, k = ", i, j, k
-				!	pause
-				endif
+				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
+                                                   +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2
 			enddo
-			E(flx_l1,j,k,1) = 0.25d0*(-flx(flx_l1,j,k-1,QMAGZ,2) - flx(flx_l1,j,k,QMAGZ,2) + flx(flx_l1,j-1,k,QMAGY,3) + flx(flx_l1,j,k,QMAGY,3))
-			E(flx_l1,j,k,2) = 1.d0/3.d0*(flx(flx_l1,j,k,QMAGZ,1) + flx(flx_l1,j,k-1,QMAGZ,1) - flx(flx_l1,j,k,QMAGX,3))
-			E(flx_l1,j,k,3) = 1.d0/3.d0*(-flx(flx_l1,j,k,QMAGY,1) - flx(flx_l1,j-1,k,QMAGY,1) + flx(flx_l1,j,k,QMAGX,2))
-			E(flx_h1,j,k,1) = 0.25d0*(-flx(flx_h1,j,k-1,QMAGZ,2) - flx(flx_h1,j,k,QMAGZ,2) + flx(flx_h1,j-1,k,QMAGY,3) + flx(flx_h1,j,k,QMAGY,3))
-			E(flx_h1,j,k,2) = 0.25d0*(flx(flx_h1,j,k,QMAGZ,1) + flx(flx_h1,j,k-1,QMAGZ,1) - flx(flx_h1-1,j,k,QMAGX,3) + flx(flx_h1,j,k,QMAGX,3))
-			E(flx_h1,j,k,3) = 0.25d0*(-flx(flx_h1,j,k,QMAGY,1) - flx(flx_h1,j-1,k,QMAGY,1) + flx(flx_h1-1,j,k,QMAGX,2) + flx(flx_h1,j,k,QMAGX,2))
 		enddo
-		E(flx_l1,flx_l2,k,1) = 1.d0/3.d0*(-flx(flx_l1,flx_l2,k-1,QMAGZ,2) - flx(flx_l1,flx_l2,k,QMAGZ,2) + flx(flx_l1,flx_l2,k,QMAGY,3))
-		E(flx_l1,flx_l2,k,2) = 1.d0/3.d0*(flx(flx_l1,flx_l2,k,QMAGZ,1) + flx(flx_l1,flx_l2,k-1,QMAGZ,1) - flx(flx_l1,flx_l2,k,QMAGX,3))
-		E(flx_l1,flx_l2,k,3) = 0.5d0*(-flx(flx_l1,flx_l2,k,QMAGY,1) + flx(flx_l1,flx_l2,k,QMAGX,2))
-		E(flx_h1,flx_h2,k,1) = 0.25d0*(-flx(flx_h1,flx_h2,k-1,QMAGZ,2) - flx(flx_h1,flx_h2,k,QMAGZ,2) + flx(flx_h1,flx_h2-1,k,QMAGY,3)&
-								 + flx(flx_h1,flx_h2,k,QMAGY,3))
-		E(flx_h1,flx_h2,k,2) = 0.25d0*(flx(flx_h1,flx_h2,k,QMAGZ,1) + flx(flx_h1,flx_h2,k-1,QMAGZ,1) - flx(flx_h1-1,flx_h2,k,QMAGX,3)&
-								 + flx(flx_h1,flx_h2,k,QMAGX,3))
-		E(flx_h1,flx_h2,k,3) = 0.25d0*(-flx(flx_h1,flx_h2,k,QMAGY,1) - flx(flx_h1,flx_h2-1,k,QMAGY,1) + flx(flx_h1-1,flx_h2,k,QMAGX,2)&
-								 + flx(flx_h1,flx_h2,k,QMAGX,2))
-	enddo
-	E(flx_l1,flx_l2,flx_l3,1) = 0.5d0*(-flx(flx_l1,flx_l2,flx_l3,QMAGZ,2) + flx(flx_l1,flx_l2,flx_l3,QMAGY,3))
-	E(flx_l1,flx_l2,flx_l3,2) = 0.5d0*(flx(flx_l1,flx_l2,flx_l3,QMAGZ,1)  - flx(flx_l1,flx_l2,flx_l3,QMAGX,3))
-	E(flx_l1,flx_l2,flx_l3,3) = 0.5d0*(-flx(flx_l1,flx_l2,k,QMAGY,1) + flx(flx_l1,flx_l2,k,QMAGX,2))
-	E(flx_h1,flx_h2,flx_h3,1) = 0.25d0*(-flx(flx_h1,flx_h2,flx_h3-1,QMAGZ,2) - flx(flx_h1,flx_h2,flx_h3,QMAGZ,2) + flx(flx_h1,flx_h2-1,flx_h3,QMAGY,3)&
-							 + flx(flx_h1,flx_h2,flx_h3,QMAGY,3))
-	E(flx_h1,flx_h2,flx_h3,2) = 0.25d0*(flx(flx_h1,flx_h2,flx_h3,QMAGZ,1) + flx(flx_h1,flx_h2,flx_h3-1,QMAGZ,1) - flx(flx_h1-1,flx_h2,flx_h3,QMAGX,3)&
-							 + flx(flx_h1,flx_h2,flx_h3,QMAGX,3))
-	E(flx_h1,flx_h2,flx_h3,3) = 0.25d0*(-flx(flx_h1,flx_h2,flx_h3,QMAGY,1) - flx(flx_h1,flx_h2-1,flx_h3,QMAGY,1) + flx(flx_h1-1,flx_h2,flx_h3,QMAGX,2)&
-							 + flx(flx_h1,flx_h2,flx_h3,QMAGX,2))
-	
-	do j = flx_l2+1,flx_h2-1
-		do i = flx_l1+1,flx_h1-1
-			E(i,j,flx_l3,1) = 1.d0/3.d0*(-flx(i,j,flx_l3,QMAGZ,2) + flx(i,j-1,flx_l3,QMAGY,3) + flx(i,j,flx_l3,QMAGY,3))
-			E(i,j,flx_l3,2) =1.d0/3.d0*(flx(i,j,flx_l3,QMAGZ,1) - flx(i-1,j,flx_l3,QMAGX,3) - flx(i,j,flx_l3,QMAGX,3))
-			E(i,j,flx_l3,3) = 0.25d0*(-flx(i,j,flx_l3,QMAGY,1) - flx(i,j-1,flx_l3,QMAGY,1) + flx(i-1,j,flx_l3,QMAGX,2) + flx(i,j,flx_l3,QMAGX,2))
-			E(i,j,flx_h3,1) = 0.25d0*(-flx(i,j,flx_h3-1,QMAGZ,2) - flx(i,j,flx_h3,QMAGZ,2) + flx(i,j-1,flx_h3,QMAGY,3) + flx(i,j,flx_h3,QMAGY,3))
-			E(i,j,flx_h3,2) = 0.25d0*(flx(i,j,flx_h3,QMAGZ,1) + flx(i,j,flx_h3-1,QMAGZ,1) - flx(i-1,j,flx_h3,QMAGX,3) - flx(i,j,flx_h3,QMAGX,3))
-			E(i,j,flx_h3,3) = 0.25d0*(-flx(i,j,flx_h3,QMAGY,1) - flx(i,j-1,flx_h3,QMAGY,1) + flx(i-1,j,flx_h3,QMAGX,2) + flx(i,j,flx_h3,QMAGX,2))
-		enddo
-		E(flx_l1,j,flx_l3,1) = 1.d0/3.d0*(-flx(flx_l1,j,flx_l3,QMAGZ,2) + flx(flx_l1,j-1,flx_l3,QMAGY,3) + flx(flx_l1,j,flx_l3,QMAGY,3))
-		E(flx_l1,j,flx_l3,2) = 0.5d0*(flx(flx_l1,j,flx_l3,QMAGZ,1) - flx(flx_l1,j,flx_l3,QMAGX,3))
-		E(flx_l1,j,flx_l3,3) = 1.d0/3.d0*(-flx(flx_l1,j,flx_l3,QMAGY,1) - flx(flx_l1,j-1,flx_l3,QMAGY,1) + flx(flx_l1,j,flx_l3,QMAGX,2))
-		E(flx_h1,j,flx_h3,1) = 0.25d0*(-flx(flx_h1,j,flx_h3-1,QMAGZ,2) - flx(flx_h1,j,flx_h3,QMAGZ,2) + flx(flx_h1,j-1,flx_h3,QMAGY,3)&
-								 + flx(flx_h1,j,flx_h3,QMAGY,3))
-		E(flx_h1,j,flx_h3,2) = 0.25d0*(flx(flx_h1,j,flx_h3,QMAGZ,1) + flx(flx_h1,j,flx_h3-1,QMAGZ,1) - flx(flx_h1-1,j,flx_h3,QMAGX,3)&
-								 - flx(flx_h1,j,flx_h3,QMAGX,3))
-		E(flx_h1,j,flx_h3,3) = 0.25d0*(-flx(flx_h1,j,flx_h3,QMAGY,1) - flx(flx_h1,j-1,flx_h3,QMAGY,1) + flx(flx_h1-1,j,flx_h3,QMAGX,2)&
-								 + flx(flx_h1,j,flx_h3,QMAGX,2))
-	enddo
-
-	do k = flx_l3+1,flx_h3-1
-		do i = flx_l1+1,flx_h1-1
-			E(i,flx_l2,k,1) = 1.d0/3.d0*(-flx(i,flx_l2,k-1,QMAGZ,2) - flx(i,flx_l2,k,QMAGZ,2) + flx(i,flx_l2,k,QMAGY,3))
-			E(i,flx_l2,k,2) = 0.25d0*(flx(i,flx_l2,k,QMAGZ,1) + flx(i,flx_l2,k-1,QMAGZ,1) - flx(i-1,flx_l2,k,QMAGX,3) - flx(i,flx_l2,k,QMAGX,3))
-			E(i,flx_l2,k,3) = 1.d0/3.d0*(-flx(i,flx_l2,k,QMAGY,1) + flx(i-1,flx_l2,k,QMAGX,2) + flx(i,flx_l2,k,QMAGX,2))
-			E(i,flx_h2,k,1) = 0.25d0*(-flx(i,flx_h2,k-1,QMAGZ,2) - flx(i,flx_h2,k,QMAGZ,2) + flx(i,flx_h2-1,k,QMAGY,3) + flx(i,flx_h2,k,QMAGY,3))	
-			E(i,flx_h2,k,2) = 0.25d0*(flx(i,flx_h2,k,QMAGZ,1) + flx(i,flx_h2,k-1,QMAGZ,1) - flx(i-1,flx_h2,k,QMAGX,3) - flx(i,flx_h2,k,QMAGX,3))
-			E(i,flx_h2,k,3) = 0.25d0*(-flx(i,flx_h2,k,QMAGY,1) - flx(i,flx_h2-1,k,QMAGY,1) + flx(i-1,flx_h2,k,QMAGX,2) + flx(i,flx_h2,k,QMAGX,2))
-		enddo
-			E(flx_l1,flx_l2,k,1) = 1.d0/3.d0*(-flx(flx_l1,flx_l2,k-1,QMAGZ,2) - flx(flx_l1,flx_l2,k,QMAGZ,2) + flx(flx_l1,flx_l2,k,QMAGY,3))
-			E(flx_l1,flx_l2,k,2) = 1.d0/3.d0*(flx(flx_l1,flx_l2,k,QMAGZ,1) + flx(flx_l1,flx_l2,k-1,QMAGZ,1) - flx(flx_l1,flx_l2,k,QMAGX,3))
-			E(flx_l1,flx_l2,k,3) = 0.5d0*(-flx(flx_l1,flx_l2,k,QMAGY,1) + flx(flx_l1,flx_l2,k,QMAGX,2))
-			E(flx_h1,flx_h2,k,1) = 0.25d0*(-flx(flx_h1,flx_h2,k-1,QMAGZ,2) - flx(flx_h1,flx_h2,k,QMAGZ,2) + flx(flx_h1,flx_h2-1,k,QMAGY,3)&
-									 + flx(flx_h1,flx_h2,k,QMAGY,3))	
-			E(flx_h1,flx_h2,k,2) = 0.25d0*(flx(flx_h1,flx_h2,k,QMAGZ,1) + flx(flx_h1,flx_h2,k-1,QMAGZ,1) - flx(flx_h1-1,flx_h2,k,QMAGX,3)&
-									 - flx(flx_h1,flx_h2,k,QMAGX,3))
-			E(flx_h1,flx_h2,k,3) = 0.25d0*(-flx(flx_h1,flx_h2,k,QMAGY,1) - flx(flx_h1,flx_h2-1,k,QMAGY,1) + flx(flx_h1-1,flx_h2,k,QMAGX,2)&
-									 + flx(flx_h1,flx_h2,k,QMAGX,2))
 	enddo
 	
-	do i = flx_l1+1,flx_h1-1
-		E(i,flx_l2,flx_l3,1) = 0.5d0*(- flx(i,flx_l2,flx_l3,QMAGZ,2) + flx(i,flx_l2,flx_l3,QMAGY,3))
-		E(i,flx_l2,flx_l3,2) = 1.d0/3.d0*(flx(i,flx_l2,flx_l3,QMAGZ,1)- flx(i-1,flx_l2,flx_l3,QMAGX,3) - flx(i,flx_l2,flx_l3,QMAGX,3))
-		E(i,flx_l2,flx_l3,3) = 1.d0/3.d0*(-flx(i,flx_l2,flx_l3,QMAGY,1) + flx(i-1,flx_l2,flx_l3,QMAGX,2) + flx(i,flx_l2,flx_l3,QMAGX,2))
-		E(i,flx_h2,flx_h3,1) = 0.25d0*(-flx(i,flx_h2,flx_h3-1,QMAGZ,2) - flx(i,flx_h2,flx_h3,QMAGZ,2) + flx(i,flx_h2-1,flx_h3,QMAGY,3)&
-								 + flx(i,flx_h2,flx_h3,QMAGY,3))	
-		E(i,flx_h2,flx_h3,2) = 0.25d0*(flx(i,flx_h2,flx_h3,QMAGZ,1) + flx(i,flx_h2,flx_h3-1,QMAGZ,1) - flx(i-1,flx_h2,flx_h3,QMAGX,3)&
-								 - flx(i,flx_h2,flx_h3,QMAGX,3))
-		E(i,flx_h2,flx_h3,3) = 0.25d0*(-flx(i,flx_h2,flx_h3,QMAGY,1) - flx(i,flx_h2-1,flx_h3,QMAGY,1) + flx(i-1,flx_h2,flx_h3,QMAGX,2)&
-								 + flx(i,flx_h2,flx_h3,QMAGX,2))
-	enddo
+end subroutine electric_edge_z
 
-	print*, "E z = ", E(3,11,3,3), "Fluxes = ", -flx(3,11,3,QMAGY,1), - flx(3,10,3,QMAGY,1), flx(2,11,3,QMAGX,2), flx(3,11,3,QMAGX,2)
-	!pause
-end subroutine electric_edge
 end module electric_field
