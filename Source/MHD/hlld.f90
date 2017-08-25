@@ -170,32 +170,44 @@ implicit none
 	!u
 	UssL(QU)    = sM
 	UssR(QU)    = sM
+
 	!v
-	UssL(QV)    = (sqrt(UsL(QRHO))*UsL(QV)/UsL(QRHO) + sqrt(UsR(QRHO))*UsR(QV)/UsR(QRHO) &
-				+ (UsR(QMAGY) - UsL(QMAGY))*sign(1.d0,qL(QMAGX)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+	UssL(QV)    = (sqrt(UsL(QRHO))*UsL(QV)/UsL(QRHO) + &
+                       sqrt(UsR(QRHO))*UsR(QV)/UsR(QRHO) + &
+		    + (UsR(QMAGY) - UsL(QMAGY)) * sign(1.d0,qL(QMAGX)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QV)    = UssL(QV)
+
 	!w
 	UssL(QW)    = (sqrt(UsL(QRHO))*UsL(QW)/UsL(QRHO) + sqrt(UsR(QRHO))*UsR(QW)/UsR(QRHO) &
-				+ (UsR(QMAGZ) - UsL(QMAGZ))*sign(1.d0,qL(QMAGX)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+		    + (UsR(QMAGZ) - UsL(QMAGZ)) * sign(1.d0,qL(QMAGX)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QW)    = UssL(QW)
 	UssL(QU:QW) = UssL(QU:QW)*UssL(QRHO)
 	UssR(QU:QW) = UssR(QU:QW)*UssR(QRHO)
+
 	!Bx
 	UssL(QMAGX) = UsL(QMAGX)
 	UssR(QMAGX) = UsR(QMAGX)
+
 	!By
-	UssL(QMAGY) = (sqrt(UsL(QRHO))*UsR(QMAGY) + sqrt(UsR(QRHO))*UsL(QMAGY) + sqrt(UsL(QRHO)*UsR(QRHO))*(UsR(QV)/UsR(QRHO) - UsL(QV)/UsL(QRHO))&
-					*sign(1.d0,UsR(QMAGX)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+	UssL(QMAGY) = (sqrt(UsL(QRHO))*UsR(QMAGY) + &
+                       sqrt(UsR(QRHO))*UsL(QMAGY) + &
+                       sqrt(UsL(QRHO)*UsR(QRHO)) * (UsR(QV)/UsR(QRHO) - UsL(QV)/UsL(QRHO)) * sign(1.d0,UsR(QMAGX)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QMAGY) = UssL(QMAGY)
+
 	!Bz
-	UssL(QMAGZ) = (sqrt(UsL(QRHO))*UsR(QMAGZ) + sqrt(UsR(QRHO))*UsL(QMAGZ) + sqrt(UsL(QRHO)*UsR(QRHO))*(UsR(QW)/UsR(QRHO) - UsL(QW)/UsL(QRHO))&
-					*sign(1.d0,UsR(QMAGX)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+	UssL(QMAGZ) = (sqrt(UsL(QRHO))*UsR(QMAGZ) + &
+                       sqrt(UsR(QRHO))*UsL(QMAGZ) + &
+                       sqrt(UsL(QRHO)*UsR(QRHO)) * (UsR(QW)/UsR(QRHO) - UsL(QW)/UsL(QRHO)) * sign(1.d0,UsR(QMAGX)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QMAGZ) = UssL(QMAGZ)
+
 	!Energy *Stored in Pressure slot
+
 	UssL(QPRES) = UsL(QPRES) - sqrt(UsL(QRHO))*(dot_product(UsL(QU:QW)/UsL(QRHO),UsL(QMAGX:QMAGZ)) &
-				- dot_product(UssL(QU:QW)/UssL(QRHO),UssL(QMAGX:QMAGZ)))*sign(1.d0, UsL(QMAGX))
+				- dot_product(UssL(QU:QW)/UssL(QRHO),UssL(QMAGX:QMAGZ))) * sign(1.d0, UsL(QMAGX))
+
 	UssR(QPRES) = UsR(QPRES) + sqrt(UsR(QRHO))*(dot_product(UsR(QU:QW)/UsR(QRHO),UsR(QMAGX:QMAGZ)) &
-				- dot_product(UssR(QU:QW)/UssR(QRHO),UssR(QMAGX:QMAGZ)))*sign(1.d0, UsR(QMAGX))
+				- dot_product(UssR(QU:QW)/UssR(QRHO),UssR(QMAGX:QMAGZ))) * sign(1.d0, UsR(QMAGX))
+
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
 	FsL  = FL + sL*(UsL - uL)
 	FssL = FsL + ssL*(UssL - UsL)
@@ -404,37 +416,44 @@ implicit none
 	!Dens
 	UssL(QRHO)  = UsL(QRHO)
 	UssR(QRHO)  = UsR(QRHO)
+
 	!u
 	UssL(QU)    = (sqrt(UsL(QRHO))*UsL(QU)/UsL(QRHO) + sqrt(UsR(QRHO))*UsR(QU)/UsR(QRHO)&
-				+ (UsR(QMAGX) - UsL(QMAGX))*sign(1.d0,qL(QMAGY)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+		    + (UsR(QMAGX) - UsL(QMAGX))*sign(1.d0,qL(QMAGY)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QU)    = UssL(QU)
+
 	!v
 	UssL(QV)    = sM
 	UssR(QV)    = sM
+
 	!w
 	UssL(QW)    = (sqrt(UsL(QRHO))*UsL(QW)/UsL(QRHO) + sqrt(UsR(QRHO))*UsR(QW)/UsR(QRHO)&
-				+ (UsR(QMAGZ) - UsL(QMAGZ))*sign(1.d0,qL(QMAGY)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+		    + (UsR(QMAGZ) - UsL(QMAGZ))*sign(1.d0,qL(QMAGY)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QW)    = UssL(QW)
 
 	UssL(QU:QW) = UssL(QU:QW)*UssL(QRHO)
 	UssR(QU:QW) = UssR(QU:QW)*UssR(QRHO)
 
 	!Bx
-	UssL(QMAGX) = (sqrt(UsL(QRHO))*UsR(QMAGX) + sqrt(UsR(QRHO))*UsL(QMAGX) + sqrt(UsL(QRHO)*UsR(QRHO))&
-				*(UsR(QU)/UsR(QRHO) - UsL(QU)/UsR(QRHO))*sign(1.d0,UsR(QMAGY)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+	UssL(QMAGX) = (sqrt(UsL(QRHO))*UsR(QMAGX) + sqrt(UsR(QRHO))*UsL(QMAGX) + sqrt(UsL(QRHO)*UsR(QRHO)) * &
+                      ( UsR(QU)/UsR(QRHO) - UsL(QU)/UsR(QRHO)) * sign(1.d0,UsR(QMAGY)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QMAGX) = UssL(QMAGX)
 	!By
 	UssL(QMAGY) = UsL(QMAGY)
 	UssR(QMAGY) = UsR(QMAGY)
 	!Bz
-	UssL(QMAGZ) = (sqrt(UsL(QRHO))*UsR(QMAGZ) + sqrt(UsR(QRHO))*UsL(QMAGZ) + sqrt(UsL(QRHO)*UsR(QRHO))&
-				*(UsR(QW)/UsR(QRHO) - UsL(QW)/UsL(QRHO))*sign(1.d0,UsR(QMAGY)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+	UssL(QMAGZ) = (sqrt(UsL(QRHO))*UsR(QMAGZ) + sqrt(UsR(QRHO))*UsL(QMAGZ) + &
+                       sqrt(UsL(QRHO)*UsR(QRHO))*( UsR(QW)/UsR(QRHO) - UsL(QW)/UsL(QRHO) ) * sign(1.d0,UsR(QMAGY)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QMAGZ) = UssL(QMAGZ)
+
 	!Energy *Stored in Pressure slot
+
 	UssL(QPRES) = UsL(QPRES) - sqrt(UsL(QRHO))*(dot_product(UsL(QU:QW)/UsL(QRHO),UsL(QMAGX:QMAGZ)) &
-				- dot_product(UssL(QU:QW)/UssL(QRHO),UssL(QMAGX:QMAGZ)))*sign(1.d0, UsR(QMAGY))
+				 - dot_product(UssL(QU:QW)/UssL(QRHO),UssL(QMAGX:QMAGZ)))*sign(1.d0, UsL(QMAGY))
+
 	UssR(QPRES) = UsR(QPRES) + sqrt(UsR(QRHO))*(dot_product(UsR(QU:QW)/UsR(QRHO),UsR(QMAGX:QMAGZ)) &
-				- dot_product(UssR(QU:QW)/UssR(QRHO),UssR(QMAGX:QMAGZ)))*sign(1.d0, UsR(QMAGY))
+				 - dot_product(UssR(QU:QW)/UssR(QRHO),UssR(QMAGX:QMAGZ)))*sign(1.d0, UsR(QMAGY))
+
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
 	FsL  = FL + sL*(UsL - uL)
 	FssL = FsL + ssL*(UssL - UsL)
@@ -597,11 +616,11 @@ implicit none
 	UssR(QRHO)  = UsR(QRHO)
 	!u
 	UssL(QU)    = (sqrt(UsL(QRHO))*UsL(QU)/UsL(QRHO) + sqrt(UsR(QRHO))*UsR(QU)/UsR(QRHO)&
-				+ (UsR(QMAGX) - UsL(QMAGX))*sign(1.d0,qL(QMAGZ)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+		     + (UsR(QMAGX) - UsL(QMAGX))*sign(1.d0,qL(QMAGZ)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QU)    = UssL(QU)
 	!v
 	UssL(QV)    = (sqrt(UsL(QRHO))*UsL(QV)/UsL(QRHO) + sqrt(UsR(QRHO))*UsR(QV)/UsR(QRHO)&
-				+ (UsR(QMAGY) - UsL(QMAGY))*sign(1.d0,qL(QMAGZ)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+		    + (UsR(QMAGY) - UsL(QMAGY))*sign(1.d0,qL(QMAGZ)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QV)    = UssL(QW)
 	!w
 	UssL(QW)    = sM
@@ -611,21 +630,24 @@ implicit none
 	UssR(QU:QW) = UssR(QU:QW)*UssR(QRHO)
 
 	!Bx
-	UssL(QMAGX) = (sqrt(UsL(QRHO))*UsR(QMAGX) + sqrt(UsR(QRHO))*UsL(QMAGX) + sqrt(UsL(QRHO)*UsR(QRHO))*(UsR(QU) - UsL(QU))*sign(1.d0,UsR(QMAGZ)))&
-				   /(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+	UssL(QMAGX) = (sqrt(UsL(QRHO))*UsR(QMAGX) + sqrt(UsR(QRHO))*UsL(QMAGX) + &
+                       sqrt(UsL(QRHO)*UsR(QRHO))*(UsR(QU) - UsL(QU))*sign(1.d0,UsR(QMAGZ)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QMAGX) = UssL(QMAGX)
 	!By
-	UssL(QMAGY) = (sqrt(UsL(QRHO))*UsR(QMAGY) + sqrt(UsR(QRHO))*UsL(QMAGY) + sqrt(UsL(QRHO)*UsR(QRHO))*(UsR(QV) - UsL(QV))*sign(1.d0,UsR(QMAGZ)))&
-				   /(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
+	UssL(QMAGY) = (sqrt(UsL(QRHO))*UsR(QMAGY) + sqrt(UsR(QRHO))*UsL(QMAGY) + &
+                       sqrt(UsL(QRHO)*UsR(QRHO))*(UsR(QV) - UsL(QV))*sign(1.d0,UsR(QMAGZ)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QMAGY) = UssL(QMAGY)
 	!Bz
 	UssL(QMAGZ) = UsL(QMAGZ)
 	UssR(QMAGZ) = UsR(QMAGZ)
+
 	!Energy *Stored in Pressure slot
+
 	UssL(QPRES) = UsL(QPRES) - sqrt(UsL(QRHO))*(dot_product(UsL(QU:QW)/UsL(QRHO),UsL(QMAGX:QMAGZ))&
-				- dot_product(UssL(QU:QW)/UssL(QRHO),UssL(QMAGX:QMAGZ)))*sign(1.d0, UsR(QMAGZ))
+				- dot_product(UssL(QU:QW)/UssL(QRHO),UssL(QMAGX:QMAGZ)))*sign(1.d0, UsL(QMAGZ))
 	UssR(QPRES) = UsR(QPRES) + sqrt(UsR(QRHO))*(dot_product(UsR(QU:QW)/UsR(QRHO),UsR(QMAGX:QMAGZ))&
 				- dot_product(UssR(QU:QW)/UssR(QRHO),UssR(QMAGX:QMAGZ)))*sign(1.d0, UsR(QMAGZ))
+
 	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
 	FsL  = FL + sL*(UsL - uL)
 	FssL = FsL + ssL*(UssL - UsL)
