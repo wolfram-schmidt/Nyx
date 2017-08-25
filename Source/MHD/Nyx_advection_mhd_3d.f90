@@ -409,7 +409,6 @@ end subroutine fort_advance_mhd
       integer          :: ngp, ngf, loq(3), hiq(3)
       integer          :: n, nq
       integer          :: iadv, ispec
-	  integer		   :: btile(3)
       real(rt) :: courx, coury, courz, courmx, courmy, courmz
       real(rt) :: a_half, a_dot, rhoInv
       real(rt) :: dtdxaold, dtdyaold, dtdzaold, small_pres_over_dens
@@ -666,7 +665,7 @@ end subroutine fort_advance_mhd
                           lo,hi,dx,dy,dz,dt,a_old,a_new)
 
      use amrex_fort_module, only : rt => amrex_real
-     use meth_params_module, only : QVAR, QRHO, UMX,UMY,UMZ, QPRES, NVAR, URHO, UEDEN, UEINT
+     use meth_params_module, only : QVAR, UMX,UMY,UMZ, NVAR, URHO, UEDEN, UEINT
 
 	implicit none
 
