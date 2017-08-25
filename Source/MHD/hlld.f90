@@ -1,63 +1,12 @@
 module hlld_solver
 
    implicit none
-   private hlld_dir
    public  hlld
 
 contains
 
 subroutine hlld(qm,qp,qRd_l1,qRd_l2,qRd_l3,qRd_h1,qRd_h2,qRd_h3, &
-                flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3, &
-				dir)
- use amrex_fort_module, only : rt => amrex_real
- use meth_params_module!, only: QVAR
-
-   integer, intent(in)   :: qRd_l1,qRd_l2,qRd_l3,qRd_h1,qRd_h2,qRd_h3
-   integer, intent(in)   :: flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
-   integer, intent(in)   :: dir
-
-   real(rt), intent(in)  :: qm(qRd_l1:qRd_h1,qRd_l2:qRd_h2,qRd_l3:qRd_h3,QVAR)
-   real(rt), intent(in)  :: qp(qRd_l1:qRd_h1,qRd_l2:qRd_h2,qRd_l3:qRd_h3,QVAR)
-   real(rt), intent(out) :: flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR)
-	
-   integer				  :: i, j, k
-
-   if (dir.eq.1) then
-
-	do k = flx_l3, flx_h3
-	do j = flx_l2, flx_h2
-	do i = flx_l1, flx_h1
-	   call hlld_dir(i,j,k,qp(i-1,j,k,:),qm(i,j,k,:),flx(i,j,k,:),dir)
-	enddo
-	enddo
-	enddo
-
-    elseif (dir.eq.2) then
-
-	do k = flx_l3, flx_h3
-	do j = flx_l2, flx_h2
-	do i = flx_l1, flx_h1
-	   call hlld_dir(i,j,k,qp(i,j-1,k,:),qm(i,j,k,:),flx(i,j,k,:),dir)
-	enddo
-	enddo
-	enddo
-
-    else 
-
-	do k = flx_l3, flx_h3
-	do j = flx_l2, flx_h2
-	do i = flx_l1, flx_h1
-	   call hlld_dir(i,j,k,qp(i,j,k-1,:),qm(i,j,k,:),flx(i,j,k,:),dir)
-	enddo
-	enddo
-	enddo
-   endif
-
-end subroutine hlld
-
-!====================================================== Fluxes ================================================================================
-
-subroutine hlld_dir(i,j,k,qL,qR,flx,dir)
+                flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,dir)
 
   !Riemann solve:
   !Main assumption, the normal velocity/Mag field is constant in the Riemann fan, and is sM/By respectively. 
@@ -66,13 +15,17 @@ subroutine hlld_dir(i,j,k,qL,qR,flx,dir)
    use amrex_fort_module, only : rt => amrex_real
    use meth_params_module
 
-   integer , intent(in)    :: i,j,k,dir
-   real(rt), intent(in)    :: qL(QVAR)
-   real(rt), intent(in)    :: qR(QVAR)
-   real(rt), intent(inout) :: flx(QVAR)
+   integer, intent(in)   :: qRd_l1,qRd_l2,qRd_l3,qRd_h1,qRd_h2,qRd_h3
+   integer, intent(in)   :: flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
+   integer, intent(in)   :: dir
+
+   real(rt), intent(in)  :: qm(qRd_l1:qRd_h1,qRd_l2:qRd_h2,qRd_l3:qRd_h3,QVAR,3)
+   real(rt), intent(in)  :: qp(qRd_l1:qRd_h1,qRd_l2:qRd_h2,qRd_l3:qRd_h3,QVAR,3)
+   real(rt), intent(out) :: flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR)
 
    real(rt)	  :: cfL, cfR, sL, sR, sM, ssL, ssR, pst, caL, canL
    real(rt) 	  :: caR, canR, asL, asR, ptL, ptR, eL, eR
+   real(rt)	  :: QL(QVAR), QR(QVAR)
    real(rt)	  :: FL(QVAR), FR(QVAR)
    real(rt)       :: uL(QVAR), uR(QVAR)
    real(rt)	  :: UsL(QVAR), FsL(QVAR)
@@ -83,9 +36,8 @@ subroutine hlld_dir(i,j,k,qL,qR,flx,dir)
    integer           :: QVELN, QVELP1, QVELP2
    integer           :: QMAGN, QMAGP1, QMAGP2
    integer           :: UMN  , UMP1  , UMP2
+   integer           :: i,j,k
    character(len=10) :: choice
-
-   flx = 0.d0; FL  = 0.d0; FR = 0.d0; UsL = 0.d0; UsR = 0.d0; FsL = 0.d0; FsR = 0.d0; UssL = 0.d0; UssR = 0.d0; FssL = 0.d0; FssR = 0.d0
 
    if (dir .eq. 1) then
       QMAGN  = QMAGX
@@ -119,36 +71,53 @@ subroutine hlld_dir(i,j,k,qL,qR,flx,dir)
       UMP2   = UMY
    end if
 
-   call PToC(qL,uL)
-   call PToC(qR,uR)
+   do k = flx_l3, flx_h3
+   do j = flx_l2, flx_h2
+   do i = flx_l1, flx_h1
 
-   ! Note this is actually (rho e)
-   eL   = (qL(QPRES) - 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)))/(gamma_minus_1) &
-                     + 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)) &
-	             + 0.5d0*dot_product(qL(QU:QW),qL(QU:QW))*qL(QRHO)
+      if (dir .eq. 1) then
+         qL(:) = qp(i-1,j,k,:,dir)
+      else if (dir .eq. 2) then
+         qL(:) = qp(i,j-1,k,:,dir)
+      else if (dir .eq. 3) then
+         qL(:) = qp(i,j,k-1,:,dir)
+      end if
 
-   FL(URHO)  = qL(QRHO)*qL(QVELN)
-   FL(UMN)   = qL(QRHO)*qL(QVELN)**2 + qL(QPRES) - qL(QMAGN)**2
-   FL(UMP1)  = qL(QRHO)*qL(QVELN)*qL(QVELP1) - qL(QMAGN)*qL(QMAGP1)
-   FL(UMP2)  = qL(QRHO)*qL(QVELN)*qL(QVELP2) - qL(QMAGN)*qL(QMAGP2)
-   FL(UEDEN) = qL(QVELN)*(eL + qL(QPRES)) - qL(QMAGN)*dot_product(qL(QMAGX:QMAGZ),qL(QU:QW))
-   FL(QMAGN) = 0.d0
-   FL(QMAGP1) = qL(QVELN)*qL(QMAGP1) - qL(QVELP1)*qL(QMAGN)
-   FL(QMAGP2) = qL(QVELN)*qL(QMAGP2) - qL(QVELP2)*qL(QMAGN)
+      qR(:) = qm(i,j,k,:,dir)
 
-   ! Note this is actually (rho e)
-   eR   = (qR(QPRES) - 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)))/(gamma_minus_1) &
-                     + 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)) &
-	             + 0.5d0*dot_product(qR(QU:QW),qR(QU:QW))*qR(QRHO)
+      flx(i,j,k,:) = 0.d0  
+      FL  = 0.d0; FR = 0.d0; UsL = 0.d0; UsR = 0.d0; FsL = 0.d0; FsR = 0.d0; UssL = 0.d0; UssR = 0.d0; FssL = 0.d0; FssR = 0.d0
 
-   FR(URHO)  = qR(QRHO)*qR(QVELN)
-   FR(UMN)   = qR(QRHO)*qR(QVELN)**2 + qR(QPRES) - qR(QMAGN)**2
-   FR(UMP1)  = qR(QRHO)*qR(QVELN)*qR(QVELP1) - qR(QMAGN)*qR(QMAGP1)
-   FR(UMP2)  = qR(QRHO)*qR(QVELN)*qR(QVELP2) - qR(QMAGN)*qR(QMAGP2)
-   FR(UEDEN) = qR(QVELN)*(eR + qR(QPRES)) - qR(QMAGN)*dot_product(qR(QMAGX:QMAGZ),qR(QU:QW))
-   FR(QMAGN) = 0.d0
-   FR(QMAGP1) = qR(QVELN)*qR(QMAGP1) - qR(QVELP1)*qR(QMAGN)
-   FR(QMAGP2) = qR(QVELN)*qR(QMAGP2) - qR(QVELP2)*qR(QMAGN)
+      call PToC(qL,uL)
+      call PToC(qR,uR)
+
+      ! Note this is actually (rho e)
+      eL   = (qL(QPRES) - 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)))/(gamma_minus_1) &
+                        + 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)) &
+   	                + 0.5d0*dot_product(qL(QU:QW),qL(QU:QW))*qL(QRHO)
+
+      FL(URHO)  = qL(QRHO)*qL(QVELN)
+      FL(UMN)   = qL(QRHO)*qL(QVELN)**2 + qL(QPRES) - qL(QMAGN)**2
+      FL(UMP1)  = qL(QRHO)*qL(QVELN)*qL(QVELP1) - qL(QMAGN)*qL(QMAGP1)
+      FL(UMP2)  = qL(QRHO)*qL(QVELN)*qL(QVELP2) - qL(QMAGN)*qL(QMAGP2)
+      FL(UEDEN) = qL(QVELN)*(eL + qL(QPRES)) - qL(QMAGN)*dot_product(qL(QMAGX:QMAGZ),qL(QU:QW))
+      FL(QMAGN) = 0.d0
+      FL(QMAGP1) = qL(QVELN)*qL(QMAGP1) - qL(QVELP1)*qL(QMAGN)
+      FL(QMAGP2) = qL(QVELN)*qL(QMAGP2) - qL(QVELP2)*qL(QMAGN)
+
+      ! Note this is actually (rho e)
+      eR   = (qR(QPRES) - 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)))/(gamma_minus_1) &
+                        + 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)) &
+      	                + 0.5d0*dot_product(qR(QU:QW),qR(QU:QW))*qR(QRHO)
+
+      FR(URHO)  = qR(QRHO)*qR(QVELN)
+      FR(UMN)   = qR(QRHO)*qR(QVELN)**2 + qR(QPRES) - qR(QMAGN)**2
+      FR(UMP1)  = qR(QRHO)*qR(QVELN)*qR(QVELP1) - qR(QMAGN)*qR(QMAGP1)
+      FR(UMP2)  = qR(QRHO)*qR(QVELN)*qR(QVELP2) - qR(QMAGN)*qR(QMAGP2)
+      FR(UEDEN) = qR(QVELN)*(eR + qR(QPRES)) - qR(QMAGN)*dot_product(qR(QMAGX:QMAGZ),qR(QU:QW))
+      FR(QMAGN) = 0.d0
+      FR(QMAGP1) = qR(QVELN)*qR(QMAGP1) - qR(QVELP1)*qR(QMAGN)
+      FR(QMAGP2) = qR(QVELN)*qR(QMAGP2) - qR(QVELP2)*qR(QMAGN)
 
 	asL  = gamma_const * (qL(QPRES) - 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)))/qL(QRHO)
 	asR  = gamma_const * (qR(QPRES) - 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)))/qR(QRHO)
@@ -310,27 +279,30 @@ subroutine hlld_dir(i,j,k,qL,qR,flx,dir)
 
 	!Solve the RP
 	if(sL .gt. 0.d0) then
-	   flx = FL
+	   flx(i,j,k,:) = FL
 	   choice = "FL"
 	elseif(sL .le. 0.d0 .and. ssL .gt. 0.d0) then
-	   flx = FsL
+	   flx(i,j,k,:) = FsL
 	   choice = "FsL"
 	elseif(ssL .le. 0.d0 .and. sM .gt. 0.d0) then
-	   flx = FssL
+	   flx(i,j,k,:) = FssL
 	   choice = "FssL"
 	elseif(sM .le. 0.d0 .and. ssR .gt. 0.d0) then
-	   flx = FssR
+	   flx(i,j,k,:) = FssR
 	   choice = "FssR"
 	elseif(ssR .le. 0.d0 .and. sR .gt. 0.d0) then
-	   flx = FsR
+	   flx(i,j,k,:) = FsR
 	   choice = "FsR"
 	else 
-	   flx = FR
+	   flx(i,j,k,:) = FR
 	   choice = "FR"
 	endif
 
-end subroutine hlld_dir
+   end do
+   end do
+   end do
 
+end subroutine hlld
 
 !================================================= Calculate the Conservative Variables ===============================================
 
