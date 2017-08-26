@@ -707,8 +707,8 @@
 !-----------------------------------------------------------------------
 
       subroutine dermomt(vel,vel_l1,vel_l2,vel_l3,vel_h1,vel_h2,vel_h3,nv, &
-                           dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc,lo,hi,domlo, &
-                           domhi,delta,xlo,time,dt,bc,level,grid_no)
+                         dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc,lo,hi,domlo, &
+                         domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
       ! This routine computes Mom + Mom*Sdens/Density
       !
@@ -744,11 +744,11 @@
 !------------------------------------------------------------------------------
 
    subroutine dermagcenx(mag_cen_x,mag_x_l1,mag_x_l2,mag_x_l3,mag_x_h1,mag_x_h2,mag_x_h3, nbx, &
-                              dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
-                              lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
+                         dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
+                         lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
       ! This routine will derive cell centered magnetic field in x direction
-      ! mag_cen_x = 1/2 (mag_x(i,j,k) + mag_x(i-1,j,k))
+      ! mag_cen_x = 1/2 (mag_x(i,j,k) + mag_x(i+1,j,k))
       !
       use amrex_fort_module, only : rt => amrex_real
       implicit none
@@ -762,16 +762,15 @@
       real(rt) mag_cen_x(mag_x_l1:mag_x_h1,mag_x_l2:mag_x_h2,mag_x_l3:mag_x_h3,nbx)
       real(rt)    dat(dat_l1:dat_h1,dat_l2:dat_h2,dat_l3:dat_h3,nc)
       integer    level, grid_no
+      integer    i,j,k
 
-      integer i,j,k
       ! 
       ! Here dat contains (mag_x)
       ! 
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
-		mag_cen_x(lo(1),j,k,1) = dat(lo(1),j,k,1)
-            do i = lo(1)+1, hi(1)
-    		mag_cen_x(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i-1,j,k,1))
+            do i = lo(1), hi(1)
+  		mag_cen_x(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i+1,j,k,1))
             end do
          end do
       end do
@@ -781,11 +780,11 @@
 !------------------------------------------------------------------------------
 
    subroutine dermagceny(mag_cen_y,mag_y_l1,mag_y_l2,mag_y_l3,mag_y_h1,mag_y_h2,mag_y_h3, nby, &
-                              dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
-                              lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
+                         dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
+                         lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
       ! This routine will derive cell centered magnetic field in y direction
-      ! mag_cen_y = 1/2 (mag_y(i,j,k) + mag_y(i,j-1,k))
+      ! mag_cen_y = 1/2 (mag_y(i,j,k) + mag_y(i,j+1,k))
       !
       use amrex_fort_module, only : rt => amrex_real
       implicit none
@@ -805,10 +804,9 @@
       ! Here dat contains (mag_y)
       ! 
       do k = lo(3), hi(3)
-         do j = lo(2)+1, hi(2)
+         do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-		mag_cen_y(i,lo(2),k,1) = dat(i,lo(2),k,1)
-    		mag_cen_y(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i,j-1,k,1))
+    		mag_cen_y(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i,j+1,k,1))
             end do
          end do
       end do
@@ -818,11 +816,11 @@
 !------------------------------------------------------------------------------
 
    subroutine dermagcenz(mag_cen_z,mag_z_l1,mag_z_l2,mag_z_l3,mag_z_h1,mag_z_h2,mag_z_h3, nbz, &
-                              dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
-                              lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
+                         dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
+                         lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
       ! This routine will derive cell centered magnetic field in z direction
-      ! mag_cen_z = 1/2 (mag_z(i,j,k) + mag_z(i,j,k-1))
+      ! mag_cen_z = 1/2 (mag_z(i,j,k) + mag_z(i,j,k+1))
       !
       use amrex_fort_module, only : rt => amrex_real
       implicit none
@@ -841,11 +839,10 @@
       ! 
       ! Here dat contains (mag_z)
       ! 
-      do k = lo(3)+1, hi(3)
+      do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-		mag_cen_z(i,j,lo(3),1) = dat(i,j,lo(3),1)
-    		mag_cen_z(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i,j,k-1,1))
+    		mag_cen_z(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i,j,k+1,1))
             end do
          end do
       end do
