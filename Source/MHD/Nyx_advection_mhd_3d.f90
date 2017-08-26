@@ -6,12 +6,12 @@
       subroutine fort_advance_mhd(time,lo,hi,&
            uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
            uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-		   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
-		   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
-		   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
-		   bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
-		   byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
-		   bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
+	   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+	   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+	   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
+	   bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
+	   byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
+	   bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
            ugdnvx,ugdnvx_l1,ugdnvx_l2,ugdnvx_l3,ugdnvx_h1,ugdnvx_h2,ugdnvx_h3, &
            ugdnvy,ugdnvy_l1,ugdnvy_l2,ugdnvy_l3,ugdnvy_h1,ugdnvy_h2,ugdnvy_h3, &
            ugdnvz,ugdnvz_l1,ugdnvz_l2,ugdnvz_l3,ugdnvz_h1,ugdnvz_h2,ugdnvz_h3, &
@@ -30,10 +30,8 @@
 !--------------------- Dependencies ------------------------------------------------
       use amrex_fort_module, only : rt => amrex_real
       use mempool_module, only : bl_allocate, bl_deallocate
-	  use ct_upwind, only : corner_transport, checkisnan
-	  use mhd_plm_module, only : plm
-	  use hlld_solver, only : hlld
-	  use electric_field!, only :elec_1
+      use ct_upwind, only : corner_transport, checkisnan
+      use mhd_plm_module, only : plm
       use meth_params_module!, only : QVAR, NTHERM, NHYP, normalize_species, NVAR, URHO, UEDEN
       use enforce_module, only : enforce_nonnegative_species
       use bl_constants_module
@@ -45,12 +43,12 @@
       integer lo(3),hi(3),print_fortran_warnings,do_grav
       integer uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3
       integer uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
-	  integer bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3
-	  integer byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3
-	  integer bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
-	  integer bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
-	  integer byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
-	  integer bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
+      integer bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3
+      integer byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3
+      integer bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
+      integer bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
+      integer byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
+      integer bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
       integer ugdnvx_l1,ugdnvx_l2,ugdnvx_l3,ugdnvx_h1,ugdnvx_h2,ugdnvx_h3
       integer ugdnvy_l1,ugdnvy_l2,ugdnvy_l3,ugdnvy_h1,ugdnvy_h2,ugdnvy_h3
       integer ugdnvz_l1,ugdnvz_l2,ugdnvz_l3,ugdnvz_h1,ugdnvz_h2,ugdnvz_h3
@@ -202,37 +200,9 @@
 
       q = 0.d0
 
-!Allocation Hacks
-    do k = bxout_l3, bxout_h3
-        do j = bxout_l2, bxout_h2
-            do i = bxout_l1, bxout_h1
-                if(isnan(bxout(i,j,k))) then
-                    bxout(i,j,k) = 0.d0
-                endif
-            enddo
-        enddo
-    enddo
-    do k = byout_l3, byout_h3
-        do j = byout_l2, byout_h2
-            do i = byout_l1, byout_h1
-                if(isnan(byout(i,j,k))) then
-                    byout(i,j,k) = 0.d0
-                endif
-            enddo
-        enddo
-    enddo
-    do k = bzout_l3, bzout_h3
-        do j = bzout_l2, bzout_h2
-            do i = bzout_l1, bzout_h1
-                if(isnan(bzout(i,j,k))) then
-                    bzout(i,j,k) = 0.d0
-                endif
-            enddo
-        enddo
-    enddo
-    dx = delta(1)
-    dy = delta(2)
-    dz = delta(3)
+      dx = delta(1)
+      dy = delta(2)
+      dz = delta(3)
 
 !Step One, Calculate Primitives based on conservatives
     call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3,&
@@ -347,9 +317,9 @@ end subroutine fort_advance_mhd
 ! :::
 
       subroutine ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3,&
-						 bx, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
-		 				 by, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
-						 bz, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
+			 bx, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+			 by, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+			 bz, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
                          q,c,csml,flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
                          src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                          srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
@@ -382,9 +352,9 @@ end subroutine fort_advance_mhd
 
       integer lo(3), hi(3)
       integer  uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3
-	  integer bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3
-	  integer byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3
-	  integer bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
+      integer bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3
+      integer byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3
+      integer bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
       integer    q_l1,   q_l2,   q_l3,   q_h1,   q_h2,   q_h3
       integer   gv_l1,  gv_l2,  gv_l3,  gv_h1,  gv_h2,  gv_h3
       integer  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3
@@ -479,27 +449,27 @@ end subroutine fort_advance_mhd
       small_pres_over_dens = small_pres / small_dens
 	  !Calculate Cell Centered Magnetic Field x
 
-         do k = loq(3),hiq(3)
-            do j = loq(2),hiq(2)
-               do i = loq(1),hiq(1)-1
-		q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
-	    end do
-	end do
-     end do
-         do k = loq(3),hiq(3)
-            do j = loq(2),hiq(2)-1
-               do i = loq(1),hiq(1)
-		q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
-	    end do
-	end do
-     end do
-         do k = loq(3),hiq(3)-1
-            do j = loq(2),hiq(2)
-               do i = loq(1),hiq(1)
-		q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
-	    end do
-	end do
-     end do
+      do k = loq(3),hiq(3)
+         do j = loq(2),hiq(2)
+            do i = loq(1),hiq(1)-1
+ 	      q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
+ 	   end do
+ 	 end do
+      end do
+      do k = loq(3),hiq(3)
+         do j = loq(2),hiq(2)-1
+            do i = loq(1),hiq(1)
+ 	      q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
+            end do
+  	end do
+      end do
+      do k = loq(3),hiq(3)-1
+         do j = loq(2),hiq(2)
+            do i = loq(1),hiq(1)
+ 	      q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
+            end do
+ 	end do
+      end do
 
       ! Get p, T, c, csml using q state
       do k = loq(3), hiq(3)
@@ -542,7 +512,7 @@ end subroutine fort_advance_mhd
             end do
          end do
       end do
-!pause
+
       a_half = HALF * (a_old + a_new)
       a_dot   = (a_new - a_old) / dt
 
