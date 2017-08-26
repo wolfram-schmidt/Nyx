@@ -133,13 +133,8 @@ Nyx::just_the_mhd (Real time,
     FillPatch(*this, S_old_tmp, NUM_GROW, time, State_Type, 0, NUM_STATE);
 
     MultiFab Bx_old_tmp(Bx_old.boxArray(), Bx_old.DistributionMap(), 1, NUM_GROW);
-    Bx_old_tmp.copy(Bx_old);
-
     MultiFab By_old_tmp(By_old.boxArray(), By_old.DistributionMap(), 1, NUM_GROW);
-    By_old_tmp.copy(By_old);
-
     MultiFab Bz_old_tmp(Bz_old.boxArray(), Bz_old.DistributionMap(), 1, NUM_GROW);
-    Bz_old_tmp.copy(Bz_old);
 
     FillPatch(*this, Bx_old_tmp, NUM_GROW, time, Mag_Type_x, 0, 1);
     FillPatch(*this, By_old_tmp, NUM_GROW, time, Mag_Type_y, 0, 1);
@@ -194,12 +189,12 @@ Nyx::just_the_mhd (Real time,
             (&time, bx.loVect(), bx.hiVect(), 
              BL_TO_FORTRAN(state),
              BL_TO_FORTRAN(stateout),
-	       	 BL_TO_FORTRAN(Bx),
-	     	 BL_TO_FORTRAN(By),
-	    	 BL_TO_FORTRAN(Bz),
-	    	 BL_TO_FORTRAN(Bxout),
-	   	 	 BL_TO_FORTRAN(Byout),
-	   		 BL_TO_FORTRAN(Bzout),
+	     BL_TO_FORTRAN(Bx),
+	     BL_TO_FORTRAN(By),
+	     BL_TO_FORTRAN(Bz),
+	     BL_TO_FORTRAN(Bxout),
+	     BL_TO_FORTRAN(Byout),
+	     BL_TO_FORTRAN(Bzout),
              BL_TO_FORTRAN(u_gdnv[0]),
              BL_TO_FORTRAN(u_gdnv[1]),
              BL_TO_FORTRAN(u_gdnv[2]),
