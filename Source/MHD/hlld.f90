@@ -5,22 +5,22 @@ module hlld_solver
 
 contains
 
-subroutine hlld(qm,qp,qRd_l1,qRd_l2,qRd_l3,qRd_h1,qRd_h2,qRd_h3, &
+subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
                 flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,dir)
 
   !Riemann solve:
-  !Main assumption, the normal velocity/Mag field is constant in the Riemann fan, and is sM/By respectively. 
+  !Main assumption, the normal velocity/Mag field is constant in the Riemann fan, and is sM/Bn respectively. 
   !Total Pressure is constant throughout the Riemann fan, pst!
 
    use amrex_fort_module, only : rt => amrex_real
    use meth_params_module
 
-   integer, intent(in)   :: qRd_l1,qRd_l2,qRd_l3,qRd_h1,qRd_h2,qRd_h3
+   integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2,q_h3
    integer, intent(in)   :: flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
    integer, intent(in)   :: dir
 
-   real(rt), intent(in)  :: qm(qRd_l1:qRd_h1,qRd_l2:qRd_h2,qRd_l3:qRd_h3,QVAR,3)
-   real(rt), intent(in)  :: qp(qRd_l1:qRd_h1,qRd_l2:qRd_h2,qRd_l3:qRd_h3,QVAR,3)
+   real(rt), intent(in)  :: qm(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
+   real(rt), intent(in)  :: qp(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
    real(rt), intent(out) :: flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR)
 
    real(rt)	  :: cfL, cfR, sL, sR, sM, ssL, ssR, pst, caL, canL
@@ -90,7 +90,6 @@ subroutine hlld(qm,qp,qRd_l1,qRd_l2,qRd_l3,qRd_h1,qRd_h2,qRd_h3, &
 
       call PToC(qL,uL)
       call PToC(qR,uR)
-
       ! Note this is actually (rho e)
       eL   = (qL(QPRES) - 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)))/(gamma_minus_1) &
                         + 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)) &
@@ -298,6 +297,12 @@ subroutine hlld(qm,qp,qRd_l1,qRd_l2,qRd_l3,qRd_h1,qRd_h2,qRd_h3, &
 	   choice = "FR"
 	endif
 
+!	if(dir.eq. 3 .and.i.eq. 9 .and.j.eq. 0 .and. k.eq. 0) then 
+!		print *, "Flux = ", choice, " = ", flx(i,j,k,:)
+!		print *, "qL =", qL
+!		print *, " qR = ", qR
+!		pause
+!	endif
    end do
    end do
    end do

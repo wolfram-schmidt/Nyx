@@ -158,6 +158,14 @@ enddo
 
 write(*,*) "Corner Couple Cons"
 !Corner Couple
+	
+        work_lo(1) = q_l1+1
+        work_lo(2) = q_l2+1
+        work_lo(3) = q_l3+1
+        work_hi(1) = q_h1-1
+        work_hi(2) = q_h2-1
+        work_hi(3) = q_h3-1
+	
 	call corner_couple(work_lo, work_hi, &
                            cons_temp_M, cons_temp_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 			   flxx1D, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
@@ -215,7 +223,7 @@ enddo
         work_hi(2) = ex_h2-2
         work_hi(3) = ex_h3-2
 	call electric_edge_x(work_lo, work_hi, &
-                             q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+                         q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			     Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
 			     flxy1D, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
 			     flxz1D, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
@@ -227,7 +235,7 @@ enddo
         work_hi(2) = ey_h2-2
         work_hi(3) = ey_h3-2
 	call electric_edge_y(work_lo, work_hi, &
-                             q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+                         q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			     Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
 			     flxx1D, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
 			     flxz1D, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
@@ -239,28 +247,41 @@ enddo
         work_hi(2) = ez_h2-2
         work_hi(3) = ez_h3-2
 	call electric_edge_z(work_lo, work_hi, &
-                             q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+                         q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			     Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
 			     flxx1D, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
 			     flxy1D, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3)
 
 !Half Step conservative vars
-	call half_step(cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+        work_lo(1) = q_l1+2
+        work_lo(2) = q_l2+2
+        work_lo(3) = q_l3+2
+        work_hi(1) = q_h1-2
+        work_hi(2) = q_h2-2
+        work_hi(3) = q_h3-2
+	call half_step(work_lo, work_hi, &
+				   cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 	               flxx2D, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
-		       flxy2D, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
-		       flxz2D, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
-		       dx, dy, dz, dt)
+		       	   flxy2D, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
+		       	   flxz2D, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
+		       	   dx, dy, dz, dt)
 
-	call half_step_mag(cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+	call half_step_mag(work_lo, work_hi, &
+					   cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 	                   Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
-			   Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
-			   Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
-			   dx, dy, dz, dt)
+					   Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
+					   Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
+					   dx, dy, dz, dt)
 do i = 1,3
 	call ConsToPrim(q_half_M(:,:,:,:,i), cons_half_M(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 	call ConsToPrim(q_half_P(:,:,:,:,i), cons_half_P(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 enddo
 
+	print*, "UMZ - = ",  cons_half_M(9,0,0,:,3)
+	print*, "W - = ", q_half_M(9,0,0,:,3)
+	print*, "UMZ + = ",  cons_half_P(9,0,0,:,3),
+	print*, "W + = ", q_half_P(9,0,0,:,3)
+	pause
 !Final Fluxes
 !flx = 0.d0
 
@@ -297,10 +318,10 @@ print *, "Flux Half Step"
         work_hi(2) = ex_h2-3
         work_hi(3) = ex_h3-3
 	call electric_edge_x(work_lo, work_hi, &
-                             q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-			     Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
-			     flxy, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
-			     flxz, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
+                         q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+					     Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
+					     flxy, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
+					     flxz, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
 
         work_lo(1) = ey_l1+3
         work_lo(2) = ey_l2+3
@@ -309,10 +330,10 @@ print *, "Flux Half Step"
         work_hi(2) = ey_h2-3
         work_hi(3) = ey_h3-3
 	call electric_edge_y(work_lo, work_hi, &
-                             q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-			     Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
-			     flxx, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
-			     flxz, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
+                         q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+					     Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
+					     flxx, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
+					     flxz, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
 
         work_lo(1) = ez_l1+3
         work_lo(2) = ez_l2+3
@@ -321,10 +342,10 @@ print *, "Flux Half Step"
         work_hi(2) = ez_h2-3
         work_hi(3) = ez_h3-3
 	call electric_edge_z(work_lo, work_hi, &
-                             q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-			     Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
-			     flxx, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
-			     flxy, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3)
+                         q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+					     Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
+					     flxx, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
+					     flxy, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3)
 
 end subroutine corner_transport
 
@@ -390,7 +411,7 @@ implicit none
 end subroutine ConsToPrim
 
 !======================================= Update the Temporary Conservative Variables with Transverse 1D Fluxes ========================
-subroutine corner_couple(work_lo, work_hi, &
+subroutine corner_couple(lo, hi, &
                          uL, uR, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 			 flxx, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
 			 flxy, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
@@ -402,11 +423,11 @@ use meth_params_module
 
 implicit none
 	
-	integer, intent(in)	:: work_lo(3), work_hi(3)
-	integer, intent(in)		::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
-	integer, intent(in)		::flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
-	integer, intent(in)		::flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
-	integer, intent(in)		::flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
+	integer, intent(in)		:: lo(3), hi(3)
+	integer, intent(in)		:: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	integer, intent(in)		:: flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
+	integer, intent(in)		:: flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
+	integer, intent(in)		:: flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
 	
 	real(rt), intent(in)	::um(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
 	real(rt), intent(in)	::up(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR,3)
@@ -426,9 +447,10 @@ implicit none
 	uL(:,:,:,:,:,2) = um
 	uR(:,:,:,:,:,1) = up
 	uR(:,:,:,:,:,2) = up
-   	do k = q_l3+1, q_h3-1
-		do j = q_l2+1, q_h2-1
-			do i = q_l1+1, q_h1-1
+
+    do k = lo(3), hi(3)
+		do j = lo(2), hi(2)
+			do i = lo(1), hi(1)
 	!Left Corrected States
 				uL(i,j,k,URHO:UEDEN,1,1) = um(i,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flxy(i,j+1,k,URHO:UEDEN) - flxy(i,j,k,URHO:UEDEN))! y corrected x
 				uL(i,j,k,URHO:UEDEN,1,2) = um(i,j,k,URHO:UEDEN,1) - dt/(3.d0*dx)*(flxz(i,j,k+1,URHO:UEDEN) - flxz(i,j,k,URHO:UEDEN))! z corrected x
@@ -513,19 +535,19 @@ implicit none
 end subroutine corner_couple
 
 !================================== Use 1D Electric Fields to Transverse correct the Temporary Magnetic Fields ===========================
-subroutine corner_couple_mag(work_lo, work_hi, &
+subroutine corner_couple_mag(lo, hi, &
                              uL, uR, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-			     Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
-    			     Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
-    			     Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
-                              dx, dy, dz, dt)
+						     Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
+    					     Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
+    			    		 Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
+                             dx, dy, dz, dt)
 use amrex_fort_module, only : rt => amrex_real
 use meth_params_module, only : QVAR, QMAGX, QMAGY, QMAGZ
 
 !Correction using Faraday's Law
 implicit none
 
-	integer, intent(in)	:: work_lo(3), work_hi(3)
+	integer, intent(in)	:: lo(3), hi(3)
 	integer, intent(in)	:: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
 	integer, intent(in)	:: ex_l1,ex_l2,ex_l3,ex_h1,ex_h2, ex_h3
 	integer, intent(in)	:: ey_l1,ey_l2,ey_l3,ey_h1,ey_h2, ey_h3
@@ -542,9 +564,9 @@ implicit none
 	real(rt)		:: dx, dy, dz, dt
 	integer			:: i ,j ,k
 
-   	do k = q_l3+1,q_h3-1
-		do j = q_l2+1,q_h2-1
-			do i = q_l1+1,q_h1-1	
+   	do k = lo(3), hi(3)
+		do j = lo(2), hi(2)
+			do i = lo(1), hi(1)
 		!Left State
 				!X-direction 
 				!-> Affected by Y flux
@@ -660,7 +682,8 @@ implicit none
 end subroutine corner_couple_mag
 
 !====================================================== Final Conservative Corrections================================================================
-subroutine half_step(uL, uR, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+subroutine half_step(lo, hi, &
+			 uL, uR, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 		     flxx, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
 		     flxy, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
 		     flxz, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
@@ -670,7 +693,7 @@ use meth_params_module, only : QVAR, URHO, UEDEN
 
 implicit none
 	
-	integer, intent(in)	::q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	integer, intent(in)	  :: lo(3), hi(3),q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
 	integer, intent(in)   :: flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
 	integer, intent(in)   :: flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
 	integer, intent(in)   :: flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
@@ -690,9 +713,9 @@ implicit none
 
 	uL = um
 	uR = up
-   	do k = q_l3+1, q_h3-1
-		do j = q_l2+1, q_h2-1
-			do i = q_l1+1, q_h1-1
+   	do k = lo(3), hi(3)
+		do j = lo(2), hi(2)
+			do i = lo(1), hi(1)
 !left state				
 				uL(i,j,k,URHO:UEDEN,1) = um(i,j,k,URHO:UEDEN,1) - 0.5d0*dt/dx*(flxy(i,j+1,k,URHO:UEDEN,2) - flxy(i,j,k,URHO:UEDEN,2)) &
 										- 0.5d0*dt/dx*(flxz(i,j,k+1,URHO:UEDEN,2) - flxz(i,j,k,URHO:UEDEN,2))
@@ -700,6 +723,8 @@ implicit none
 										- 0.5d0*dt/dy*(flxz(i,j,k+1,URHO:UEDEN,1) - flxz(i,j,k,URHO:UEDEN,1))
 				uL(i,j,k,URHO:UEDEN,3) = um(i,j,k,URHO:UEDEN,3) - 0.5d0*dt/dz*(flxx(i+1,j,k,URHO:UEDEN,1) - flxx(i,j,k,URHO:UEDEN,1)) &
 										- 0.5d0*dt/dz*(flxy(i,j+1,k,URHO:UEDEN,1) - flxy(i,j,k,URHO:UEDEN,1))
+
+			
 				do n = 1,3
 					u = uL(i,j,k,UMX,n)/uL(i,j,k,URHO,n)
 					v = uL(i,j,k,UMY,n)/uL(i,j,k,URHO,n)
@@ -719,24 +744,33 @@ implicit none
 					w = uR(i,j,k,UMZ,n)/uR(i,j,k,URHO,n)
 					uR(i,j,k,UEINT,n) = uR(i,j,k,UEDEN,n) - 0.5d0*uR(i,j,k,URHO,n)*(u**2 + v**2 + w**2)
 				enddo
+			if(i.eq. 9 .and.j.eq. 0 .and. k.eq. 0) then 
+					print *, "uR = ", uR(i,j,k,:,3)
+					print *, "W*RHO R = ", uR(i,j,k,UMZ,3)
+					print *, "UMZ p = ", up(i,j,k,UMZ,3) 
+					print *, " Flxx ", flxx(i+1,j,k,URHO:UEDEN,1) , flxx(i,j,k,URHO:UEDEN,1)
+					print *, " Flxy ", flxy(i,j+1,k,URHO:UEDEN,1) , flxy(i,j,k,URHO:UEDEN,1)
+					pause
+			endif
 			enddo
 		enddo
 	enddo
 end subroutine 
 
 !================================================= Final Magnetic Corrections ========================================================================
-subroutine half_step_mag(uL, uR, um, up, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, &
+subroutine half_step_mag(lo, hi, &
+				 uL, uR, um, up, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, &
 		         Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
-			 Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
-			 Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
-			 dx, dy, dz, dt)
+				 Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
+				 Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
+				 dx, dy, dz, dt)
 use amrex_fort_module, only : rt => amrex_real
 use meth_params_module, only : QVAR, QMAGX,QMAGY,QMAGZ
 
 !Correction using Faraday's Law
 implicit none
 
-	integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+	integer, intent(in)   :: lo(3), hi(3), q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
 	integer, intent(in)   :: ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3
 	integer, intent(in)   :: ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3
 	integer, intent(in)   :: ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3
@@ -753,9 +787,9 @@ implicit none
 	real(rt)					:: dx, dy, dz, dt
 	integer						:: i ,j ,k, n
 
-   	do k = q_l3+2,q_h3-2
-		do j = q_l2+2,q_h2-2
-			do i = q_l1+2,q_h1-2
+   	do k = lo(3), hi(3)
+		do j = lo(2), hi(2)
+			do i = lo(1), hi(1)
 		!---------------------------------------left state-----------------------------------------------------
 				!X-Direction
 				!Bx

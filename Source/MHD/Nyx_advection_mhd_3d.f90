@@ -119,9 +119,8 @@
       integer ngq,ngf
       integer q_l1, q_l2, q_l3, q_h1, q_h2, q_h3
       integer srcq_l1, srcq_l2, srcq_l3, srcq_h1, srcq_h2, srcq_h3
-      integer 	:: i,j,k!, alloc
+      integer 	:: i,j,k
     
-!      alloc = 0
       ngq = NHYP
       ngf = 1
 
@@ -138,7 +137,8 @@
       srcq_h1 = hi(1)+1
       srcq_h2 = hi(2)+1
       srcq_h3 = hi(3)+1
-	  
+
+      uout(srcq_l1:srcq_h1,srcq_l2:srcq_h2, srcq_l3:srcq_h3,:) = 0.d0
       call bl_allocate(     q, lo-NHYP, hi+NHYP, QVAR)
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
       call bl_allocate(     c, lo-NHYP, hi+NHYP      )
@@ -221,12 +221,6 @@
 		   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
 		   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
                    qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
-!qm(:,:,:,:,1) = q
-!qm(:,:,:,:,2) = q
-!qm(:,:,:,:,3) = q
-!qp(:,:,:,:,1) = q
-!qp(:,:,:,:,2) = q
-!qp(:,:,:,:,3) = q
 
 flxx = 0.d0
 flxy = 0.d0
@@ -259,9 +253,9 @@ flxz = 0.d0
 		 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
 		 uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
 		 src ,  src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3, &
-                 Extemp, extemp_l1,extemp_l2,extemp_l3,extemp_h1,extemp_h2,extemp_h3, &
-                 Eytemp, eytemp_l1,eytemp_l2,eytemp_l3,eytemp_h1,eytemp_h2,eytemp_h3, &
-                 Eztemp, eztemp_l1,eztemp_l2,eztemp_l3,eztemp_h1,eztemp_h2,eztemp_h3, &
+         Extemp, extemp_l1,extemp_l2,extemp_l3,extemp_h1,extemp_h2,extemp_h3, &
+         Eytemp, eytemp_l1,eytemp_l2,eytemp_l3,eytemp_h1,eytemp_h2,eytemp_h3, &
+         Eztemp, eztemp_l1,eztemp_l2,eztemp_l3,eztemp_h1,eztemp_h2,eztemp_h3, &
 		 lo, hi, dx, dy, dz, dt, a_old, a_new)
 
 	  flux1(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,URHO:UEDEN) = flxx(flux1_l1:flux1_h1,flux1_l2:flux1_h2, flux1_l3:flux1_h3,URHO:UEDEN)
@@ -641,9 +635,9 @@ end subroutine fort_advance_mhd
 
  	  integer,  intent(in)  :: uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3
 	  integer,  intent(in)  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
-          integer,  intent(in)  :: flux1_l1,flux1_l2,flux1_l3,flux1_h1,flux1_h2,flux1_h3
-          integer,  intent(in)  :: flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3
-          integer,  intent(in)  :: flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3
+      integer,  intent(in)  :: flux1_l1,flux1_l2,flux1_l3,flux1_h1,flux1_h2,flux1_h3
+      integer,  intent(in)  :: flux2_l1,flux2_l2,flux2_l3,flux2_h1,flux2_h2,flux2_h3
+      integer,  intent(in)  :: flux3_l1,flux3_l2,flux3_l3,flux3_h1,flux3_h2,flux3_h3
 	  integer,  intent(in)  :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
 	  integer, intent(in) 	:: lo(3), hi(3)
 
@@ -656,9 +650,7 @@ end subroutine fort_advance_mhd
 	  real(rt), intent(out) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
 	  real(rt)				:: u, v, w
 
-
-	  integer 				:: i, j, k		
-	 uout(lo(1):hi(1),lo(2):hi(2),lo(3):hi(3),:) = 0.d0
+	  integer 				:: i, j, k	
 	  !****TO DO ******* SOURCES
 		do k = lo(3), hi(3)
 		do j = lo(2), hi(2)
@@ -670,6 +662,13 @@ end subroutine fort_advance_mhd
 		   v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
    		   w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
 		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+		   if(abs(uout(i,j,k,UMZ)).ge. 1d-8) then 
+				print*, "Z velocity greater than zero! ",  uout(i,j,k,UMZ), "i, j, k ", i, j, k 
+				print*, fluxx(i+1,j,k,UMZ) , fluxx(i,j,k,UMZ)
+		 		print*, fluxy(i,j+1,k,UMZ) , fluxy(i,j,k,UMZ)
+ 				print*, fluxz(i,j,k+1,UMZ) , fluxz(i,j,k,UMZ)
+				pause
+			endif
 		enddo
 		enddo
 		enddo

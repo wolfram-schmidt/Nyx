@@ -56,7 +56,7 @@ implicit none
 	
 	integer					::i ,j ,k	
 
-	E = 0.d0
+	!E = 0.d0
 	do k = work_lo(3), work_hi(3)
 		do j = work_lo(2), work_hi(2)
 			do i = work_lo(1), work_hi(1)
@@ -331,7 +331,9 @@ implicit none
                                 if (abs(E(i,j,k)).gt.0.) print *,"FX ", flxx(i,j-1,k,QMAGY),flxx(i,j,k,QMAGY) 
                                 if (abs(E(i,j,k)).gt.0.) print *,"FY ", flxy(i,j-1,k,QMAGX),flxy(i,j,k,QMAGX) 
                                 if (abs(E(i,j,k)).gt.0.) print *,"DD1/2 ", dd1, dd2
-                                if (abs(E(i,j,k)).gt.0.) stop
+				if (abs(E(i,j,k)).gt.0.) print *,"d1, d2", d1, d2
+				if (abs(E(i,j,k)).gt.0.) print *,"a, b", a, b, " flxy i-1, j+1 ", flxy(i-1,j+1,k,QMAGX)
+!                                if (abs(E(i,j,k)).gt.0.) pause
 
 			enddo
 		enddo
