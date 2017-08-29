@@ -277,9 +277,10 @@ do i = 1,3
 	call ConsToPrim(q_half_P(:,:,:,:,i), cons_half_P(:,:,:,:,i), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 enddo
 
-	print*, "UMZ - = ",  cons_half_M(9,0,0,:,3)
+!	print*, "UMZ - = ",  cons_half_M(9,0,0,:,3)
+!	print*, "UMZ + = ",  cons_half_P(9,0,0,:,3)
+
 	print*, "W - = ", q_half_M(9,0,0,:,3)
-	print*, "UMZ + = ",  cons_half_P(9,0,0,:,3),
 	print*, "W + = ", q_half_P(9,0,0,:,3)
 	pause
 !Final Fluxes
@@ -288,17 +289,16 @@ enddo
 print *, "Flux Half Step"
 
 	!x-dir
-	call hlld(q_half_M(:,:,:,:,1),q_half_P(:,:,:,:,1),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-                  flxx(:,:,:,:),flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, 1)
+ 	call hlld(q_half_M,q_half_P,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+                   flxx,flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, 1)
 
 	!y-dir	
-	call hlld(q_half_M(:,:,:,:,2),q_half_P(:,:,:,:,2),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-                  flxy(:,:,:,:),flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, 2)
+ 	call hlld(q_half_M,q_half_P,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+                   flxy,flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, 2)
 
 	!z-dir
-	call hlld(q_half_M(:,:,:,:,3),q_half_P(:,:,:,:,3),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
-                  flxz(:,:,:,:),flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, 3)
-
+	call hlld(q_half_M,q_half_P,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+                  flxz,flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, 3)
 	
 !Primitive update
        call prim_half(q2D,q,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
