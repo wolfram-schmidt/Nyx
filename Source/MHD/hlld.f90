@@ -303,6 +303,7 @@ subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 !		print *, " qR = ", qR
 !		pause
 !	endif
+
    end do
    end do
    end do
