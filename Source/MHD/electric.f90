@@ -85,10 +85,6 @@ implicit none
 					d2 = 0.5d0*(a+b)
 				endif
 				dd1 = 0.125d0*(d1 - d2)
-				if(i.eq.1.and.j.eq.15.and.k.eq.5) then 
-					print*,"First Derivatives", d1, d2, a, b, flxz(i,j-1,k+1,QMAGY), Ecen
-					print*, "i,j-1,k+1", i, j-1, k+1
-				endif
 
 				call electric(q(i,j-1,k-1,:),Ecen,1)
 				a = 2.d0*(-flxy(i,j,k-1,QMAGZ) - Ecen)
@@ -251,9 +247,6 @@ implicit none
 
 	E = 0.d0
 
-        print *,"WORK LO IN EZ ", work_lo(:)
-        print *,"WORK HI IN EZ ", work_hi(:)
-
 ! ====  Ez i-1/2, j-1/2, k ====
 
 	do k = work_lo(3), work_hi(3)
@@ -302,15 +295,9 @@ implicit none
 				else
 					d1 = 0.5d0*(a+b)
 				endif
-				if (i.eq.-2.and.j.ge.28.and.k.eq.-2) then
-				   print *,'A B ', j, a, b
-				end if
 
 				a = b 
 				b = 2.d0*(flxy(i-1,j+1,k,QMAGX) - Ecen) 
-				if (i.eq.-2.and.j.ge.28.and.k.eq.-2) then
-				   print *,'B2 ', j, b, flxy(i-1,j+1,k,QMAGX), Ecen
-				end if
 
 				if(q(i-1,j,k,QV).gt.0.d0) then
 					d2 = a
@@ -320,20 +307,9 @@ implicit none
 					d2 = 0.5d0*(a+b)
 				endif
 				dd2 = 0.125*(d1 - d2)
-				if (i.eq.-2.and.j.ge.28.and.k.eq.-2) then
-				   print *,'DD2 ', j, d1, d2
-				end if
 
 				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
                                                    +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2
-
-                                if (abs(E(i,j,k)).gt.0.) print *,"EZ ", i,j,k,E(i,j,k)
-                                if (abs(E(i,j,k)).gt.0.) print *,"FX ", flxx(i,j-1,k,QMAGY),flxx(i,j,k,QMAGY) 
-                                if (abs(E(i,j,k)).gt.0.) print *,"FY ", flxy(i,j-1,k,QMAGX),flxy(i,j,k,QMAGX) 
-                                if (abs(E(i,j,k)).gt.0.) print *,"DD1/2 ", dd1, dd2
-				if (abs(E(i,j,k)).gt.0.) print *,"d1, d2", d1, d2
-				if (abs(E(i,j,k)).gt.0.) print *,"a, b", a, b, " flxy i-1, j+1 ", flxy(i-1,j+1,k,QMAGX)
-!                                if (abs(E(i,j,k)).gt.0.) pause
 
 			enddo
 		enddo
