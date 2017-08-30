@@ -137,8 +137,9 @@
       srcq_h1 = hi(1)+1
       srcq_h2 = hi(2)+1
       srcq_h3 = hi(3)+1
-
-      uout(srcq_l1:srcq_h1,srcq_l2:srcq_h2, srcq_l3:srcq_h3,:) = 0.d0
+		
+		uout(lo(1)-1:hi(1)+1,lo(2)-1:hi(2)+1,lo(3)-1:hi(3)+1,:) = uin(lo(1)-1:hi(1)+1,lo(2)-1:hi(2)+1,lo(3)-1:hi(3)+1,:)
+		
       call bl_allocate(     q, lo-NHYP, hi+NHYP, QVAR)
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
       call bl_allocate(     c, lo-NHYP, hi+NHYP      )
@@ -216,11 +217,11 @@
                  courno,dx,dy,dz,dt,ngq,ngf,a_old,a_new)
 
 !Step Two, Interpolate Cell centered values to faces
-	  call plm(q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
+	  call plm(lo, hi, q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
 	  	   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
 		   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
 		   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
-                   qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
+           qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
 
 flxx = 0.d0
 flxy = 0.d0
@@ -662,13 +663,6 @@ end subroutine fort_advance_mhd
 		   v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
    		   w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
 		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
-		   if(abs(uout(i,j,k,UMZ)).ge. 1d-8) then 
-				print*, "Z velocity greater than zero! ",  uout(i,j,k,UMZ), "i, j, k ", i, j, k 
-				print*, fluxx(i+1,j,k,UMZ) , fluxx(i,j,k,UMZ)
-		 		print*, fluxy(i,j+1,k,UMZ) , fluxy(i,j,k,UMZ)
- 				print*, fluxz(i,j,k+1,UMZ) , fluxz(i,j,k,UMZ)
-				pause
-			endif
 		enddo
 		enddo
 		enddo

@@ -148,7 +148,7 @@ subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 	UsL(QRHO) = qL(QRHO)*((sL - qL(QVELN))/(sL - sM))
 	UsR(QRHO) = qR(QRHO)*((sR - qR(QVELN))/(sR - sM))
 
-	!--------------------------------------------------------- Vel * states----------------------------------------------------------------------
+	!--------------------------------------------------------- Vel * states----------------------------------------------------------------
 
         !Normal dir
 	UsL(QVELN)    = sM
@@ -296,14 +296,6 @@ subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 	   flx(i,j,k,:) = FR
 	   choice = "FR"
 	endif
-
-!	if(dir.eq. 3 .and.i.eq. 9 .and.j.eq. 0 .and. k.eq. 0) then 
-!		print *, "Flux = ", choice, " = ", flx(i,j,k,:)
-!		print *, "qL =", qL
-!		print *, " qR = ", qR
-!		pause
-!	endif
-
    end do
    end do
    end do

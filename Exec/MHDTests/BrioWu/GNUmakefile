@@ -10,7 +10,7 @@ TOP = ../../..
 COMP    = gcc
 
 USE_MPI = FALSE
-USE_OMP = FALSE
+USE_OMP = TRUE
 
 PRECISION = DOUBLE
 DEBUG     = TRUE

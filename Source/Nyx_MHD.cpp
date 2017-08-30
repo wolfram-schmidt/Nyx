@@ -152,11 +152,10 @@ Nyx::just_the_mhd (Real time,
        {
        FArrayBox flux[BL_SPACEDIM], u_gdnv[BL_SPACEDIM], E[BL_SPACEDIM];
        Real cflLoc = -1.e+200;
-	for (MFIter mfi(S_old_tmp,false); mfi.isValid(); ++mfi)
-       //for (MFIter mfi(S_old_tmp,true); mfi.isValid(); ++mfi)
+	//for (MFIter mfi(S_old_tmp,false); mfi.isValid(); ++mfi)
+       for (MFIter mfi(S_old_tmp,true); mfi.isValid(); ++mfi)
        {
         const Box& bx        = mfi.tilebox();
-
         FArrayBox& state     = S_old_tmp[mfi];
         FArrayBox& dstate    = D_old_tmp[mfi];
         FArrayBox& stateout  = S_new[mfi];

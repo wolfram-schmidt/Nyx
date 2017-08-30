@@ -114,7 +114,6 @@ implicit none
 
 				E(i,j,k) = 0.25d0*(-flxy(i,j,k-1,QMAGZ) - flxy(i,j,k,QMAGZ) + &
                                                     flxz(i,j-1,k,QMAGY) + flxz(i,j,k,QMAGY)) + dd1 + dd2
-
 			enddo
 		enddo
 	enddo

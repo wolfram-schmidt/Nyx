@@ -436,11 +436,11 @@
 
         integer             :: iadv, ispec
 
-        if (present(comm)) then
-          call parallel_initialize(comm=comm)
-        else
-          call parallel_initialize()
-        end if
+        !if (present(comm)) then
+        !  call parallel_initialize(comm=comm)
+        !else
+        !  call parallel_initialize()
+        !end if
 
         use_const_species = use_const_species_in
 
