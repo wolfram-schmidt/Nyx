@@ -46,9 +46,9 @@ contains
 
     real(rt) 				:: 	dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7)
     real(rt)				:: 	temp(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1,8), smhd(7)
-    real(rt)				::      tbx(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
-    real(rt)				::      tby(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
-    real(rt)				::      tbz(s_l1-1:s_h1+2,s_l2-1:s_h2+2,s_l3-1:s_h3+2)
+    real(rt)				::      tbx(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
+    real(rt)				::      tby(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
+    real(rt)				::      tbz(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
     real(rt)				:: 	dt_over_a
     integer          		        ::	ii,ibx,iby,ibz, i , j, k
 
@@ -61,40 +61,10 @@ contains
     Im = 0.d0
 
 !------------------------workspace variables---------------------------------------------
-		tbx = 0.d0
-		tby = 0.d0
-		tbz = 0.d0
 		temp = 0.d0
 		temp(:,:,:,1) = small_dens
 		temp(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3,1  :  5) = s(:,:,:,QRHO:QPRES) !Gas vars Cell Centered
 		temp(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3,ibx:ibz) = s(:,:,:,QMAGX:QMAGZ) !Mag vars Cell Centered
-		if(s_l1.lt.bxl1.and.s_h1.gt.bxh1) then 
-			tbx(bxl1:bxh1, bxl2:bxh2, bxl3:bxh3) = bx(:,:,:) !Face Centered
-			tbx(s_l1-1:bxl1,s_l2-1:bxl2,s_l3-1:bxl3) = bx(bxl1,bxl2,bxl3)
-			tbx(bxh1:s_h1+1,bxh2:s_h2+1,bxh3:s_h3+1) = bx(bxh1,bxh2,bxh3)
-		else
-			tbx(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3) = bx(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3) !Face Centered
-			tbx(s_l1-1:s_l1,s_l2-1:bxl2,s_l3-1:bxl3) = bx(s_l1,s_l2,s_l3)
-			tbx(s_h1:s_h1+1,s_h2:s_h2+1,s_h3:s_h3+1) = bx(s_h1,s_h2,s_h3)
-		endif
-		if(s_l1.lt.byl1.and.s_h1.gt.byh1) then 
-			tby(byl1:byh1, byl2:byh2, byl3:byh3) = by(:,:,:)
-			tby(s_l1-1:byl1,s_l2-1:byl2,s_l3-1:byl3) = by(byl1,byl2,byl3)
-			tby(byh1:s_h1+1,byh2:s_h2+1,byh3:s_h3+1) = by(byh1,byh2,byh3)
-		else
-			tby(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3) = by(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3)
-			tby(s_l1-1:s_l1,s_l2-1:byl2,s_l3-1:byl3) = by(s_l1,s_l2,s_l3)
-			tby(s_h1:s_h1+1,s_h2:s_h2+1,s_h3:s_h3+1) = by(s_h1,s_h2,s_h3)
-		endif
-		if(s_l1.lt.bzl1.and.s_h1.gt.bzh1) then 
-			tbz(bzl1:bzh1, bzl2:bzh2, bzl3:bzh3) = bz(:,:,:)
-			tbz(s_l1-1:bzl1,s_l2-1:bzl2,s_l3-1:bzl3) = bz(bzl1,bzl2,bzl3)
-			tbz(bzh1:s_h1+1,bzh2:s_h2+1,bzh3:s_h3+1) = bz(bzh1,bzh2,bzh3)
-		else
-			tbz(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3) = bz(s_l1: s_h1, s_l2: s_h2, s_l3: s_h3)
-			tbz(s_l1-1:s_l1,s_l2-1:bzl2,s_l3-1:bzl3) = bz(s_l1,s_l2,s_l3)
-			tbz(s_h1:s_h1+1,s_h2:s_h2+1,s_h3:s_h3+1) = bz(s_h1,s_h2,s_h3)
-		endif
 !-------------------- Fill Boundaries ---------------------------------------------------
 		temp(s_l1-1,s_l2-1,s_l3-1,1:5) = s(s_l1,s_l2,s_l3,QRHO:QPRES)
 		temp(s_l1-1,s_l2-1,s_l3-1,6:8) = s(s_l1,s_l2,s_l3,QMAGX:QMAGZ)
@@ -112,69 +82,261 @@ contains
 		temp(s_l1:s_h1, s_l2:s_h2, s_h3+1,6:8) = s(:,:,s_h3,QMAGX:QMAGZ)
 		temp(s_h1+1,s_h2+1,s_h3+1,1:5) = s(s_h1,s_h2,s_h3,QRHO:QPRES)
 		temp(s_h1+1,s_h2+1,s_h3+1,6:8) = s(s_h1,s_h2,s_h3,QMAGX:QMAGZ)
+! Temp face centered magnetic fields
+	do k = s_l3-1, s_h3+1
+		do j = s_l2-1, s_h2+1
+			do i = s_l1-1, s_h1+1
+	!---------------------------------------------- set up temporary bx ------------------------------------------------
+				if(i.lt.bxl1) then 
+					if(j.lt.bxl2) then
+						if(k.lt.bxl3) then 
+							tbx(i,j,k) = bx(bxl1,bxl2,bxl3)
+						elseif(k.lt.bxh3) then
+							tbx(i,j,k) = bx(bxl1, bxl2, k)
+						else
+							tbx(i,j,k) = bx(bxl1, bxl2, bxh3)
+						endif
+					elseif(j.lt.bxh2) then
+						if(k.lt.bxl3) then 
+							tbx(i,j,k) = bx(bxl1,j,bxl3)
+						elseif(k.lt.bxh3) then
+							tbx(i,j,k) = bx(bxl1, j, k)
+						else
+							tbx(i,j,k) = bx(bxl1, j, bxh3)
+						endif
+					else
+						if(k.lt.bxl3) then 
+							tbx(i,j,k) = bx(bxl1,bxh2,bxl3)
+						elseif(k.lt.bxh3) then
+							tbx(i,j,k) = bx(bxl1, bxh2, k)
+						else
+							tbx(i,j,k) = bx(bxl1, bxh2, bxh3)
+						endif
+					endif
+				elseif(i.lt.bxh1) then 
+					if(j.lt.bxl2) then
+						if(k.lt.bxl3) then 
+							tbx(i,j,k) = bx(i,bxl2,bxl3)
+						elseif(k.lt.bxh3) then
+							tbx(i,j,k) = bx(i, bxl2, k)
+						else
+							tbx(i,j,k) = bx(i, bxl2, bxh3)
+						endif
+					elseif(j.lt.bxh2) then
+						if(k.lt.bxl3) then 
+							tbx(i,j,k) = bx(i,j,bxl3)
+						elseif(k.lt.bxh3) then
+							tbx(i,j,k) = bx(i, j, k)
+						else
+							tbx(i,j,k) = bx(i, j, bxh3)
+						endif
+					else
+						if(k.lt.bxl3) then 
+							tbx(i,j,k) = bx(i,bxh2,bxl3)
+						elseif(k.lt.bxh3) then
+							tbx(i,j,k) = bx(i, bxh2, k)
+						else
+							tbx(i,j,k) = bx(i, bxh2, bxh3)
+						endif
+					endif
+				else
+					if(j.lt.bxl2) then
+						if(k.lt.bxl3) then 
+							tbx(i,j,k) = bx(bxh1,bxl2,bxl3)
+						elseif(k.lt.bxh3) then
+							tbx(i,j,k) = bx(bxh1, bxl2, k)
+						else
+							tbx(i,j,k) = bx(bxh1, bxl2, bxh3)
+						endif
+					elseif(j.lt.bxh2) then
+						if(k.lt.bxl3) then 
+							tbx(i,j,k) = bx(bxh1,j,bxl3)
+						elseif(k.lt.bxh3) then
+							tbx(i,j,k) = bx(bxh1, j, k)
+						else
+							tbx(i,j,k) = bx(bxh1, j, bxh3)
+						endif
+					else
+						if(k.lt.bxl3) then 
+							tbx(i,j,k) = bx(bxh1,bxh2,bxl3)
+						elseif(k.lt.bxh3) then
+							tbx(i,j,k) = bx(bxh1, bxh2, k)
+						else
+							tbx(i,j,k) = bx(bxh1, bxh2, bxh3)
+						endif
+					endif
+				endif
 
-		if(s_h1+1.gt.bxh1.and.s_h1+1.gt.byh1.and.s_h1+1.gt.bzh1) then
-		do i = s_l1-1,s_h1+1
-			if(i.lt.bxl1) then
-				tbx(i,bxl2:bxh2, bxl3:bxh3) = bx(bxl1,bxl2:bxh2, bxl3:bxh3)
-			elseif(i.gt.bxh1) then
-				tbx(i,bxl2:bxh2, bxl3:bxh3) = bx(bxh1,bxl2:bxh2, bxl3:bxh3)
-			endif
-			if(i.lt.byl1) then
-				tby(i,byl2:byh2, byl3:byh3) = by(byl1,byl2:byh2, byl3:byh3)
-			elseif(i.gt.byh1) then
-				tby(i,byl2:byh2, byl3:byh3) = by(byh1,byl2:byh2, byl3:byh3)
-			endif			
-			if(i.lt.bzl1) then
-				tbz(i,bzl2:bzh2, bzl3:bzh3) = bz(bzl1,bzl2:bzh2, bzl3:bzh3)
-			elseif(i.gt.bzh1) then
-				tbz(i,bzl2:bzh2, bzl3:bzh3) = bz(bzh1,bzl2:bzh2, bzl3:bzh3)
-			endif				
-		enddo
-		endif
-		if(s_h2+1.gt.bxh2.and.s_h2+1.gt.byh2.and.s_h2+1.gt.bzh2) then
-		do j = s_l2-1,s_h2+1
-			if(j.lt.bxl2) then
-				tbx(bxl1:bxh1,j, bxl3:bxh3) = bx(bxl1:bxh1,bxl2, bxl3:bxh3)
-			elseif(j.gt.bxh2) then
-				tbx(bxl1:bxh1,j, bxl3:bxh3) = bx(bxl1:bxh1,bxh2, bxl3:bxh3)
-			endif
-			if(j.lt.byl2) then
-				tby(byl1:byh1,j, byl3:byh3) = by(byl1:byh1,byl2, byl3:byh3)
-			elseif(j.gt.byh2) then
-				tby(byl1:byh1,j, byl3:byh3) = by(byl1:byh1,byh2, byl3:byh3)
-			endif
-			if(j.lt.bzl2) then
-				tbz(bzl1:bzh1,j, bzl3:bzh3) = bz(bzl1:bzh1,bzl2, bzl3:bzh3)
-			elseif(j.gt.bzh2) then
-				tbz(bzl1:bzh1,j, bzl3:bzh3) = bz(bzl1:bzh1,bzh2, bzl3:bzh3)
-			endif
-		enddo
-		endif
+	!---------------------------------------------- set up temporary by ------------------------------------------------
+				if(i.lt.byl1) then 
+					if(j.lt.byl2) then
+						if(k.lt.byl3) then 
+							tby(i,j,k) = by(byl1,byl2,byl3)
+						elseif(k.lt.byh3) then
+							tby(i,j,k) = by(byl1, byl2, k)
+						else
+							tby(i,j,k) = by(byl1, byl2, byh3)
+						endif
+					elseif(j.lt.byh2) then
+						if(k.lt.byl3) then 
+							tby(i,j,k) = by(byl1,j,byl3)
+						elseif(k.lt.byh3) then
+							tby(i,j,k) = by(byl1, j, k)
+						else
+							tby(i,j,k) = by(byl1, j, byh3)
+						endif
+					else
+						if(k.lt.byl3) then 
+							tby(i,j,k) = by(byl1,byh2,byl3)
+						elseif(k.lt.byh3) then
+							tby(i,j,k) = by(byl1, byh2, k)
+						else
+							tby(i,j,k) = by(byl1, byh2, byh3)
+						endif
+					endif
+				elseif(i.lt.byh1) then 
+					if(j.lt.byl2) then
+						if(k.lt.byl3) then 
+							tby(i,j,k) = by(i,byl2,byl3)
+						elseif(k.lt.byh3) then
+							tby(i,j,k) = by(i, byl2, k)
+						else
+							tby(i,j,k) = by(i, byl2, byh3)
+						endif
+					elseif(j.lt.byh2) then
+						if(k.lt.byl3) then 
+							tby(i,j,k) = by(i,j,byl3)
+						elseif(k.lt.byh3) then
+							tby(i,j,k) = by(i, j, k)
+						else
+							tby(i,j,k) = by(i, j, byh3)
+						endif
+					else
+						if(k.lt.byl3) then 
+							tby(i,j,k) = by(i,byh2,byl3)
+						elseif(k.lt.byh3) then
+							tby(i,j,k) = by(i, byh2, k)
+						else
+							tby(i,j,k) = by(i, byh2, byh3)
+						endif
+					endif
+				else
+					if(j.lt.byl2) then
+						if(k.lt.byl3) then 
+							tby(i,j,k) = by(byh1,byl2,byl3)
+						elseif(k.lt.byh3) then
+							tby(i,j,k) = by(byh1, byl2, k)
+						else
+							tby(i,j,k) = by(byh1, byl2, byh3)
+						endif
+					elseif(j.lt.byh2) then
+						if(k.lt.byl3) then 
+							tby(i,j,k) = by(byh1,j,byl3)
+						elseif(k.lt.byh3) then
+							tby(i,j,k) = by(byh1, j, k)
+						else
+							tby(i,j,k) = by(byh1, j, byh3)
+						endif
+					else
+						if(k.lt.byl3) then 
+							tby(i,j,k) = by(byh1,byh2,byl3)
+						elseif(k.lt.byh3) then
+							tby(i,j,k) = by(byh1, byh2, k)
+						else
+							tby(i,j,k) = by(byh1, byh2, byh3)
+						endif
+					endif
+				endif
 
-		if(s_h3+1.gt.bxh3.and.s_h3+1.gt.byh3.and.s_h3+1.gt.bzh3) then
-		do k = s_l3-1,s_h3+1
-			if(k.lt.bxl3) then
-				tbx(bxl1:bxh1,bxl2:bxh2, k) = bx(bxl1:bxh1,bxl2:bxh2, bxl3)
-			elseif(k.gt.bxh3) then
-				tbx(bxl1:bxh1,bxl2:bxh2, k) = bx(bxl1:bxh1,bxl2:bxh2, bxh3)
-			endif
-			if(k.lt.byl3) then
-				tby(byl1:byh1,byl2:byh2, k) = by(byl1:byh1,byl2:byh2, byl3)
-			elseif(k.gt.byh3) then
-				tby(byl1:byh1,byl2:byh2, k) = by(byl1:byh1,byl2:byh2, byh3)
-			endif
-			if(k.lt.bzl3) then
-				tbz(bzl1:bzh1,bzl2:bzh2, k) = bz(bzl1:bzh1,bzl2:bzh2, bzl3)
-			elseif(k.gt.bzh3) then
-				tbz(bzl1:bzh1,bzl2:bzh2, k) = bz(bzl1:bzh1,bzl2:bzh2, bzh3)
-			endif
+	!---------------------------------------------- set up temporary bz ------------------------------------------------
+				if(i.lt.bzl1) then 
+					if(j.lt.bzl2) then
+						if(k.lt.bzl3) then 
+							tbz(i,j,k) = bz(bzl1,bzl2,bzl3)
+						elseif(k.lt.bzh3) then
+							tbz(i,j,k) = bz(bzl1, bzl2, k)
+						else
+							tbz(i,j,k) = bz(bzl1, bzl2, bzh3)
+						endif
+					elseif(j.lt.bzh2) then
+						if(k.lt.bzl3) then 
+							tbz(i,j,k) = bz(bzl1,j,bzl3)
+						elseif(k.lt.bzh3) then
+							tbz(i,j,k) = bz(bzl1, j, k)
+						else
+							tbz(i,j,k) = bz(bzl1, j, bzh3)
+						endif
+					else
+						if(k.lt.bzl3) then 
+							tbz(i,j,k) = bz(bzl1,bzh2,bzl3)
+						elseif(k.lt.bzh3) then
+							tbz(i,j,k) = bz(bzl1, bzh2, k)
+						else
+							tbz(i,j,k) = bz(bzl1, bzh2, bzh3)
+						endif
+					endif
+				elseif(i.lt.bzh1) then 
+					if(j.lt.bzl2) then
+						if(k.lt.bzl3) then 
+							tbz(i,j,k) = bz(i,bzl2,bzl3)
+						elseif(k.lt.bzh3) then
+							tbz(i,j,k) = bz(i, bzl2, k)
+						else
+							tbz(i,j,k) = bz(i, bzl2, bzh3)
+						endif
+					elseif(j.lt.bzh2) then
+						if(k.lt.bzl3) then 
+							tbz(i,j,k) = bz(i,j,bzl3)
+						elseif(k.lt.bzh3) then
+							tbz(i,j,k) = bz(i, j, k)
+						else
+							tbz(i,j,k) = bz(i, j, bzh3)
+						endif
+					else
+						if(k.lt.bzl3) then 
+							tbz(i,j,k) = bz(i,bzh2,bzl3)
+						elseif(k.lt.bzh3) then
+							tbz(i,j,k) = bz(i, bzh2, k)
+						else
+							tbz(i,j,k) = bz(i, bzh2, bzh3)
+						endif
+					endif
+				else
+					if(j.lt.bzl2) then
+						if(k.lt.bzl3) then 
+							tbz(i,j,k) = bz(bzh1,bzl2,bzl3)
+						elseif(k.lt.bzh3) then
+							tbz(i,j,k) = bz(bzh1, bzl2, k)
+						else
+							tbz(i,j,k) = bz(bzh1, bzl2, bzh3)
+						endif
+					elseif(j.lt.bzh2) then
+						if(k.lt.bzl3) then 
+							tbz(i,j,k) = bz(bzh1,j,bzl3)
+						elseif(k.lt.bzh3) then
+							tbz(i,j,k) = bz(bzh1, j, k)
+						else
+							tbz(i,j,k) = bz(bzh1, j, bzh3)
+						endif
+					else
+						if(k.lt.bzl3) then 
+							tbz(i,j,k) = bz(bzh1,bzh2,bzl3)
+						elseif(k.lt.bzh3) then
+							tbz(i,j,k) = bz(bzh1, bzh2, k)
+						else
+							tbz(i,j,k) = bz(bzh1, bzh2, bzh3)
+						endif
+					endif
+				endif
+			enddo
 		enddo
-		endif
+	enddo
+
 	!============================================== PLM ================================================================
 	do k = s_l3, s_h3
 		do j = s_l2, s_h2
 		do i = s_l1, s_h1
+	
 	!============================================ X Direction ==============================================
 			summ = 0.d0
 			smhd = 0.d0
@@ -223,7 +385,8 @@ contains
 			Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
 			Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Im(i,j,k,QPRES,1)        = Im(i,j,k,QPRES,1) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1))
-				
+
+	
 	!========================================= Y Direction ================================================				
 
 			summ = 0.d0
@@ -274,7 +437,6 @@ contains
 			Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
 			Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
 			Im(i,j,k,QPRES,2)       = Im(i,j,k,QPRES,2) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2))				
-
 	!========================================= Z Direction ================================================				
 			summ = 0.d0
 			smhd = 0.d0
@@ -321,7 +483,6 @@ contains
 			Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 			Im(i,j,k,QPRES,3)       = Im(i,j,k,QPRES,3) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3))
-
 		enddo
 		enddo
 	enddo

@@ -15,9 +15,9 @@ nyx.initial_z = 0.
 geometry.is_periodic = 0 0 0
 geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
 geometry.prob_lo     =  0      0     0
-geometry.prob_hi     =  1  1.    1
+geometry.prob_hi     =  .5  1.    .5
 
-amr.n_cell           = 32     32      32
+amr.n_cell           = 16     32      16
 amr.max_level        = 0       # maximum level number allowed
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
@@ -25,8 +25,8 @@ amr.max_level        = 0       # maximum level number allowed
 # 1 = Inflow             4 = SlipWall
 # 2 = Outflow            5 = NoSlipWall
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
-nyx.lo_bc       =  4   2   4
-nyx.hi_bc       =  4   2   4
+nyx.lo_bc       =  2   4   2
+nyx.hi_bc       =  2   4   2
 
 # WHICH PHYSICS
 nyx.do_hydro = 1 #with MHD = TRUE, does MHD

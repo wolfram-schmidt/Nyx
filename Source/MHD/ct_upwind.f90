@@ -400,7 +400,7 @@ implicit none
  			q(i,j,k,QV)    = u(i,j,k,UMY)/q(i,j,k,QRHO)
  			q(i,j,k,QW)    = u(i,j,k,UMZ)/q(i,j,k,QRHO)
 			q(i,j,k,QPRES) = u(i,j,k,UEINT)*gamma_minus_1 + 0.5*dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ))
-			q(i,j,k,QREINT) = (q(i,j,k,QPRES) - 0.5d0**dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ)))/gamma_minus_1
+			q(i,j,k,QREINT) = (q(i,j,k,QPRES) - 0.5d0*dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ)))/gamma_minus_1
 			q(i,j,k,QMAGX:QMAGZ) = u(i,j,k,QMAGX:QMAGZ)
 		 enddo
 	 enddo
@@ -575,6 +575,11 @@ implicit none
 				uL(i,j,k,QMAGY,1,1) = um(i,j,k,QMAGY,1) - dt/(6.d0*dx)*&
 									 	((Ex(i,j+1,k+1) - Ex(i,j+1,k)) + &
 										 (Ex(i,j  ,k+1) - Ex(i,j  ,k)))
+				if(i.eq.13.and.j.eq.19.and.k.eq.9) then 
+					print*, "By L 1 = ", uL(i,j,k,QMAGY,1,1)
+					print*, "Ex = ", Ex(i,j+1, k+1), Ex(i,j+1,k), Ex(i,j,k+1), Ex(i,j,k)
+					pause
+				endif
 
 				uL(i,j,k,QMAGY:QMAGZ,1,2) = um(i,j,k,QMAGY:QMAGZ,1)
 				!Y-direction

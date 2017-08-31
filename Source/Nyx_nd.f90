@@ -521,7 +521,7 @@
            QU     = 2   ! u
            QV     = 3   ! v
            QW     = 4   ! w
-	   QPRES  = 5   ! p
+	   QPRES  = 5   ! p + 0.5 BB^T
            QREINT = 6   ! (rho e)
 	   QMAGX  = 7   ! Bx centered
 	   QMAGY  = 8   ! By centered 
