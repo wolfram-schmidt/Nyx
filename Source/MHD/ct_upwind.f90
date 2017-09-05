@@ -263,12 +263,19 @@ enddo
         work_hi(1) = q_h1-2
         work_hi(2) = q_h2-2
         work_hi(3) = q_h3-2
+					
+
+					print *, "flxx2D = ", flxx2D(15,-2,-2,2,1) , flxx2D(14,-2,-2,2,1), "at ", 15,-2,-2
+					print *, "qL = ", q_temp_P(14,-2,-2,2,1,2), "qR = ", q_temp_M(15,-2,-2,2,1,2)
+					pause
+	
+
 	call half_step(work_lo, work_hi, &
-				   cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
+	               cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 	               flxx2D, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
-		       	   flxy2D, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
-		       	   flxz2D, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
-		       	   dx, dy, dz, dt)
+	               flxy2D, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
+	               flxz2D, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
+	               dx, dy, dz, dt)
 
 	call half_step_mag(work_lo, work_hi, &
 					   cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
@@ -455,6 +462,13 @@ implicit none
 				uL(i,j,k,URHO:UEDEN,2,2) = um(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flxz(i,j,k+1,URHO:UEDEN) - flxz(i,j,k,URHO:UEDEN))! z corrected y
 				uL(i,j,k,URHO:UEDEN,3,1) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flxx(i+1,j,k,URHO:UEDEN) - flxx(i,j,k,URHO:UEDEN))! x corrected z
 				uL(i,j,k,URHO:UEDEN,3,2) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flxy(i,j+1,k,URHO:UEDEN) - flxy(i,j,k,URHO:UEDEN))! y corrected z
+				if(i.eq. 15 .and.j.eq. -2 .and.k.eq. -2) then 
+					print*, i, j, k
+					print*, "UL z corrected x  =", uL(i,j,k,2,1,2)
+					print*, "um = ",  um(i,j,k,2,1)
+					print*, "flxz = ", flxz(i,j,k+1,2) , flxz(i,j,k,2)
+					pause
+				endif
 
 				u = uL(i,j,k,UMX,1,1)/uL(i,j,k,URHO,1,1)
 				v = uL(i,j,k,UMY,1,1)/uL(i,j,k,URHO,1,1)
@@ -575,11 +589,6 @@ implicit none
 				uL(i,j,k,QMAGY,1,1) = um(i,j,k,QMAGY,1) - dt/(6.d0*dx)*&
 									 	((Ex(i,j+1,k+1) - Ex(i,j+1,k)) + &
 										 (Ex(i,j  ,k+1) - Ex(i,j  ,k)))
-				if(i.eq.13.and.j.eq.19.and.k.eq.9) then 
-					print*, "By L 1 = ", uL(i,j,k,QMAGY,1,1)
-					print*, "Ex = ", Ex(i,j+1, k+1), Ex(i,j+1,k), Ex(i,j,k+1), Ex(i,j,k)
-					pause
-				endif
 
 				uL(i,j,k,QMAGY:QMAGZ,1,2) = um(i,j,k,QMAGY:QMAGZ,1)
 				!Y-direction
@@ -724,6 +733,13 @@ implicit none
 										- 0.5d0*dt/dy*(flxz(i,j,k+1,URHO:UEDEN,1) - flxz(i,j,k,URHO:UEDEN,1))
 				uL(i,j,k,URHO:UEDEN,3) = um(i,j,k,URHO:UEDEN,3) - 0.5d0*dt/dz*(flxx(i+1,j,k,URHO:UEDEN,1) - flxx(i,j,k,URHO:UEDEN,1)) &
 										- 0.5d0*dt/dz*(flxy(i,j+1,k,URHO:UEDEN,1) - flxy(i,j,k,URHO:UEDEN,1))
+				if(abs(uL(i,j,k,2,3)).gt.0.d0) then 
+					print *, "Momentum not Zero at ", i, j ,k
+					print *, "out = ", uL(i, j, k, 2, 3), "in = ", um(i,j,k,2,3)
+					print *, "flxx = ", flxx(i+1,j,k,2,1) , flxx(i,j,k,2,1)
+					print *, "flxy = ", flxy(i,j+1,k,2,1) , flxy(i,j,k,2,1)
+					pause
+				endif
 
 			
 				do n = 1,3

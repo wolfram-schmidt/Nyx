@@ -446,24 +446,44 @@ end subroutine fort_advance_mhd
 
       do k = loq(3),hiq(3)
          do j = loq(2),hiq(2)
-            do i = loq(1),hiq(1)-1
- 	      q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
- 	   end do
- 	 end do
-      end do
-      do k = loq(3),hiq(3)
-         do j = loq(2),hiq(2)-1
             do i = loq(1),hiq(1)
- 	      q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
-            end do
-  	end do
+				if(bx(i+1,j,k).eq.0.d0.or.i.eq.hiq(1)) then 
+					q(i,j,k,QMAGX) = bx(i,j,k)
+				else
+		  	 	    q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
+				endif
+				if(q(i,j,k,QMAGX).eq.0.d0) then 
+					print*, "Bx is 0, at ", i, j, k
+					print*, bx(i+1,j,k), bx(i, j, k), bx(i-1,j,k)
+					print*, "hiq(1) = ", hiq(1), "bxhi1 = ", bxin_h1
+					pause
+				endif
+	 	   end do
+	 	 end do
       end do
-      do k = loq(3),hiq(3)-1
+
+      do k = loq(3),hiq(3)
          do j = loq(2),hiq(2)
             do i = loq(1),hiq(1)
- 	      q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
+			  if(by(i,j+1,k).eq.0.d0.or.j.eq.hiq(2)) then 
+				q(i,j,k,QMAGY) = by(i,j,k)
+			  else
+		 	      q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
+			  endif
             end do
- 	end do
+	  	end do
+      end do
+
+      do k = loq(3),hiq(3)
+         do j = loq(2),hiq(2)
+            do i = loq(1),hiq(1)
+			  if(bz(i,j,k+1).eq.0.d0.or.k.eq.hiq(3)) then 
+				q(i,j,k,QMAGZ) = bz(i,j,k)
+			  else
+		 	      q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
+			  endif
+            end do
+		end do
       end do
 
       ! Get p, T, c, csml using q state

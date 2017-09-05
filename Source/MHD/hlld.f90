@@ -298,6 +298,7 @@ subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 	endif
 	if(dir.eq.3.and.i.eq.0.and.j.eq.6.and.k.eq.15) then 
 		print*, "flux is ", choice, " = ", flx(i,j,k,:)
+		print*, "dir, i, j, k =", dir, i, j, k
 		print*, "qL = ", qL
 		print*, "qR = ", qR
 		pause
