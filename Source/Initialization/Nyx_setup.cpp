@@ -42,6 +42,11 @@ static int tang_vel_bc[] =
     INT_DIR, EXT_DIR, FOEXTRAP, REFLECT_EVEN, REFLECT_EVEN, REFLECT_EVEN
 };
 
+static int mag_field_bc[] =
+{
+    INT_DIR, EXT_DIR, FOEXTRAP, REFLECT_EVEN, FOEXTRAP, FOEXTRAP
+};
+
 static
 void
 set_scalar_bc(BCRec& bc, const BCRec& phys_bc)
@@ -95,6 +100,19 @@ set_z_vel_bc(BCRec& bc, const BCRec& phys_bc)
     bc.setHi(1, tang_vel_bc[hi_bc[1]]);
     bc.setLo(2, norm_vel_bc[lo_bc[2]]);
     bc.setHi(2, norm_vel_bc[hi_bc[2]]);
+}
+
+static
+void
+set_mag_field_bc(BCRec& bc, const BCRec& phys_bc)
+{
+    const int* lo_bc = phys_bc.lo();
+    const int* hi_bc = phys_bc.hi();
+    for (int i = 0; i < BL_SPACEDIM; i++)
+    {
+        bc.setLo(i, mag_field_bc[lo_bc[i]]);
+        bc.setHi(i, mag_field_bc[hi_bc[i]]);
+    }
 }
 
 void
@@ -404,6 +422,7 @@ Nyx::hydro_setup()
     desc_lst.setComponent(DiagEOS_Type, 1, "Ne", bc,
                           BndryFunc(generic_fill));
 
+    set_mag_field_bc(bc, phys_bc);
     desc_lst.setComponent(Mag_Type_x, 0, "b_x", bc,
                           BndryFunc(face_fillx));
     desc_lst.setComponent(Mag_Type_y, 0, "b_y", bc,
