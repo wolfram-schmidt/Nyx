@@ -117,6 +117,12 @@ contains
 					if(j.lt.bxl2) then
 						if(k.lt.bxl3) then 
 							tbx(i,j,k) = bx(i,bxl2,bxl3)
+							if(isnan(tbx(i,j,k))) then 
+								print*, "bx is nan", i, j, k
+								print*, "bxh1", bxh1
+								print*, "s_h1 + 1 = ", s_h1+1
+								stop
+							endif
 						elseif(k.lt.bxh3) then
 							tbx(i,j,k) = bx(i, bxl2, k)
 						else
@@ -445,11 +451,12 @@ contains
 			Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
 			Im(i,j,k,QPRES,2)       = Im(i,j,k,QPRES,2) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2))
 
-			if(Im(i,j,k,QMAGZ,2).eq.0.5d0) then 
-				print *, "Bz -y wrong = ", Im(i,j,k,QMAGZ,2), "i, j, k =", i, j, k
-				print *, "in ", temp(i,j,k,ibz), "summ =", summ(7), "smhd = ", smhd(7)
-				pause
-			endif				
+			if (isnan(Im(i,j,k,QMAGX,2))) then
+         			print *,'IM:QMAGX2 IS NAN ', i,j,k
+				print *, "bx = ", temp(i,j,k,ibx), "sum = ", summ(6), "smhd = ", smhd(6)
+				print *, "by = ", tby(i,j+1,k), tby(i,j,k)
+			         stop			
+			endif
 	!========================================= Z Direction ================================================				
 			summ = 0.d0
 			smhd = 0.d0
