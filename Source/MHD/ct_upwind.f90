@@ -264,12 +264,6 @@ enddo
         work_hi(2) = q_h2-2
         work_hi(3) = q_h3-2
 					
-
-					print *, "flxx2D = ", flxx2D(15,-2,-2,2,1) , flxx2D(14,-2,-2,2,1), "at ", 15,-2,-2
-					print *, "qL = ", q_temp_P(14,-2,-2,2,1,2), "qR = ", q_temp_M(15,-2,-2,2,1,2)
-					pause
-	
-
 	call half_step(work_lo, work_hi, &
 	               cons_half_M, cons_half_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 	               flxx2D, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &

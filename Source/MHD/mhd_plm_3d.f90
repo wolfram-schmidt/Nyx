@@ -501,6 +501,36 @@ contains
 				print *, "in ", temp(i,j,k-1,ibz)
 				pause
 			endif
+
+      if (isnan(Im(i,j,k,QMAGX,1))) then
+         print *,'IM:QMAGX1 IS NAN ', i,j,k
+         stop
+      else if (isnan(Im(i,j,k,QMAGX,2))) then
+         print *,'IM:QMAGX2 IS NAN ', i,j,k
+         stop
+      else if (isnan(Im(i,j,k,QMAGX,3))) then
+         print *,'IM:QMAGX3 IS NAN ', i,j,k
+         stop
+      else if (isnan(Im(i,j,k,QMAGY,1))) then
+         print *,'IM:QMAGY1 IS NAN ', i,j,k
+         stop
+      else if (isnan(Im(i,j,k,QMAGY,2))) then
+         print *,'IM:QMAGY2 IS NAN ', i,j,k
+         stop
+      else if (isnan(Im(i,j,k,QMAGY,3))) then
+         print *,'IM:QMAGY3 IS NAN ', i,j,k
+         stop
+      else if (isnan(Im(i,j,k,QMAGZ,1))) then
+         print *,'IM:QMAGZ1 IS NAN ', i,j,k
+         stop
+      else if (isnan(Im(i,j,k,QMAGZ,2))) then
+         print *,'IM:QMAGZ2 IS NAN ', i,j,k
+         stop
+      else if (isnan(Im(i,j,k,QMAGZ,3))) then
+         print *,'IM:QMAGZ3 IS NAN ', i,j,k
+         stop
+      end if
+
 		enddo
 		enddo
 	enddo

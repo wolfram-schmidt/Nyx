@@ -75,6 +75,17 @@ subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
    do j = flx_l2, flx_h2
    do i = flx_l1, flx_h1
 
+      if (isnan(qL(QMAGN))) then
+         print *,'QMAGN IS NAN ', dir,i,j,k
+         stop
+      else if (isnan(qL(QMAGP1))) then
+         print *,'QMAGP1 IS NAN ', dir,i,j,k
+         stop
+      else if (isnan(qL(QMAGP2))) then
+         print *,'QMAGP2 IS NAN ', dir,i,j,k
+         stop
+      end if
+
       if (dir .eq. 1) then
          qL(:) = qp(i-1,j,k,:,dir)
       else if (dir .eq. 2) then
@@ -296,6 +307,7 @@ subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 	   flx(i,j,k,:) = FR
 	   choice = "FR"
 	endif
+
 	if(dir.eq.3.and.i.eq.0.and.j.eq.6.and.k.eq.15) then 
 		print*, "flux is ", choice, " = ", flx(i,j,k,:)
 		print*, "dir, i, j, k =", dir, i, j, k
