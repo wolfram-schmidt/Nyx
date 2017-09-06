@@ -132,13 +132,13 @@ Nyx::initData ()
 #ifdef MHD
    // Same comment as Hydro
    MultiFab& Bx_new	= get_new_data(Mag_Type_x);
-   Bx_new.setVal(0.0);
+   Bx_new.setVal(1.e200);
 
    MultiFab& By_new	= get_new_data(Mag_Type_y);
-   By_new.setVal(0.0);
+   By_new.setVal(1.e200);
 
    MultiFab& Bz_new	= get_new_data(Mag_Type_z);
-   Bz_new.setVal(0.0);
+   Bz_new.setVal(1.e200);
 #endif
 
     // If you run a pure N-body simulation and Nyx segfaults here, then
