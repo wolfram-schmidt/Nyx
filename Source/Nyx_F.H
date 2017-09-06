@@ -146,6 +146,24 @@ extern "C"
      const amrex::Real dx[], const amrex::Real glo[],
      const amrex::Real* time, const int bc[]);
 
+  void face_fillx
+    (BL_FORT_FAB_ARG(state),
+     const int dlo[], const int dhi[],
+     const amrex::Real dx[], const amrex::Real glo[],
+     const amrex::Real* time, const int bc[]);
+
+  void face_filly
+    (BL_FORT_FAB_ARG(state),
+     const int dlo[], const int dhi[],
+     const amrex::Real dx[], const amrex::Real glo[],
+     const amrex::Real* time, const int bc[]);
+
+  void face_fillz
+    (BL_FORT_FAB_ARG(state),
+     const int dlo[], const int dhi[],
+     const amrex::Real dx[], const amrex::Real glo[],
+     const amrex::Real* time, const int bc[]);
+
 #if MHD
   void fort_advance_mhd
     (const amrex::Real* time,

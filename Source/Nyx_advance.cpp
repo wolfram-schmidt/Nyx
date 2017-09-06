@@ -537,13 +537,10 @@ Nyx::advance_mhd (Real time,
 
     // Call the mhd advance itself
     just_the_mhd(time, dt, a_old, a_new);
-    MultiFab& S_new = get_new_data(State_Type); 
-	MultiFab& Bx_new = get_new_data(Mag_Type_x); // Note that the magnetic variables are not in S 
-	MultiFab& By_new = get_new_data(Mag_Type_y);
-	MultiFab& Bz_new = get_new_data(Mag_Type_z);
-    MultiFab& D_new = get_new_data(DiagEOS_Type);
 
-    //reset_internal_energy(S_new,D_new); //Getting an Error in Here Need to fix
+    MultiFab& S_new = get_new_data(State_Type); 
+    MultiFab& D_new = get_new_data(DiagEOS_Type);
+    reset_internal_energy(S_new,D_new); 
 
     return dt;
 }
