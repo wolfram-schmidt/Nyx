@@ -738,6 +738,15 @@ Nyx::init ()
     FillCoarsePatch(S_new, 0, cur_time,   State_Type, 0, S_new.nComp());
     FillCoarsePatch(D_new, 0, cur_time, DiagEOS_Type, 0, D_new.nComp());
 #endif
+#ifdef MHD
+    MultiFab& Bx_new = get_new_data(Mag_Type_x);
+    MultiFab& By_new = get_new_data(Mag_Type_y);
+    MultiFab& Bz_new = get_new_data(Mag_Type_z);
+    FillCoarsePatch(Bx_new,0,cur_time,Mag_Type_x,0, Bx_new.nComp());
+    FillCoarsePatch(By_new,0,cur_time,Mag_Type_y,0, By_new.nComp());
+    FillCoarsePatch(Bz_new,0,cur_time,Mag_Type_z,0, Bz_new.nComp());
+ #endif
+
 
 #ifdef GRAVITY
     MultiFab& Phi_new = get_new_data(PhiGrav_Type);
