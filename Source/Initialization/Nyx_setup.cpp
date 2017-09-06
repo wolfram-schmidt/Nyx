@@ -405,11 +405,11 @@ Nyx::hydro_setup()
                           BndryFunc(generic_fill));
 
     desc_lst.setComponent(Mag_Type_x, 0, "b_x", bc,
-                          BndryFunc(generic_fill));
+                          BndryFunc(face_fillx));
     desc_lst.setComponent(Mag_Type_y, 0, "b_y", bc,
-                          BndryFunc(generic_fill));
+                          BndryFunc(face_filly));
     desc_lst.setComponent(Mag_Type_z, 0, "b_z", bc,
-                          BndryFunc(generic_fill));
+                          BndryFunc(face_fillz));
 
 #ifdef GRAVITY
     if (do_grav)

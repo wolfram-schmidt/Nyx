@@ -373,9 +373,6 @@ Nyx::init_from_plotfile ()
 #endif
 
         int ns = S_new.nComp();
-		int nbx = Bx_new.nComp();
-		int nby = By_new.nComp();
-		int nbz = Bz_new.nComp();
         int nd = D_new.nComp();
 
 #ifdef _OPENMP
