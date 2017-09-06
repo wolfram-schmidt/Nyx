@@ -4,6 +4,7 @@ module fc_fill_module
   implicit none
 
   include 'AMReX_bc_types.fi'
+
   public
 
 contains
@@ -45,14 +46,7 @@ contains
       ndwn = max(0,domlo(3)-q_l3)
       nup  = max(0,q_h3-(domhi(3)+1))
 
-!========================================================== X Face Valued Vars ==========================================================
-
-
       if (dir.eq.1) then
-!
-!   ::::: first fill sides
-!
-
 !
 !     ::::: X-face extending in lo-x direction
 !
@@ -62,15 +56,15 @@ contains
 	 if (bc(1,1) .eq. FOEXTRAP .or. &
              bc(1,1) .eq. HOEXTRAP) then
 
-            do k = domlo(3),domhi(3)
-            do j = domlo(2),domhi(2)
+            do k = q_l3,q_h3
+            do j = q_l2,q_h2
                q(ilo-1,j,k) = 2.d0*q(ilo,j,k) - q(ilo+1,j,k)
             end do
 	    end do
 
             do n = 2, nlft
-            do k = domlo(3),domhi(3)
-            do j = domlo(2),domhi(2)
+               do k = q_l3,q_h3
+               do j = q_l2,q_h2
                   q(ilo-n,j,k) = q(ilo-1,j,k)
 	       end do
    	       end do
@@ -79,8 +73,8 @@ contains
 	 else if (bc(1,1) .eq. REFLECT_EVEN) then
 
 	    do n = 1, nlft
-            do k = domlo(3),domhi(3)
-            do j = domlo(2),domhi(2)
+            do k = q_l3,q_h3
+            do j = q_l2,q_h2
                q(ilo-n,j,k) = q(ilo+n,j,k)
             end do
             end do
@@ -93,20 +87,20 @@ contains
 !     ::::: X-face extending in hi-x direction
 !
       if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)
+         ihi = domhi(1)+1
 
 	 if (bc(1,2) .eq. FOEXTRAP .or. &
              bc(1,2) .eq. HOEXTRAP) then
 
-            do k = domlo(3),domhi(3)
-            do j = domlo(2),domhi(2)
+            do k = q_l3,q_h3
+            do j = q_l2,q_h2
                q(ihi+1,j,k) = 2.d0*q(ihi,j,k) - q(ihi-1,j,k)
             end do
 	    end do
 
             do n = 2, nrgt
-	       do k = domlo(3),domhi(3)
-               do j = domlo(2),domhi(2)
+               do k = q_l3,q_h3
+               do j = q_l2,q_h2
                   q(ihi+n,j,k) = q(ihi+1,j,k)
 	       end do
    	       end do
@@ -115,8 +109,8 @@ contains
 	 else if (bc(1,2) .eq. REFLECT_EVEN) then
 
 	    do n = 1, nrgt
- 	    do k = domlo(3),domhi(3)
-            do j = domlo(2),domhi(2)
+            do k = q_l3,q_h3
+            do j = q_l2,q_h2
                q(ihi+n,j,k) = q(ihi-n,j,k)
             end do
             end do
@@ -136,8 +130,8 @@ contains
              bc(2,1) .eq. HOEXTRAP) then
 
             do n = 1, nbot
-	       do k = domlo(3),domhi(3)
-               do i = domlo(1),domhi(1)
+               do k = q_l3,q_h3
+               do i = q_l1,q_h1
                   q(i,jlo-n,k) = q(i,jlo,k)
 	       end do
    	       end do
@@ -146,8 +140,8 @@ contains
 	 else if (bc(2,1) .eq. REFLECT_EVEN) then
 
 	    do n = 1, nbot
-	    do k = domlo(3),domhi(3)
-            do i = domlo(1),domhi(1)
+            do k = q_l3,q_h3
+            do i = q_l1,q_h1
                q(i,jlo-n,k) = q(i,jlo+n-1,k)
             end do
             end do
@@ -168,8 +162,8 @@ contains
              bc(2,2) .eq. HOEXTRAP) then
 
             do n = 1, ntop
-	       do k = domlo(3),domhi(3)
-               do i = domlo(1),domhi(1)
+               do k = q_l3,q_h3
+               do i = q_l1,q_h1
                   q(i,jhi+n,k) = q(i,jhi,k)
 	       end do
    	       end do
@@ -178,8 +172,8 @@ contains
 	 else if (bc(2,2) .eq. REFLECT_EVEN) then
 
 	    do n = 1, ntop
-	    do k = domlo(3),domhi(3)
-            do i = domlo(1),domhi(1)
+            do k = q_l3,q_h3
+            do i = q_l1,q_h1
                q(i,jhi+n,k) = q(i,jhi-n+1,k)
             end do
             end do
@@ -200,8 +194,8 @@ contains
              bc(3,1) .eq. HOEXTRAP) then
 
             do n = 1, ndwn
-	       do j = domlo(2),domhi(2)
-               do i = domlo(1),domhi(1)
+               do j = q_l2,q_h2
+               do i = q_l1,q_h1
                   q(i,j,klo-n) = q(i,j,klo)
 	       end do
    	       end do
@@ -210,8 +204,8 @@ contains
 	 else if (bc(3,1) .eq. REFLECT_EVEN) then
 
 	    do n = 1, ndwn
-	    do j = domlo(2),domhi(2)
-            do i = domlo(1),domhi(1)
+            do j = q_l2,q_h2
+            do i = q_l1,q_h1
                q(i,j,klo-n) = q(i,j,klo+n-1)
             end do
             end do
@@ -232,8 +226,8 @@ contains
              bc(3,2) .eq. HOEXTRAP) then
 
             do n = 1, nup
-	       do j = domlo(2),domhi(2)
-               do i = domlo(1),domhi(1)
+               do j = q_l2,q_h2
+               do i = q_l1,q_h1
                   q(i,j,khi+n) = q(i,j,khi)
 	       end do
    	       end do
@@ -242,8 +236,8 @@ contains
 	 else if (bc(3,2) .eq. REFLECT_EVEN) then
 
 	    do n = 1, nup
-     	    do j = domlo(2),domhi(2)
-            do i = domlo(1),domhi(1)
+            do j = q_l2,q_h2
+            do i = q_l1,q_h1
                q(i,j,khi+n) = q(i,j,khi-n+1)
             end do
             end do
@@ -252,797 +246,6 @@ contains
 	    call bl_abort("Dont know how to fill this bc(3,2)")
 	 end if
       end if
-
-!
-!     ::::: Now fill edges ::::::
-!
-
-!
-!     ::::: X-face extending in lo-y direction, sweep x, hi z
-!
-      if (q_l2 .lt. domlo(2)) then
-
-         jlo = domlo(2)
-
-	 if (bc(2,1) .eq. FOEXTRAP .or. &
-             bc(2,1) .eq. HOEXTRAP) then
-
-            do n = 1, nbot
-	       do k = domhi(3),q_h3
-               do i = domlo(1),domhi(1)
-                  q(i,jlo-n,k) = q(i,jlo,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(2,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nbot
-	       do k = domhi(3),q_h3
-               do i = domlo(1),domhi(1)
-               q(i,jlo-n,k) = q(i,jlo+n-1,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(2,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in hi-y direction, sweep x, hi z
-!
-      if (q_h2 .gt. domhi(2)) then
-
-         jhi = domhi(2)
-
-	 if (bc(2,2) .eq. FOEXTRAP .or. &
-             bc(2,2) .eq. HOEXTRAP) then
-
-            do n = 1, ntop
-	       do k = domhi(3),q_h3
-               do i = domlo(1),domhi(1)
-                  q(i,jhi+n,k) = q(i,jhi,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(2,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, ntop
-            do k = domhi(3),q_h3
-            do i = domlo(1),domhi(1)
-               q(i,jhi+n,k) = q(i,jhi-n+1,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(2,2)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in lo-y direction, sweep x, hi z
-!
-      if (q_l2 .lt. domlo(2)) then
-
-         jlo = domlo(2)
-
-	 if (bc(2,1) .eq. FOEXTRAP .or. &
-             bc(2,1) .eq. HOEXTRAP) then
-
-            do n = 1, nbot
-	       do k = domhi(3),q_h3
-               do i = domlo(1),domhi(1)
-                  q(i,jlo-n,k) = q(i,jlo,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(2,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nbot
-	       do k = domhi(3),q_h3
-               do i = domlo(1),domhi(1)
-               q(i,jlo-n,k) = q(i,jlo+n-1,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(2,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in hi-y direction, sweep x, lo z
-!
-      if (q_h2 .gt. domhi(2)) then
-
-         jhi = domhi(2)
-
-	 if (bc(2,2) .eq. FOEXTRAP .or. &
-             bc(2,2) .eq. HOEXTRAP) then
-
-            do n = 1, ntop
-	       do k = domlo(3),q_l3,-1
-               do i = domlo(1),domhi(1)
-                  q(i,jhi+n,k) = q(i,jhi,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(2,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, ntop
-	       do k = domlo(3),q_l3,-1
-               do i = domlo(1),domhi(1)
-               q(i,jhi+n,k) = q(i,jhi-n+1,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(2,2)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in lo-y direction, sweep x, lo z
-!
-      if (q_l2 .lt. domlo(2)) then
-
-         jlo = domlo(2)
-
-	 if (bc(2,1) .eq. FOEXTRAP .or. &
-             bc(2,1) .eq. HOEXTRAP) then
-
-            do n = 1, nbot
-	       do k = domlo(3),q_l3,-1
-               do i = domlo(1),domhi(1)
-                  q(i,jlo-n,k) = q(i,jlo,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(2,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nbot
-            do k = domlo(3),q_l3,-1
-            do i = domlo(1),domhi(1)
-               q(i,jlo-n,k) = q(i,jlo+n-1,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(2,1)")
-	 end if
-      end if
-
-
-!
-!     ::::: X-face extending in lo-x direction, lo-z direction, sweep y
-!
-
-      if (q_l1 .lt. domlo(1)) then
-         ilo = domlo(1)
-
-	 if (bc(1,1) .eq. FOEXTRAP .or. &
-             bc(1,1) .eq. HOEXTRAP) then
-
-            do k = domlo(3), q_l3, -1
-            do j = domlo(2),domhi(2)
-               q(ilo-1,j,k) = 2.d0*q(ilo,j,k) - q(ilo+1,j,k)
-            end do
-	    end do
-
-            do n = 2, nlft
-            do k = domlo(3), q_l3, -1
-            do j = domlo(2),domhi(2)
-                  q(ilo-n,j,k) = q(ilo-1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nlft
-            do k = domlo(3), q_l3, -1
-            do j = domlo(2),domhi(2)
-               q(ilo-n,j,k) = q(ilo+n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in lo-x direction, hi-z direction, sweep y
-!
-
-      if (q_l1 .lt. domlo(1)) then
-         ilo = domlo(1)
-
-	 if (bc(1,1) .eq. FOEXTRAP .or. &
-             bc(1,1) .eq. HOEXTRAP) then
-
-            do k = domhi(3), q_h3
-            do j = domlo(2),domhi(2)
-               q(ilo-1,j,k) = 2.d0*q(ilo,j,k) - q(ilo+1,j,k)
-            end do
-	    end do
-
-            do n = 2, nlft
-            do k = domhi(3), q_h3
-            do j = domlo(2),domhi(2)
-                  q(ilo-n,j,k) = q(ilo-1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nlft
-            do k = domhi(3), q_h3
-            do j = domlo(2),domhi(2)
-               q(ilo-n,j,k) = q(ilo+n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in lo-x direction, lo-y direction, sweep z
-!
-
-      if (q_l1 .lt. domlo(1)) then
-         ilo = domlo(1)
-
-	 if (bc(1,1) .eq. FOEXTRAP .or. &
-             bc(1,1) .eq. HOEXTRAP) then
-
-            do k = domlo(3), domhi(3)
-            do j = domlo(2), q_l2, -1
-               q(ilo-1,j,k) = 2.d0*q(ilo,j,k) - q(ilo+1,j,k)
-            end do
-	    end do
-
-            do n = 2, nlft
-            do k = domlo(3), domhi(3)
-            do j = domlo(2), q_l2, -1
-                  q(ilo-n,j,k) = q(ilo-1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nlft
-            do k = domlo(3), domhi(3)
-            do j = domlo(2), q_l2, -1
-               q(ilo-n,j,k) = q(ilo+n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in lo-x direction, hi-y direction, sweep z
-!
-
-      if (q_l1 .lt. domlo(1)) then
-         ilo = domlo(1)
-
-	 if (bc(1,1) .eq. FOEXTRAP .or. &
-             bc(1,1) .eq. HOEXTRAP) then
-
-            do k = domlo(3),domhi(3)
-            do j = domhi(2), q_h2
-               q(ilo-1,j,k) = 2.d0*q(ilo,j,k) - q(ilo+1,j,k)
-            end do
-	    end do
-
-            do n = 2, nlft
-            do k = domlo(3),domhi(3)
-            do j = domhi(2), q_h2
-                  q(ilo-n,j,k) = q(ilo-1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nlft
-            do k = domlo(3),domhi(3)
-            do j = domhi(2), q_h2
-               q(ilo-n,j,k) = q(ilo+n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in hi-x direction, lo z, sweep y 
-!
-      if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)
-
-	 if (bc(1,2) .eq. FOEXTRAP .or. &
-             bc(1,2) .eq. HOEXTRAP) then
-
-            do k = domlo(3),q_l3, -1
-            do j = domlo(2),domhi(2)
-               q(ihi+1,j,k) = 2.d0*q(ihi,j,k) - q(ihi-1,j,k)
-            end do
-	    end do
-
-            do n = 2, nrgt
-            do k = domlo(3),q_l3, -1
-            do j = domlo(2),domhi(2)
-                  q(ihi+n,j,k) = q(ihi+1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nrgt
-            do k = domlo(3),q_l3, -1
-            do j = domlo(2),domhi(2)
-               q(ihi+n,j,k) = q(ihi-n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in hi-x direction, hi z, sweep y 
-!
-      if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)
-
-	 if (bc(1,2) .eq. FOEXTRAP .or. &
-             bc(1,2) .eq. HOEXTRAP) then
-
-            do k = domhi(3),q_h3
-            do j = domlo(2),domhi(2)
-               q(ihi+1,j,k) = 2.d0*q(ihi,j,k) - q(ihi-1,j,k)
-		
-            end do
-	    end do
-
-            do n = 2, nrgt
-            do k = domhi(3),q_h3
-            do j = domlo(2),domhi(2)
-                  q(ihi+n,j,k) = q(ihi+1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nrgt
-            do k = domhi(3),q_h3
-            do j = domlo(2),domhi(2)
-               q(ihi+n,j,k) = q(ihi-n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
-	 end if
-      end if
-
-
-!
-!     ::::: X-face extending in hi-x direction, lo y, sweep z
-!
-      if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)
-
-	 if (bc(1,2) .eq. FOEXTRAP .or. &
-             bc(1,2) .eq. HOEXTRAP) then
-
-            do k = domlo(3),domhi(3)
-            do j = domlo(2),q_l2, -1
-               q(ihi+1,j,k) = 2.d0*q(ihi,j,k) - q(ihi-1,j,k)
-		
-            end do
-	    end do
-
-            do n = 2, nrgt
-            do k = domlo(3),domhi(3)
-            do j = domlo(2),q_l2, -1
-                  q(ihi+n,j,k) = q(ihi+1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nrgt
-            do k = domlo(3),domhi(3)
-            do j = domlo(2),q_l2, -1
-               q(ihi+n,j,k) = q(ihi-n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in hi-x direction, hi y, sweep z 
-!
-      if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)
-
-	 if (bc(1,2) .eq. FOEXTRAP .or. &
-             bc(1,2) .eq. HOEXTRAP) then
-
-            do k = domlo(3),domhi(3)
-            do j = domhi(2),q_h2
-               q(ihi+1,j,k) = 2.d0*q(ihi,j,k) - q(ihi-1,j,k)
-		
-            end do
-	    end do
-
-            do n = 2, nrgt
-            do k = domlo(3),domhi(3)
-            do j = domhi(2),q_h2
-                  q(ihi+n,j,k) = q(ihi+1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nrgt
-            do k = domlo(3),domhi(3)
-            do j = domhi(2),q_h2
-               q(ihi+n,j,k) = q(ihi-n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
-	 end if
-      end if
-
-!
-!     ::::: Now fill Corners ::::::
-!
-
-!
-!     ::::: X-Face, lo x, lo y, lo z
-!
-
-     if (q_l1 .lt. domlo(1)) then
-         ilo = domlo(1)
-
-	 if (bc(1,1) .eq. FOEXTRAP .or. &
-             bc(1,1) .eq. HOEXTRAP) then
-
-            do k = domlo(3), q_l3, -1
-            do j = domlo(2), q_l2, -1
-               q(ilo-1,j,k) = 2.d0*q(ilo,j,k) - q(ilo+1,j,k)
-            end do
-	    end do
-
-            do n = 2, nlft
-            do k = domlo(3), q_l3, -1
-            do j = domlo(2), q_l2, -1
-                  q(ilo-n,j,k) = q(ilo-1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nlft
-            do k = domlo(3), q_l3, -1
-            do j = domlo(2), q_l2, -1
-               q(ilo-n,j,k) = q(ilo+n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-Face, lo x, hi y, lo z
-!
-
-     if (q_l1 .lt. domlo(1)) then
-         ilo = domlo(1)
-
-	 if (bc(1,1) .eq. FOEXTRAP .or. &
-             bc(1,1) .eq. HOEXTRAP) then
-
-            do k = domlo(3), q_l3, -1
-            do j = domhi(2), q_h2
-               q(ilo-1,j,k) = 2.d0*q(ilo,j,k) - q(ilo+1,j,k)
-            end do
-	    end do
-
-            do n = 2, nlft
-            do k = domlo(3), q_l3, -1
-            do j = domhi(2), q_h2
-                  q(ilo-n,j,k) = q(ilo-1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nlft
-            do k = domlo(3), q_l3, -1
-            do j = domhi(2), q_h2
-               q(ilo-n,j,k) = q(ilo+n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-Face, lo x, lo y, hi z
-!
-
-     if (q_l1 .lt. domlo(1)) then
-         ilo = domlo(1)
-
-	 if (bc(1,1) .eq. FOEXTRAP .or. &
-             bc(1,1) .eq. HOEXTRAP) then
-
-            do k = domhi(3), q_h3
-            do j = domlo(2), q_l3, -1
-               q(ilo-1,j,k) = 2.d0*q(ilo,j,k) - q(ilo+1,j,k)
-            end do
-	    end do
-
-            do n = 2, nlft
-            do k = domhi(3), q_h3
-            do j = domlo(2), q_l3, -1
-                  q(ilo-n,j,k) = q(ilo-1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nlft
-            do k = domhi(3), q_h3
-            do j = domlo(2), q_l3, -1
-               q(ilo-n,j,k) = q(ilo+n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-Face, lo x, hi y, hi z
-!
-
-     if (q_l1 .lt. domlo(1)) then
-         ilo = domlo(1)
-
-	 if (bc(1,1) .eq. FOEXTRAP .or. &
-             bc(1,1) .eq. HOEXTRAP) then
-
-            do k = domhi(3), q_h3
-            do j = domhi(2), q_h2
-               q(ilo-1,j,k) = 2.d0*q(ilo,j,k) - q(ilo+1,j,k)
-            end do
-	    end do
-
-            do n = 2, nlft
-            do k = domhi(3), q_h3
-            do j = domhi(2), q_h2
-                  q(ilo-n,j,k) = q(ilo-1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,1) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nlft
-            do k = domhi(3), q_h3
-            do j = domhi(2), q_h2
-               q(ilo-n,j,k) = q(ilo+n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in hi-x direction, lo y, lo z
-!
-      if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)
-
-	 if (bc(1,2) .eq. FOEXTRAP .or. &
-             bc(1,2) .eq. HOEXTRAP) then
-
-            do k = domlo(3),q_l3, -1
-            do j = domlo(2),q_l2, -1
-               q(ihi+1,j,k) = 2.d0*q(ihi,j,k) - q(ihi-1,j,k)
-		
-            end do
-	    end do
-
-            do n = 2, nrgt
-            do k = domlo(3),q_l3, -1
-            do j = domlo(2),q_l2, -1
-                  q(ihi+n,j,k) = q(ihi+1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nrgt
-            do k = domlo(3),q_l3, -1
-            do j = domlo(2),q_l2, -1
-               q(ihi+n,j,k) = q(ihi-n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in hi-x direction, hi y, lo z
-!
-      if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)
-
-	 if (bc(1,2) .eq. FOEXTRAP .or. &
-             bc(1,2) .eq. HOEXTRAP) then
-
-            do k = domlo(3),q_l3, -1
-            do j = domhi(2),q_h2
-               q(ihi+1,j,k) = 2.d0*q(ihi,j,k) - q(ihi-1,j,k)
-		
-            end do
-	    end do
-
-            do n = 2, nrgt
-            do k = domlo(3),q_l3, -1
-            do j = domhi(2),q_h2
-                  q(ihi+n,j,k) = q(ihi+1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nrgt
-            do k = domlo(3),q_l3, -1
-            do j = domhi(2),q_h2
-               q(ihi+n,j,k) = q(ihi-n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in hi-x direction, lo y, hi z
-!
-      if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)
-
-	 if (bc(1,2) .eq. FOEXTRAP .or. &
-             bc(1,2) .eq. HOEXTRAP) then
-
-            do k = domhi(3),q_h3
-            do j = domlo(2),q_l2, -1
-               q(ihi+1,j,k) = 2.d0*q(ihi,j,k) - q(ihi-1,j,k)
-		
-            end do
-	    end do
-
-            do n = 2, nrgt
-            do k = domhi(3),q_h3
-            do j = domlo(2),q_l2, -1
-                  q(ihi+n,j,k) = q(ihi+1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nrgt
-            do k = domhi(3),q_h3
-            do j = domlo(2),q_l2, -1
-               q(ihi+n,j,k) = q(ihi-n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
-	 end if
-      end if
-
-!
-!     ::::: X-face extending in hi-x direction, hi y, hi z
-!
-      if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)
-
-	 if (bc(1,2) .eq. FOEXTRAP .or. &
-             bc(1,2) .eq. HOEXTRAP) then
-
-            do k = domhi(3),q_h3
-            do j = domhi(2),q_h2
-               q(ihi+1,j,k) = 2.d0*q(ihi,j,k) - q(ihi-1,j,k)
-		
-            end do
-	    end do
-
-            do n = 2, nrgt
-            do k = domhi(3),q_h3
-            do j = domhi(2),q_h2
-                  q(ihi+n,j,k) = q(ihi+1,j,k)
-	       end do
-   	       end do
-	    end do
-
-	 else if (bc(1,2) .eq. REFLECT_EVEN) then
-
-	    do n = 1, nrgt
-            do k = domhi(3),q_h3
-            do j = domhi(2),q_h2
-               q(ihi+n,j,k) = q(ihi-n,j,k)
-            end do
-            end do
-	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
-	 end if
-      end if
-	
-	do k = q_l3,q_h3
-	do j = q_l2,q_h2
-	do i = q_l1,q_h1
-		if(isnan(q(i,j,k))) then
-			print*, "is nan!"
-			print*, i, j, k
-			pause
-		endif
-	enddo
-	enddo
-	enddo
-
-!========================================================== Y Face Valued Vars ==========================================================
 
       else if (dir.eq.2) then
 !

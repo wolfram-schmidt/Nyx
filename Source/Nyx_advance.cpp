@@ -540,10 +540,7 @@ Nyx::advance_mhd (Real time,
 
     MultiFab& S_new = get_new_data(State_Type); 
     MultiFab& D_new = get_new_data(DiagEOS_Type);
-    MultiFab& Bx_new = get_new_data(Mag_Type_x);
-    MultiFab& By_new = get_new_data(Mag_Type_y);
-    MultiFab& Bz_new = get_new_data(Mag_Type_z);
-   //reset_internal_energy(S_new,D_new); 
+    reset_internal_energy(S_new,D_new); 
 
     return dt;
 }

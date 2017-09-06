@@ -210,7 +210,7 @@ Nyx::just_the_mhd (Real time,
 
         for (int i = 0; i < BL_SPACEDIM; ++i) {
           fluxes[i][mfi].copy(flux[i], mfi.nodaltilebox(i));
-	  electric[i][mfi].copy(E[i], mfi.nodaltilebox(i));
+		  electric[i][mfi].copy(E[i], mfi.nodaltilebox(i));
         }
 
          e_added += se;

@@ -156,6 +156,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_l + 0.5d0*rho_l*u_l*u_l + 0.5d0*(B_x_l**2 + B_y_l**2 + B_z_l**2)
                      state(i,j,k,UEINT) = rhoe_l
+		     mag_x(i,j,k,1) = B_x_l
+		     mag_y(i,j,k,1) = B_y_l
+		     mag_z(i,j,k,1) = B_z_l
                   else
                      state(i,j,k,URHO) = rho_r
                      state(i,j,k,UMX) = rho_r*u_r
@@ -163,6 +166,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_r + 0.5d0*rho_r*u_r*u_r + 0.5d0*(B_x_r**2 + B_y_r**2 + B_z_r**2)
                      state(i,j,k,UEINT) = rhoe_r
+		     mag_x(i,j,k,1) = B_x_r
+		     mag_y(i,j,k,1) = B_y_r
+		     mag_z(i,j,k,1) = B_z_r
                   endif
 
                else if (idir == 2) then
@@ -173,6 +179,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_l + 0.5d0*rho_l*u_l*u_l + 0.5d0*(B_x_l**2 + B_y_l**2 + B_z_l**2)
                      state(i,j,k,UEINT) = rhoe_l
+		     mag_x(i,j,k,1) = B_x_l
+		     mag_y(i,j,k,1) = B_y_l
+		     mag_z(i,j,k,1) = B_z_l
                   else
                      state(i,j,k,URHO) = rho_r
                      state(i,j,k,UMX) = 0.d0
@@ -180,6 +189,9 @@
                      state(i,j,k,UMZ) = 0.d0
                      state(i,j,k,UEDEN) = rhoe_r + 0.5d0*rho_r*u_r*u_r + 0.5d0*(B_x_r**2 + B_y_r**2 + B_z_r**2)
                      state(i,j,k,UEINT) = rhoe_r
+		     mag_x(i,j,k,1) = B_x_r
+		     mag_y(i,j,k,1) = B_y_r
+		     mag_z(i,j,k,1) = B_z_r
                   endif
 
                else if (idir == 3) then
@@ -190,6 +202,9 @@
                      state(i,j,k,UMZ) = rho_l*u_l
                      state(i,j,k,UEDEN) = rhoe_l + 0.5d0*rho_l*u_l*u_l + 0.5d0*(B_x_l**2 + B_y_l**2 + B_z_l**2) 
                      state(i,j,k,UEINT) = rhoe_l 
+		     mag_x(i,j,k,1) = B_x_l
+		     mag_y(i,j,k,1) = B_y_l
+		     mag_z(i,j,k,1) = B_z_l
                   else
                      state(i,j,k,URHO) = rho_r
                      state(i,j,k,UMX) = 0.d0
@@ -197,6 +212,9 @@
                      state(i,j,k,UMZ) = rho_r*u_r
                      state(i,j,k,UEDEN) = rhoe_r + 0.5d0*rho_r*u_r*u_r + 0.5d0*(B_x_r**2 + B_y_r**2 + B_z_r**2)
                      state(i,j,k,UEINT) = rhoe_r
+		     mag_x(i,j,k,1) = B_x_r
+		     mag_y(i,j,k,1) = B_y_r
+		     mag_z(i,j,k,1) = B_z_r
                   endif
 
                else
