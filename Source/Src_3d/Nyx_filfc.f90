@@ -98,7 +98,7 @@ contains
             end do
 	    end do
 
-            do n = 2, nlft
+            do n = 2, nrgt
                do k = q_l3,q_h3
                do j = q_l2,q_h2
                   q(ihi+n,j,k) = q(ihi+1,j,k)
@@ -108,7 +108,7 @@ contains
 
 	 else if (bc(1,2) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, nrgt
             do k = q_l3,q_h3
             do j = q_l2,q_h2
                q(ihi+n,j,k) = q(ihi-n,j,k)
@@ -129,7 +129,7 @@ contains
 	 if (bc(2,1) .eq. FOEXTRAP .or. &
              bc(2,1) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, nbot
                do k = q_l3,q_h3
                do i = q_l1,q_h1
                   q(i,jlo-n,k) = q(i,jlo,k)
@@ -139,7 +139,7 @@ contains
 
 	 else if (bc(2,1) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, nbot
             do k = q_l3,q_h3
             do i = q_l1,q_h1
                q(i,jlo-n,k) = q(i,jlo+n-1,k)
@@ -161,7 +161,7 @@ contains
 	 if (bc(2,2) .eq. FOEXTRAP .or. &
              bc(2,2) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, ntop
                do k = q_l3,q_h3
                do i = q_l1,q_h1
                   q(i,jhi+n,k) = q(i,jhi,k)
@@ -171,7 +171,7 @@ contains
 
 	 else if (bc(2,2) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, ntop
             do k = q_l3,q_h3
             do i = q_l1,q_h1
                q(i,jhi+n,k) = q(i,jhi-n+1,k)
@@ -193,7 +193,7 @@ contains
 	 if (bc(3,1) .eq. FOEXTRAP .or. &
              bc(3,1) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, ndwn
                do j = q_l2,q_h2
                do i = q_l1,q_h1
                   q(i,j,klo-n) = q(i,j,klo)
@@ -203,7 +203,7 @@ contains
 
 	 else if (bc(3,1) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, ndwn
             do j = q_l2,q_h2
             do i = q_l1,q_h1
                q(i,j,klo-n) = q(i,j,klo+n-1)
@@ -225,7 +225,7 @@ contains
 	 if (bc(3,2) .eq. FOEXTRAP .or. &
              bc(3,2) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, nup
                do j = q_l2,q_h2
                do i = q_l1,q_h1
                   q(i,j,khi+n) = q(i,j,khi)
@@ -235,7 +235,7 @@ contains
 
 	 else if (bc(3,2) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, nup
             do j = q_l2,q_h2
             do i = q_l1,q_h1
                q(i,j,khi+n) = q(i,j,khi-n+1)
@@ -287,7 +287,7 @@ contains
 	 if (bc(1,2) .eq. FOEXTRAP .or. &
              bc(1,2) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, nrgt
                do k = q_l3,q_h3
                do j = q_l2,q_h2
                   q(ihi+n,j,k) = q(ihi,j,k)
@@ -297,7 +297,7 @@ contains
 
 	 else if (bc(1,2) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, nrgt
             do k = q_l3,q_h3
             do j = q_l2,q_h2
                q(ihi+n,j,k) = q(ihi-n+1,j,k)
@@ -324,7 +324,7 @@ contains
             end do
             end do
 
-            do n = 2, nlft
+            do n = 2, nbot
                do k = q_l3,q_h3
                do i = q_l1,q_h1
                   q(i,jlo-n,k) = q(i,jlo-1,k)
@@ -334,7 +334,7 @@ contains
 
 	 else if (bc(2,1) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, nbot
             do k = q_l3,q_h3
             do i = q_l1,q_h1
                q(i,jlo-n,k) = q(i,jlo+n,k)
@@ -362,7 +362,7 @@ contains
             end do
             end do
 
-            do n = 2, nlft
+            do n = 2, ntop
                do k = q_l3,q_h3
                do i = q_l1,q_h1
                   q(i,jhi+n,k) = q(i,jhi+1,k)
@@ -372,7 +372,7 @@ contains
 
 	 else if (bc(2,2) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, ntop
             do k = q_l3,q_h3
             do i = q_l1,q_h1
                q(i,jhi+n,k) = q(i,jhi-n,k)
@@ -394,7 +394,7 @@ contains
 	 if (bc(3,1) .eq. FOEXTRAP .or. &
              bc(3,1) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, ndwn
                do j = q_l2,q_h2
                do i = q_l1,q_h1
                   q(i,j,klo-n) = q(i,j,klo)
@@ -404,7 +404,7 @@ contains
 
 	 else if (bc(3,1) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, ndwn
             do j = q_l2,q_h2
             do i = q_l1,q_h1
                q(i,j,klo-n) = q(i,j,klo+n-1)
@@ -426,7 +426,7 @@ contains
 	 if (bc(3,2) .eq. FOEXTRAP .or. &
              bc(3,2) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, nup
                do j = q_l2,q_h2
                do i = q_l1,q_h1
                   q(i,j,khi+n) = q(i,j,khi)
@@ -436,7 +436,7 @@ contains
 
 	 else if (bc(3,2) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, nup
             do j = q_l2,q_h2
             do i = q_l1,q_h1
                q(i,j,khi+n) = q(i,j,khi-n+1)
@@ -488,7 +488,7 @@ contains
 	 if (bc(1,2) .eq. FOEXTRAP .or. &
              bc(1,2) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, nrgt
                do k = q_l3,q_h3
                do j = q_l2,q_h2
                   q(ihi+n,j,k) = q(ihi,j,k)
@@ -498,7 +498,7 @@ contains
 
 	 else if (bc(1,2) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, nrgt
             do k = q_l3,q_h3
             do j = q_l2,q_h2
                q(ihi+n,j,k) = q(ihi-n+1,j,k)
@@ -519,7 +519,7 @@ contains
 	 if (bc(2,1) .eq. FOEXTRAP .or. &
              bc(2,1) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, nbot
                do k = q_l3,q_h3
                do i = q_l1,q_h1
                   q(i,jlo-n,k) = q(i,jlo,k)
@@ -529,7 +529,7 @@ contains
 
 	 else if (bc(2,1) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, nbot
             do k = q_l3,q_h3
             do i = q_l1,q_h1
                q(i,jlo-n,k) = q(i,jlo+n-1,k)
@@ -551,7 +551,7 @@ contains
 	 if (bc(2,2) .eq. FOEXTRAP .or. &
              bc(2,2) .eq. HOEXTRAP) then
 
-            do n = 1, nlft
+            do n = 1, ntop
                do k = q_l3,q_h3
                do i = q_l1,q_h1
                   q(i,jhi+n,k) = q(i,jhi,k)
@@ -561,7 +561,7 @@ contains
 
 	 else if (bc(2,2) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, ntop
             do k = q_l3,q_h3
             do i = q_l1,q_h1
                q(i,jhi+n,k) = q(i,jhi-n+1,k)
@@ -589,7 +589,7 @@ contains
             end do
             end do
 
-            do n = 2, nlft
+            do n = 2, ndwn
                do j = q_l2,q_h2
                do i = q_l1,q_h1
                   q(i,j,klo-n) = q(i,j,klo-1)
@@ -599,7 +599,7 @@ contains
 
 	 else if (bc(3,1) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, ndwn
             do j = q_l2,q_h2
             do i = q_l1,q_h1
                q(i,j,klo-n) = q(i,j,klo+n)
@@ -627,7 +627,7 @@ contains
             end do
             end do
 
-            do n = 2, nlft
+            do n = 2, nup
                do j = q_l2,q_h2
                do i = q_l1,q_h1
                   q(i,j,khi+n) = q(i,j,khi+1)
@@ -637,7 +637,7 @@ contains
 
 	 else if (bc(3,2) .eq. REFLECT_EVEN) then
 
-	    do n = 1, nlft
+	    do n = 1, nup
             do j = q_l2,q_h2
             do i = q_l1,q_h1
                q(i,j,khi+n) = q(i,j,khi-n)
