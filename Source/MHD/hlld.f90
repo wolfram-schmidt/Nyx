@@ -5,7 +5,7 @@ module hlld_solver
 
 contains
 
-subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+subroutine hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
                 flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,dir)
 
   !Riemann solve:
@@ -16,6 +16,7 @@ subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
    use meth_params_module
 
    integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2,q_h3
+   integer, intent(in)   :: work_lo(3), work_hi(3)
    integer, intent(in)   :: flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3
    integer, intent(in)   :: dir
 
@@ -38,7 +39,7 @@ subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
    integer           :: UMN  , UMP1  , UMP2
    integer           :: i,j,k
    character(len=10) :: choice
-
+   
    if (dir .eq. 1) then
       QMAGN  = QMAGX
       QMAGP1 = QMAGY
@@ -71,21 +72,14 @@ subroutine hlld(qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
       UMP2   = UMY
    end if
 
-   do k = flx_l3, flx_h3
-   do j = flx_l2, flx_h2
-   do i = flx_l1, flx_h1
+      print *, qp(:,:,:,QMAGN,dir)
+      pause 
 
-      if (isnan(qL(QMAGN))) then
-         print *,'QMAGN IS NAN ', dir,i,j,k
-         stop
-      else if (isnan(qL(QMAGP1))) then
-         print *,'QMAGP1 IS NAN ', dir,i,j,k
-         stop
-      else if (isnan(qL(QMAGP2))) then
-         print *,'QMAGP2 IS NAN ', dir,i,j,k
-         stop
-      end if
+   do k = work_lo(3), work_hi(3)
+   do j = work_lo(2), work_hi(2)
+   do i = work_lo(1), work_hi(1)
 
+      
       if (dir .eq. 1) then
          qL(:) = qp(i-1,j,k,:,dir)
       else if (dir .eq. 2) then

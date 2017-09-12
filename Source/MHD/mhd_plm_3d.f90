@@ -57,8 +57,8 @@ contains
     ibz = 8
 
     dt_over_a = dt / a_old
-    Ip = 0.d0
-    Im = 0.d0
+!    Ip = 0.d0
+!    Im = 0.d0
 
 !------------------------workspace variables---------------------------------------------
 		temp = 0.d0
@@ -496,11 +496,6 @@ contains
 			Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 			Im(i,j,k,QPRES,3)       = Im(i,j,k,QPRES,3) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3))
-			if(Im(i,j,k,QMAGZ,3).eq.0.5d0) then 
-				print *, "Bz -z wrong = ", Im(i,j,k,QMAGZ,3), "i, j, k =", i, j, k
-				print *, "in ", temp(i,j,k-1,ibz)
-				pause
-			endif
 
       if (isnan(Im(i,j,k,QMAGX,1))) then
          print *,'IM:QMAGX1 IS NAN ', i,j,k
