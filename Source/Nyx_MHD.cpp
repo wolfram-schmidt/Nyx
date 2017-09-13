@@ -136,6 +136,7 @@ Nyx::just_the_mhd (Real time,
     MultiFab By_old_tmp(By_old.boxArray(), By_old.DistributionMap(), 1, NUM_GROW);
     MultiFab Bz_old_tmp(Bz_old.boxArray(), Bz_old.DistributionMap(), 1, NUM_GROW);
 
+	
     FillPatch(*this, Bx_old_tmp, NUM_GROW, time, Mag_Type_x, 0, 1);
     FillPatch(*this, By_old_tmp, NUM_GROW, time, Mag_Type_y, 0, 1);
     FillPatch(*this, Bz_old_tmp, NUM_GROW, time, Mag_Type_z, 0, 1);

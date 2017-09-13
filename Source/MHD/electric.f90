@@ -77,11 +77,7 @@ implicit none
 				endif
 				a = b
 				b = 2.d0*(flxz(i,j-1,k+1,QMAGY) - Ecen)
-				if(i.eq.0.and.j.eq.7.and.k.eq.14) then
-					print *, "a = ", a, "b = ", b
-					print *, "flxz(i,j-1,k+1,QMAGY) =", flxz(i,j-1,k+1,QMAGY)
-					print *, " Ecen =", Ecen
-				endif
+				
 				if(q(i,j-1,k,QW).gt. 0.d0) then
 					d2 = a
 				elseif(q(i,j-1,k,QW).lt. 0.d0) then
@@ -90,11 +86,7 @@ implicit none
 					d2 = 0.5d0*(a+b)
 				endif
 				dd1 = 0.125d0*(d1 - d2)
-			if(i.eq.0.and.j.eq.7.and.k.eq.14) then
-				print*, "dd1 = ", dd1
-				print*, "d1 = ", d1
-				print*, "d2 =", d2
-			endif
+			
 				call electric(q(i,j-1,k-1,:),Ecen,1)
 				a = 2.d0*(-flxy(i,j,k-1,QMAGZ) - Ecen)
 
@@ -123,13 +115,7 @@ implicit none
 
 				E(i,j,k) = 0.25d0*(-flxy(i,j,k-1,QMAGZ) - flxy(i,j,k,QMAGZ) + &
                                                     flxz(i,j-1,k,QMAGY) + flxz(i,j,k,QMAGY)) + dd1 + dd2
-			if(i.eq.0.and.j.eq.7.and.k.eq.14) then
-				print*, "Ex = ", E(i,j,k), " at ", i, j, k
-				print*, "dd1 = ", dd1, "dd2 = ", dd2
-				print*, "-flxy(i, j, k-1, QMAGZ) = ",  -flxy(i, j, k-1, QMAGZ), "-flxy(i,j,k,QMAGZ) =", -flxy(i,j,k,QMAGZ)
-				print*, "flxz(i,j-1,k,QMAGY) =", flxz(i,j-1,k,QMAGY), "flxz(i,j,k,QMAGY) =", flxz(i,j,k,QMAGY)
-				pause
-			endif
+			
 			enddo
 		enddo
 	enddo
@@ -295,14 +281,7 @@ implicit none
 					d2 = 0.5d0*(a+b)
 				endif
 				dd1 = 0.125d0*(d1 - d2)
-			if(i.eq.12.and.j.eq.20.and.k.eq.9) then
-				print*, "dd1 =", dd1, "at ", i, j, k
-				print*, "d1 = ", d1, "d2 = ", d2
-				print*, "a = ", a, "b = ", b
-				print*, "-flxx(i+1, j-1, k, QMAGY) = ",  -flxx(i+1, j-1, k, QMAGY)
-				print*, "Ecen =", Ecen
-				print*, "u_face = ", u_face
-			endif
+			
 
 				call electric(q(i-1,j-1,k,:),Ecen,3)
 				a = 2.d0*(flxy(i-1,j,k,QMAGX) - Ecen)
@@ -333,14 +312,6 @@ implicit none
 
 				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
                                                    +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2
-			if(i.eq.12.and.j.eq.20.and.k.eq.9) then
-				print*, "Ez =", E(i, j, k), "at ", i, j, k
-				print*, "i, j - 1, k, Flux x = ", -flxx(i,j-1,k,QMAGY),"i, j, k, flx x = ", - flxx(i,j,k,QMAGY)
-				print*, "i-1, j, k, Flux y = ", flxy(i-1,j,k,QMAGX),"i , j , k , flx y =", flxy(i,j,k,QMAGX)
-				print*, "dd1 = ", dd1
-				print*, "dd2 = ", dd2
-				pause
-			endif
 			enddo
 		enddo
 	enddo

@@ -72,9 +72,6 @@ subroutine hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
       UMP2   = UMY
    end if
 
-      print *, qp(:,:,:,QMAGN,dir)
-      pause 
-
    do k = work_lo(3), work_hi(3)
    do j = work_lo(2), work_hi(2)
    do i = work_lo(1), work_hi(1)
@@ -302,13 +299,13 @@ subroutine hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 	   choice = "FR"
 	endif
 
-	if(dir.eq.3.and.i.eq.0.and.j.eq.6.and.k.eq.15) then 
-		print*, "flux is ", choice, " = ", flx(i,j,k,:)
-		print*, "dir, i, j, k =", dir, i, j, k
-		print*, "qL = ", qL
-		print*, "qR = ", qR
-		pause
-	endif
+!	if(dir.eq.3.and.i.eq.0.and.j.eq.6.and.k.eq.15) then 
+!		print*, "flux is ", choice, " = ", flx(i,j,k,:)
+!		print*, "dir, i, j, k =", dir, i, j, k
+!		print*, "qL = ", qL
+!		print*, "qR = ", qR
+!		pause
+!	endif
    end do
    end do
    end do

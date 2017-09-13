@@ -41,20 +41,31 @@ contains
       integer    i, j, k, n
 
       is = max(q_l1,domlo(1))
+	if(dir.eq.1) then
+      ie = min(q_h1,domhi(1)+1)
+	else
       ie = min(q_h1,domhi(1))
+	endif
       js = max(q_l2,domlo(2))
+	if(dir.eq.2) then
+      je = min(q_h2,domhi(2)+1)
+	else
       je = min(q_h2,domhi(2))
+	endif
       ks = max(q_l3,domlo(3))
+	if(dir.eq.3) then
+      ke = min(q_h3,domhi(3)+1)
+	else
       ke = min(q_h3,domhi(3))
+	endif
 
       nlft = max(0,domlo(1)-q_l1)
-      nrgt = max(0,q_h1-(domhi(1)+1))
+	  nrgt = max(0,q_h1-(domhi(1)))
       nbot = max(0,domlo(2)-q_l2)
-      ntop = max(0,q_h2-(domhi(2)+1))
+      ntop = max(0,q_h2-(domhi(2)))
       ndwn = max(0,domlo(3)-q_l3)
-      nup  = max(0,q_h3-(domhi(3)+1))
-      
-      q = 1.d0
+      nup  = max(0,q_h3-(domhi(3)))
+
       if (dir.eq.1) then
 !
 !     ::::: X-face extending in lo-x direction
@@ -96,7 +107,7 @@ contains
 !     ::::: X-face extending in hi-x direction
 !
       if (q_h1 .gt. domhi(1)+1) then
-         ihi = domhi(1)+1
+         ihi = domhi(1)!+1
 
 	 if (bc(1,2) .eq. FOEXTRAP .or. &
              bc(1,2) .eq. HOEXTRAP) then
@@ -360,7 +371,7 @@ contains
 !
       if (q_h2 .gt. domhi(2)+1) then
 
-         jhi = domhi(2)+1
+         jhi = domhi(2)
 
 	 if (bc(2,2) .eq. FOEXTRAP .or. &
              bc(2,2) .eq. HOEXTRAP) then
@@ -625,7 +636,7 @@ contains
 !
       if (q_h3 .gt. domhi(3)+1) then
 
-         khi = domhi(3)+1
+         khi = domhi(3)!+1
 
 	 if (bc(3,2) .eq. FOEXTRAP .or. &
              bc(3,2) .eq. HOEXTRAP) then

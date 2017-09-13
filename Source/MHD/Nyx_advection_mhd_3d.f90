@@ -452,12 +452,12 @@ end subroutine fort_advance_mhd
 				else
 		  	 	    q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
 				endif
-				if(q(i,j,k,QMAGX).eq.0.d0) then 
-					print*, "Bx is 0, at ", i, j, k
-					print*, bx(i+1,j,k), bx(i, j, k), bx(i-1,j,k)
-					print*, "hiq(1) = ", hiq(1), "bxhi1 = ", bxin_h1
-					pause
-				endif
+			!	if(q(i,j,k,QMAGX).eq.0.d0) then 
+			!		print*, "Bx is 0, at ", i, j, k
+			!		print*, bx(i+1,j,k), bx(i, j, k), bx(i-1,j,k)
+			!		print*, "hiq(1) = ", hiq(1), "bxhi1 = ", bxin_h1
+			!		pause
+			!	endif
 	 	   end do
 	 	 end do
       end do
@@ -758,13 +758,13 @@ end subroutine fort_advance_mhd
 	do j = lo(2)-1, hi(2)+2
 	do i = lo(1)-1, hi(1)+1
 		byout(i,j,k) = byin(i,j,k) - dt/dy*(Ez(i+1,j,k) - Ez(i,j,k) - (Ex(i,j,k+1) - Ex(i,j,k)))
-		if(i.eq.0.and.j.eq.7.and.k.eq.14) then
-			print *, "byout = ", byout(i,j,k), "at ", i, j ,k
-			print *, "byin = ", byin(i,j,k)
-			print *, "Ez =", Ez(i+1, j, k), Ez(i, j, k)
-			print *, "Ex =", Ex(i, j, k+1), Ex(i, j, k)
-			pause
-		endif
+		!if(i.eq.0.and.j.eq.7.and.k.eq.14) then
+		!	print *, "byout = ", byout(i,j,k), "at ", i, j ,k
+		!	print *, "byin = ", byin(i,j,k)
+		!	print *, "Ez =", Ez(i+1, j, k), Ez(i, j, k)
+		!	print *, "Ex =", Ex(i, j, k+1), Ex(i, j, k)
+		!	pause
+		!endif
 	enddo
 	enddo
 	enddo

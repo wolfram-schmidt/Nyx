@@ -104,33 +104,33 @@ Ez = 0.d0
 !Calculate Flux 1D
 write(*,*) "Do Flux 1D"
 	!x-dir
-        work_lo(1) = ex_l1+1
-        work_lo(2) = ex_l2+1
-        work_lo(3) = ex_l3+1
-        work_hi(1) = ex_h1-1
-        work_hi(2) = ex_h2-1
-        work_hi(3) = ex_h3-1
+        work_lo(1) = flxx_l1
+        work_lo(2) = flxx_l2
+        work_lo(3) = flxx_l3
+        work_hi(1) = flxx_h1
+        work_hi(2) = flxx_h2
+        work_hi(3) = flxx_h3
         
 	call hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
                   flxx1D(:,:,:,:),flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, 1)
 
-        work_lo(1) = ey_l1+1
-        work_lo(2) = ey_l2+1
-        work_lo(3) = ey_l3+1
-        work_hi(1) = ey_h1-1
-        work_hi(2) = ey_h2-1
-        work_hi(3) = ey_h3-1
+        work_lo(1) = flxy_l1
+        work_lo(2) = flxy_l2
+        work_lo(3) = flxy_l3
+        work_hi(1) = flxy_h1
+        work_hi(2) = flxy_h2
+        work_hi(3) = flxy_h3
 
 	!y-dir	
 	call hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
                   flxy1D(:,:,:,:),flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, 2)
 
-        work_lo(1) = ez_l1+1
-        work_lo(2) = ez_l2+1
-        work_lo(3) = ez_l3+1
-        work_hi(1) = ez_h1-1
-        work_hi(2) = ez_h2-1
-        work_hi(3) = ez_h3-1
+        work_lo(1) = flxz_l1
+        work_lo(2) = flxz_l2
+        work_lo(3) = flxz_l3
+        work_hi(1) = flxz_h1
+        work_hi(2) = flxz_h2
+        work_hi(3) = flxz_h3
                   
 	!z-dir
 	call hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
@@ -221,24 +221,24 @@ print *, "Flux 2D"
 !Calculate Flux 2D
 do i = 1,2
 	print *, "x flux", i
-        work_lo(1) = ex_l1+2
-        work_lo(2) = ex_l2+2
-        work_lo(3) = ex_l3+2
-        work_hi(1) = ex_h1-2
-        work_hi(2) = ex_h2-2
-        work_hi(3) = ex_h3-2
+        work_lo(1) = flxx_l1+1
+        work_lo(2) = flxx_l2+1
+        work_lo(3) = flxx_l3+1
+        work_hi(1) = flxx_h1-1
+        work_hi(2) = flxx_h2-1
+        work_hi(3) = flxx_h3-1
 	!x-dir
 	call hlld(work_lo, work_hi, q_temp_M(:,:,:,:,:,i),q_temp_P(:,:,:,:,:,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
                   flxx2D(:,:,:,:,i),flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, 1)
 
 	print *, "y flux", i	
 	!y-dir	
-        work_lo(1) = ey_l1+2
-        work_lo(2) = ey_l2+2
-        work_lo(3) = ey_l3+2
-        work_hi(1) = ey_h1-2
-        work_hi(2) = ey_h2-2
-        work_hi(3) = ey_h3-2
+        work_lo(1) = flxy_l1+1
+        work_lo(2) = flxy_l2+1
+        work_lo(3) = flxy_l3+1
+        work_hi(1) = flxy_h1-1
+        work_hi(2) = flxy_h2-1
+        work_hi(3) = flxy_h3-1
 
 	call hlld(work_lo, work_hi, q_temp_M(:,:,:,:,:,i),q_temp_P(:,:,:,:,:,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
                   flxy2D(:,:,:,:,i),flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, 2)
@@ -246,12 +246,12 @@ do i = 1,2
 	print *, "z flux", i
 	!z-dir
 
-        work_lo(1) = ez_l1+2
-        work_lo(2) = ez_l2+2
-        work_lo(3) = ez_l3+2
-        work_hi(1) = ez_h1-2
-        work_hi(2) = ez_h2-2
-        work_hi(3) = ez_h3-2
+        work_lo(1) = flxz_l1+1
+        work_lo(2) = flxz_l2+1
+        work_lo(3) = flxz_l3+1
+        work_hi(1) = flxz_h1-1
+        work_hi(2) = flxz_h2-1
+        work_hi(3) = flxz_h3-1
 	
 	call hlld(work_lo, work_hi, q_temp_M(:,:,:,:,:,i),q_temp_P(:,:,:,:,:,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
                   flxz2D(:,:,:,:,i),flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, 3)
@@ -331,34 +331,34 @@ enddo
 print *, "Flux Half Step"
 
 	!x-dir
-        work_lo(1) = ex_l1+3
-        work_lo(2) = ex_l2+3
-        work_lo(3) = ex_l3+3
-        work_hi(1) = ex_h1-3
-        work_hi(2) = ex_h2-3
-        work_hi(3) = ex_h3-3
+        work_lo(1) = flxx_l1+2
+        work_lo(2) = flxx_l2+2
+        work_lo(3) = flxx_l3+2
+        work_hi(1) = flxx_h1-2
+        work_hi(2) = flxx_h2-2
+        work_hi(3) = flxx_h3-2
 
  	call hlld(work_lo, work_hi, q_half_M,q_half_P,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
                    flxx,flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, 1)
 
 	!y-dir	
-        work_lo(1) = ey_l1+3
-        work_lo(2) = ey_l2+3
-        work_lo(3) = ey_l3+3
-        work_hi(1) = ey_h1-3
-        work_hi(2) = ey_h2-3
-        work_hi(3) = ey_h3-3
+        work_lo(1) = flxy_l1+2
+        work_lo(2) = flxy_l2+2
+        work_lo(3) = flxy_l3+2
+        work_hi(1) = flxy_h1-2
+        work_hi(2) = flxy_h2-2
+        work_hi(3) = flxy_h3-2
 	
  	call hlld(work_lo, work_hi, q_half_M,q_half_P,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
                    flxy,flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, 2)
 
 	!z-dir
-        work_lo(1) = ez_l1+3
-        work_lo(2) = ez_l2+3
-        work_lo(3) = ez_l3+3
-        work_hi(1) = ez_h1-3
-        work_hi(2) = ez_h2-3
-        work_hi(3) = ez_h3-3
+        work_lo(1) = flxz_l1+2
+        work_lo(2) = flxz_l2+2
+        work_lo(3) = flxz_l3+2
+        work_hi(1) = flxz_h1-2
+        work_hi(2) = flxz_h2-2
+        work_hi(3) = flxz_h3-2
 	
 	call hlld(work_lo, work_hi, q_half_M,q_half_P,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
                   flxz,flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, 3)
@@ -521,13 +521,13 @@ implicit none
 				uL(i,j,k,URHO:UEDEN,2,2) = um(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flxz(i,j,k+1,URHO:UEDEN) - flxz(i,j,k,URHO:UEDEN))! z corrected y
 				uL(i,j,k,URHO:UEDEN,3,1) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flxx(i+1,j,k,URHO:UEDEN) - flxx(i,j,k,URHO:UEDEN))! x corrected z
 				uL(i,j,k,URHO:UEDEN,3,2) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flxy(i,j+1,k,URHO:UEDEN) - flxy(i,j,k,URHO:UEDEN))! y corrected z
-				if(i.eq. 15 .and.j.eq. -2 .and.k.eq. -2) then 
-					print*, i, j, k
-					print*, "UL z corrected x  =", uL(i,j,k,2,1,2)
-					print*, "um = ",  um(i,j,k,2,1)
-					print*, "flxz = ", flxz(i,j,k+1,2) , flxz(i,j,k,2)
-					pause
-				endif
+				!if(i.eq. 15 .and.j.eq. -2 .and.k.eq. -2) then 
+				!	print*, i, j, k
+				!	print*, "UL z corrected x  =", uL(i,j,k,2,1,2)
+				!	print*, "um = ",  um(i,j,k,2,1)
+				!	print*, "flxz = ", flxz(i,j,k+1,2) , flxz(i,j,k,2)
+				!	pause
+				!endif
 
 				u = uL(i,j,k,UMX,1,1)/uL(i,j,k,URHO,1,1)
 				v = uL(i,j,k,UMY,1,1)/uL(i,j,k,URHO,1,1)
@@ -792,13 +792,6 @@ implicit none
 										- 0.5d0*dt/dy*(flxz(i,j,k+1,URHO:UEDEN,1) - flxz(i,j,k,URHO:UEDEN,1))
 				uL(i,j,k,URHO:UEDEN,3) = um(i,j,k,URHO:UEDEN,3) - 0.5d0*dt/dz*(flxx(i+1,j,k,URHO:UEDEN,1) - flxx(i,j,k,URHO:UEDEN,1)) &
 										- 0.5d0*dt/dz*(flxy(i,j+1,k,URHO:UEDEN,1) - flxy(i,j,k,URHO:UEDEN,1))
-				if(abs(uL(i,j,k,2,3)).gt.0.d0) then 
-					print *, "Momentum not Zero at ", i, j ,k
-					print *, "out = ", uL(i, j, k, 2, 3), "in = ", um(i,j,k,2,3)
-					print *, "flxx = ", flxx(i+1,j,k,2,1) , flxx(i,j,k,2,1)
-					print *, "flxy = ", flxy(i,j+1,k,2,1) , flxy(i,j,k,2,1)
-				!	pause
-				endif
 
 			
 				do n = 1,3
@@ -1058,8 +1051,6 @@ end subroutine qflux
 	real(rt), intent(in) :: uout(uout_l1:uout_h1,uout_l2:uout_h2,uout_l3:uout_h3)
 
 	integer :: i,j,k
-!    write(*,*) "uout = ", uout 
-!       pause
 
 		do k = uout_l3,uout_h3
 			do j = uout_l2, uout_h2

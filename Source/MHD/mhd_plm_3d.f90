@@ -385,13 +385,7 @@ contains
 			Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
 			Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Im(i,j,k,QPRES,1)        = Im(i,j,k,QPRES,1) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1))
-			if(i.eq. 15 .and.j.eq. -2 .and.k.eq. -2) then 
-				print *, Im(i,j,k,2,1), "i, j, k =", i, j, k
-				print *, "in ", temp(i,j,k,2), "summ =", summ(2), "smhd = ", smhd(2)
-				print *, "bx =", temp(i,j,k,ibx), "rho = ", temp(i,j,k,1)
-				print *, "dBx/dx = ", tbx(i+1,j,k), " - ", tbx(i,j,k)
-				pause
-			endif
+
 
 	
 	!========================================= Y Direction ================================================				
@@ -444,12 +438,7 @@ contains
 			Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
 			Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
 			Im(i,j,k,QPRES,2)       = Im(i,j,k,QPRES,2) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2))
-
-			if(Im(i,j,k,QMAGZ,2).eq.0.5d0) then 
-				print *, "Bz -y wrong = ", Im(i,j,k,QMAGZ,2), "i, j, k =", i, j, k
-				print *, "in ", temp(i,j,k,ibz), "summ =", summ(7), "smhd = ", smhd(7)
-				pause
-			endif				
+			
 	!========================================= Z Direction ================================================				
 			summ = 0.d0
 			smhd = 0.d0
