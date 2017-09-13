@@ -312,9 +312,20 @@ implicit none
 
 				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
                                                    +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2
+				if(i.eq.3.and.j.eq.64.and.k.eq.2) then
+					print *, "Electric Z at ", 3, 64, 2, "and", 4, 64, 2
+					print *, E(3,64,2)
+					print *,"Fluxes", - flxx(3,63,2, QMAGY) - flxx(3,64,2,QMAGY), flxy(2,64,2,QMAGX) + flxy(3,64,2,QMAGX)
+					print *, "Q", q(3,64,2,QMAGX:QMAGZ)
+					print *, "dd1 = ", dd1, "dd2 = ", dd2
+					pause
+				endif
 			enddo
 		enddo
 	enddo
+
+
+
 	
 end subroutine electric_edge_z
 

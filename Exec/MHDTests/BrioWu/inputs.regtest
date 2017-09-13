@@ -1,13 +1,13 @@
 # ------------------  INPUTS TO MAIN PROGRAM  -------------------
-max_step = 1000000
-stop_time =  0.2
+max_step = 2#000000
+stop_time =  0.005
 
 amr.checkpoint_files_output = 0
 
 nyx.small_temp = 1.e-4
 nyx.small_dens = 1.e-6
 
-nyx.gamma = 1.4
+nyx.gamma = 2
 
 nyx.initial_z = 0.
 

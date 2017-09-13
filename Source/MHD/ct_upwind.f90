@@ -382,6 +382,7 @@ print *, "Flux Half Step"
         work_hi(3) = ex_h3-3
 	call electric_edge_x(work_lo, work_hi, &
                          q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
+!						 q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 					     Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
 					     flxy, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
 					     flxz, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
@@ -648,7 +649,7 @@ implicit none
 				uL(i,j,k,QMAGY,1,1) = um(i,j,k,QMAGY,1) - dt/(6.d0*dx)*&
 									 	((Ex(i,j+1,k+1) - Ex(i,j+1,k)) + &
 										 (Ex(i,j  ,k+1) - Ex(i,j  ,k)))
-
+				!-> Affected by X flux
 				uL(i,j,k,QMAGY:QMAGZ,1,2) = um(i,j,k,QMAGY:QMAGZ,1)
 				!Y-direction
 				!-> Affected by X flux
@@ -864,7 +865,7 @@ implicit none
 				!Bz
 				uL(i,j,k,QMAGZ,1) = um(i,j,k,QMAGZ,1) + 0.5d0*dt/dx*((Ex(i  ,j+1,k+1) - Ex(i,j,k+1)) &
 									           + (Ex(i  ,j+1,k  ) - Ex(i,j,k  )) &
-                                               - (Ey(i+1,j  ,k+1) - Ey(i,j,k+1)) &
+                                               					   - (Ey(i+1,j  ,k+1) - Ey(i,j,k+1)) &
 									           - (Ey(i+1,j  ,k  ) - Ey(i,j,k  )))
 				!Y-Direction
 				!Bx
@@ -924,17 +925,19 @@ implicit none
 								    - (Ez(i+1,j+1,k) - Ez(i,j+1,k)))
 				!Bz
 				uR(i,j,k,QMAGZ,2) = up(i,j,k,QMAGZ,2) - 0.5d0*dt/dy*((Ey(i+1,j,k+1) - Ey(i,j,k+1)) &
-								    + (Ey(i+1,j,k) - Ey(i,j,k)) - (Ex(i,j+1,k+1) - Ex(i,j,k+1)) &
+								    	+ (Ey(i+1,j,k) - Ey(i,j,k)) &
+								        - (Ex(i,j+1,k+1) - Ex(i,j,k+1)) &
 									- (Ex(i,j+1,k) - Ex(i,j,k)))	
 		
 				!Z-direction
 				!Bx
 				uR(i,j,k,QMAGX,3) = up(i,j,k,QMAGX,3) - 0.5d0*dt/dz*((Ez(i+1,j+1,k) - Ez(i+1,j,k)) &
-								    +(Ez(i,j+1,k) - Ez(i,j,k)) - (Ey(i+1,j,k+1) - Ey(i+1,j,k)) &
+      								        + (Ez(i,j+1,k) - Ez(i,j,k)) &
+									- (Ey(i+1,j,k+1) - Ey(i+1,j,k)) &
 									- (Ey(i,j,k+1) - Ey(i,j,k)))
 				!By
 				uR(i,j,k,QMAGY,3) = up(i,j,k,QMAGY,3) + 0.5d0*dt/dz*((Ez(i+1,j+1,k  ) - Ez(i,j+1,k)) &
-								                    +(Ez(i+1,j  ,k  ) - Ez(i,j  ,k)) &
+								                   + (Ez(i+1,j  ,k  ) - Ez(i,j  ,k)) &
                                                                                    - (Ex(i  ,j+1,k+1) - Ex(i,j+1,k)) &
 									           - (Ex(i  ,j  ,k+1) - Ex(i,j,k)))
 				!Bz
@@ -978,13 +981,26 @@ implicit none
 	real(rt)				::qflx(QVAR)
 	real(rt)				:: dx, dy, dz, dt	
 	integer					::i, j, k
-	q2D = q
-	do k = q_l3+1,q_h3-1
-		do j = q_l2+1,q_h2-1
-			do i = q_l1+1,q_h1-1
+!	q2D = q
+	do k = q_l3,q_h3
+		do j = q_l2,q_h2
+			do i = q_l1,q_h1
 				flx_sum = (flxx(i+1,j,k,:) - flxx(i,j,k,:)) + (flxy(i,j+1,k,:) - flxy(i,j,k,:)) + (flxz(i,j,k+1,:) - flxz(i,j,k,:)) 
 				call qflux(qflx,flx_sum,q(i,j,k,:))
 				q2D(i,j,k,:) = q(i,j,k,:) - 0.5d0*dt/dx*qflx
+				if(i.eq.3.and.j.eq.64.and.k.eq.2) then 
+					print *, "q^n+1/2 at ", i, j, k, " = ", q2D(i,j,k,QMAGX:QMAGY)
+					print *, "q in = ", q(i,j,k,QMAGX:QMAGY) 
+					print *, "fluxes x = ", flxx(i+1,j,k,QMAGX:QMAGY) 
+					print *, flxx(i,j,k,QMAGX:QMAGY)
+					print *, "fluxes y = ", flxy(i,j+1,k,QMAGX:QMAGY) 
+					print *, flxy(i,j,k,QMAGX:QMAGY)
+					print *, "fluxes z = ", flxz(i,j,k+1,QMAGX:QMAGY)
+					print *, flxz(i,j,k,QMAGX:QMAGY)
+					print *, "flux sum = ", flx_sum(QMAGX:QMAGY)
+					print *, "qflux = ", qflx(QMAGX:QMAGY)
+					pause
+				endif
 			enddo
 		enddo
 	enddo

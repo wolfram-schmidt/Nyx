@@ -673,9 +673,9 @@ end subroutine fort_advance_mhd
 
 	  integer 				:: i, j, k	
 	  !****TO DO ******* SOURCES
-		do k = lo(3)-1, hi(3)+1
-		do j = lo(2)-1, hi(2)+1
-		do i = lo(1)-1, hi(1)+1
+		do k = lo(3), hi(3)
+		do j = lo(2), hi(2)
+		do i = lo(1), hi(1)
 		   uout(i,j,k,URHO:UEDEN) = uin(i,j,k,URHO:UEDEN) - dt/dx*(fluxx(i+1,j,k,URHO:UEDEN) - fluxx(i,j,k,URHO:UEDEN)) &
 		 						  - dt/dy*(fluxy(i,j+1,k,URHO:UEDEN) - fluxy(i,j,k,URHO:UEDEN)) &
 		 						  - dt/dz*(fluxz(i,j,k+1,URHO:UEDEN) - fluxz(i,j,k,URHO:UEDEN)) !Add source terms later
@@ -718,9 +718,9 @@ end subroutine fort_advance_mhd
 	integer, intent(in)   :: bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
 	integer, intent(in)	  :: uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
 	integer, intent(in)   :: src_l1,  src_l2,  src_l3,  src_h1,  src_h2,  src_h3
-        integer, intent(in)   ::  ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3
-        integer, intent(in)   ::  ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3
-        integer, intent(in)   ::  ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3
+    integer, intent(in)   ::  ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3
+    integer, intent(in)   ::  ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3
+    integer, intent(in)   ::  ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3
 	integer, intent(in)   :: lo(3), hi(3)
 
 	real(rt), intent(in)  :: bxin(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
@@ -728,9 +728,9 @@ end subroutine fort_advance_mhd
 	real(rt), intent(in)  :: bzin(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
 	real(rt), intent(in)  :: src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, QVAR)
 
-        real(rt), intent(in) ::  Ex(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3)
-        real(rt), intent(in) ::  Ey(ey_l1:ey_h1,ey_l2:ey_h2, ey_l3:ey_h3)
-        real(rt), intent(in) ::  Ez(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3)
+    real(rt), intent(in) ::  Ex(ex_l1:ex_h1,ex_l2:ex_h2, ex_l3:ex_h3)
+    real(rt), intent(in) ::  Ey(ey_l1:ey_h1,ey_l2:ey_h2, ey_l3:ey_h3)
+    real(rt), intent(in) ::  Ez(ez_l1:ez_h1,ez_l2:ez_h2, ez_l3:ez_h3)
 
 	real(rt), intent(in)  :: dx, dy, dz, dt, a_old, a_new
 
@@ -745,43 +745,43 @@ end subroutine fort_advance_mhd
 		
 	!***** TO DO ***** SOURCES
 	!-------------------------------- bx --------------------------------------------------
-	do k = lo(3)-1, hi(3)+1
-	do j = lo(2)-1, hi(2)+1
-	do i = lo(1)-1, hi(1)+2
-		bxout(i,j,k) = bxin(i,j,k) - dt/dx*(Ey(i,j,k+1) - Ey(i,j,k) - (Ez(i,j+1,k) - Ez(i,j,k)))
+	do k = lo(3), hi(3)
+	do j = lo(2), hi(2)
+	do i = lo(1), hi(1)+1
+		bxout(i,j,k) = bxin(i,j,k) - dt/dx*((Ey(i,j,k+1) - Ey(i,j,k)) - (Ez(i,j+1,k) - Ez(i,j,k)))
 	enddo
 	enddo
 	enddo
 
 	!------------------------------- by --------------------------------------------------
-	do k = lo(3)-1, hi(3)+1
-	do j = lo(2)-1, hi(2)+2
-	do i = lo(1)-1, hi(1)+1
-		byout(i,j,k) = byin(i,j,k) - dt/dy*(Ez(i+1,j,k) - Ez(i,j,k) - (Ex(i,j,k+1) - Ex(i,j,k)))
-		!if(i.eq.0.and.j.eq.7.and.k.eq.14) then
-		!	print *, "byout = ", byout(i,j,k), "at ", i, j ,k
-		!	print *, "byin = ", byin(i,j,k)
-		!	print *, "Ez =", Ez(i+1, j, k), Ez(i, j, k)
-		!	print *, "Ex =", Ex(i, j, k+1), Ex(i, j, k)
-		!	pause
-		!endif
+	do k = lo(3), hi(3)
+	do j = lo(2), hi(2)+1
+	do i = lo(1), hi(1)
+		byout(i,j,k) = byin(i,j,k) - dt/dy*((Ez(i+1,j,k) - Ez(i,j,k)) - (Ex(i,j,k+1) - Ex(i,j,k)))
+		if(i.eq.3.and.j.eq.64.and.k.eq.2) then
+			print *, "byout = ", byout(i,j,k), "at ", i, j ,k
+			print *, "byin = ", byin(i,j,k)
+			print *, "Ez =", Ez(i+1, j, k), Ez(i, j, k)
+			print *, "Ex =", Ex(i, j, k+1), Ex(i, j, k)
+			pause
+		endif
 	enddo
 	enddo
 	enddo
 	!------------------------------- bz --------------------------------------------------
-	do k = lo(3)-1, hi(3)+2
-	do j = lo(2)-1, hi(2)+1
-	do i = lo(1)-1, hi(1)+1
-		bzout(i,j,k) = bzin(i,j,k) - dt/dz*(Ex(i,j+1,k) - Ex(i,j,k) - (Ey(i+1,j,k) - Ey(i,j,k)))
+	do k = lo(3), hi(3)+1
+	do j = lo(2), hi(2)
+	do i = lo(1), hi(1)
+		bzout(i,j,k) = bzin(i,j,k) - dt/dz*((Ex(i,j+1,k) - Ex(i,j,k)) - (Ey(i+1,j,k) - Ey(i,j,k)))
 	enddo
 	enddo
 	enddo
 	!-------------------------------- Internal Energy ----------------------------------------------------
-	do k = lo(3)-1, hi(3)+1
-	do j = lo(2)-1, hi(2)+1
-	do i = lo(1)-1, hi(1)+1
-		uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*((0.5d0*(bxout(i+1,j,k) + bxout(i,j,k)))**2 + &
-						       (0.5d0*(byout(i,j+1,k) + byout(i,j,k)))**2 + (0.5d0*(bzout(i,j,k+1) + bzout(i,j,k)))**2)
+	do k = lo(3), hi(3)
+	do j = lo(2), hi(2)
+	do i = lo(1), hi(1)
+		uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*((0.5d0*(bxout(i+1,j,k)+bxout(i,j,k)))**2 + &
+						       (0.5d0*(byout(i,j+1,k)+byout(i,j,k)))**2 + (0.5d0*(bzout(i,j,k+1) + bzout(i,j,k)))**2)
 	enddo
 	enddo
 	enddo			
