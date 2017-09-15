@@ -521,15 +521,15 @@ implicit none
 				uL(i,j,k,URHO:UEDEN,2,2) = um(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flxz(i,j,k+1,URHO:UEDEN) - flxz(i,j,k,URHO:UEDEN))! z corrected y
 				uL(i,j,k,URHO:UEDEN,3,1) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flxx(i+1,j,k,URHO:UEDEN) - flxx(i,j,k,URHO:UEDEN))! x corrected z
 				uL(i,j,k,URHO:UEDEN,3,2) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flxy(i,j+1,k,URHO:UEDEN) - flxy(i,j,k,URHO:UEDEN))! y corrected z
-				if(i.eq. 4 .and.j.eq. 16 .and.k.eq. 1) then 
-					print*, "Corner Couple" 
-					print*, i, j, k
-					print*, "UL y corrected x  =", uL(i,j,k,URHO:UEDEN,1,1)
-					print*, "um = ",  um(i,j,k,:,1)
-					print*, "flxy i, j+1/2, k = ", flxy(i,j+1,k,:) 
-					print*, "flxy, i, j-1/2,k = ", flxy(i,j,k,:)
+				!if(i.eq. 4 .and.j.eq. 16 .and.k.eq. 1) then 
+				!	print*, "Corner Couple" 
+				!	print*, i, j, k
+				!	print*, "UL y corrected x  =", uL(i,j,k,URHO:UEDEN,1,1)
+				!	print*, "um = ",  um(i,j,k,:,1)
+				!	print*, "flxy i, j+1/2, k = ", flxy(i,j+1,k,:) 
+				!	print*, "flxy, i, j-1/2,k = ", flxy(i,j,k,:)
 				!	pause
-				endif
+				!endif
 
 				u = uL(i,j,k,UMX,1,1)/uL(i,j,k,URHO,1,1)
 				v = uL(i,j,k,UMY,1,1)/uL(i,j,k,URHO,1,1)
@@ -989,19 +989,19 @@ implicit none
 				flx_sum = (flxx(i+1,j,k,:) - flxx(i,j,k,:)) + (flxy(i,j+1,k,:) - flxy(i,j,k,:)) + (flxz(i,j,k+1,:) - flxz(i,j,k,:)) 
 				call qflux(qflx,flx_sum,q(i,j,k,:))
 				q2D(i,j,k,:) = q(i,j,k,:) - 0.5d0*dt/dx*qflx
-				if(i.eq.3.and.j.eq.64.and.k.eq.2) then 
-					print *, "q^n+1/2 at ", i, j, k, " = ", q2D(i,j,k,QMAGX:QMAGY)
-					print *, "q in = ", q(i,j,k,QMAGX:QMAGY) 
-					print *, "fluxes x = ", flxx(i+1,j,k,QMAGX:QMAGY) 
-					print *, flxx(i,j,k,QMAGX:QMAGY)
-					print *, "fluxes y = ", flxy(i,j+1,k,QMAGX:QMAGY) 
-					print *, flxy(i,j,k,QMAGX:QMAGY)
-					print *, "fluxes z = ", flxz(i,j,k+1,QMAGX:QMAGY)
-					print *, flxz(i,j,k,QMAGX:QMAGY)
-					print *, "flux sum = ", flx_sum(QMAGX:QMAGY)
-					print *, "qflux = ", qflx(QMAGX:QMAGY)
+				!if(i.eq.3.and.j.eq.64.and.k.eq.2) then 
+				!	print *, "q^n+1/2 at ", i, j, k, " = ", q2D(i,j,k,QMAGX:QMAGY)
+				!	print *, "q in = ", q(i,j,k,QMAGX:QMAGY) 
+				!	print *, "fluxes x = ", flxx(i+1,j,k,QMAGX:QMAGY) 
+				!	print *, flxx(i,j,k,QMAGX:QMAGY)
+				!	print *, "fluxes y = ", flxy(i,j+1,k,QMAGX:QMAGY) 
+				!	print *, flxy(i,j,k,QMAGX:QMAGY)
+				!	print *, "fluxes z = ", flxz(i,j,k+1,QMAGX:QMAGY)
+				!	print *, flxz(i,j,k,QMAGX:QMAGY)
+				!	print *, "flux sum = ", flx_sum(QMAGX:QMAGY)
+				!	print *, "qflux = ", qflx(QMAGX:QMAGY)
 				!	pause
-				endif
+				!endif
 			enddo
 		enddo
 	enddo

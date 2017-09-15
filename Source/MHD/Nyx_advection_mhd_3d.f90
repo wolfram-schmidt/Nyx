@@ -757,25 +757,25 @@ end subroutine fort_advance_mhd
 	do j = lo(2), hi(2)+1
 	do i = lo(1), hi(1)
 		byout(i,j,k) = byin(i,j,k) - dt/dy*((Ez(i+1,j,k) - Ez(i,j,k)) - (Ex(i,j,k+1) - Ex(i,j,k)))
-		if(i.eq.3.and.j.eq.64.and.k.eq.2) then
-			print *, "byout = ", byout(i,j,k), "at ", i, j ,k
-			print *, "byin = ", byin(i,j,k)
-			print *, "Ez =", Ez(i+1, j, k), Ez(i, j, k)
-			print *, "Ex =", Ex(i, j, k+1), Ex(i, j, k)
-			pause
-		endif
-	enddo
-	enddo
-	enddo
-			print *, "byout = ", byout(2,17,1), "at ", 2, 17 ,1
-			print *, "byin = ", byin(2,17,1)
-			print *, "Ez =", Ez(3,17,1), Ez(2,17,1)
-			print *, "Ex =", Ex(2,17,2), Ex(2,17,1)
-			print *, "byout = ", byout(3,17,1), "at ", 3,17,1
-			print *, "byin = ", byin(3,17,1)
-			print *, "Ez =", Ez(4,17,1), Ez(3,17,1)
-			print *, "Ex =", Ex(3,17,2), Ex(3,17,1)
+		!if(i.eq.3.and.j.eq.64.and.k.eq.2) then
+		!	print *, "byout = ", byout(i,j,k), "at ", i, j ,k
+		!	print *, "byin = ", byin(i,j,k)
+		!	print *, "Ez =", Ez(i+1, j, k), Ez(i, j, k)
+		!	print *, "Ex =", Ex(i, j, k+1), Ex(i, j, k)
 		!	pause
+		!endif
+	enddo
+	enddo
+	enddo
+!			print *, "byout = ", byout(2,17,1), "at ", 2, 17 ,1
+!			print *, "byin = ", byin(2,17,1)
+!			print *, "Ez =", Ez(3,17,1), Ez(2,17,1)
+!			print *, "Ex =", Ex(2,17,2), Ex(2,17,1)
+!			print *, "byout = ", byout(3,17,1), "at ", 3,17,1
+!			print *, "byin = ", byin(3,17,1)
+!			print *, "Ez =", Ez(4,17,1), Ez(3,17,1)
+!			print *, "Ex =", Ex(3,17,2), Ex(3,17,1)
+!			pause
 	!------------------------------- bz --------------------------------------------------
 	do k = lo(3), hi(3)+1
 	do j = lo(2), hi(2)

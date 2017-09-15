@@ -299,18 +299,18 @@ subroutine hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 	   choice = "FR"
 	endif
 
-	if(dir.eq.2.and.((i.eq.3.and.j.eq.16.and.k.eq.1).or.(i.eq.4.and.j.eq.16.and.k.eq.1))) then
-		print*, "dir, i, j, k =", dir, i, j, k
-		print*, "flux is ", choice, " = ", flx(i,j,k,UMX:UMZ), flx(i,j,k,QMAGX:QMAGZ)
-		print*, "FL = ",  FL(UMX:UMZ), FL(QMAGX:QMAGZ)
-		print*, "FsL = ", FsL(UMX:UMZ), FsL(QMAGX:QMAGZ)
-		print*, "ssL = ", ssL, "sL = ", sL, "sM =", sM
-		print*, "UsL = ", UsL(UMX:UMZ), UsL(QMAGX:QMAGZ) 
-		print*, "UssL = ", UssL(UMX:UMZ), UssL(QMAGX:QMAGZ) 
-		print*, "qL = ", qL(QMAGX:QMAGZ)
-		print*, "qR = ", qR(QMAGX:QMAGZ)
+	!if(dir.eq.2.and.((i.eq.3.and.j.eq.16.and.k.eq.1).or.(i.eq.4.and.j.eq.16.and.k.eq.1))) then
+	!	print*, "dir, i, j, k =", dir, i, j, k
+	!	print*, "flux is ", choice, " = ", flx(i,j,k,UMX:UMZ), flx(i,j,k,QMAGX:QMAGZ)
+	!	print*, "FL = ",  FL(UMX:UMZ), FL(QMAGX:QMAGZ)
+	!	print*, "FsL = ", FsL(UMX:UMZ), FsL(QMAGX:QMAGZ)
+	!	print*, "ssL = ", ssL, "sL = ", sL, "sM =", sM
+	!	print*, "UsL = ", UsL(UMX:UMZ), UsL(QMAGX:QMAGZ) 
+	!	print*, "UssL = ", UssL(UMX:UMZ), UssL(QMAGX:QMAGZ) 
+	!	print*, "qL = ", qL(QMAGX:QMAGZ)
+	!	print*, "qR = ", qR(QMAGX:QMAGZ)
 	!	pause
-	endif
+	!endif
    end do
    end do
    end do

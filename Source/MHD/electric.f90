@@ -114,7 +114,7 @@ implicit none
 				dd2 = 0.125*(d1 - d2)
 
 				E(i,j,k) = 0.25d0*(-flxy(i,j,k-1,QMAGZ) - flxy(i,j,k,QMAGZ) + &
-                                                    flxz(i,j-1,k,QMAGY) + flxz(i,j,k,QMAGY)) + dd1 + dd2
+                                                    flxz(i,j-1,k,QMAGY) + flxz(i,j,k,QMAGY))! + dd1 + dd2
 			
 			enddo
 		enddo
@@ -210,7 +210,7 @@ implicit none
 				dd2 = 0.125*(d1 - d2)
 
 				E(i,j,k) = 0.25d0*( flxx(i,j,k-1,QMAGZ) + flxx(i,j,k,QMAGZ) &
-                                                   -flxz(i-1,j,k,QMAGX) - flxz(i,j,k,QMAGX))  + dd1 + dd2
+                                                   -flxz(i-1,j,k,QMAGX) - flxz(i,j,k,QMAGX))!  + dd1 + dd2
 			enddo
 		enddo
 	enddo
@@ -281,10 +281,10 @@ implicit none
 					d2 = 0.5d0*(a+b)
 				endif
 				dd1 = 0.125d0*(d1 - d2)
-			if((i.eq.3.and.j.eq.17.and.k.eq.1).or.(i.eq.4.and.j.eq.17.and.k.eq.1)) then
-				print *, "d1 = ", d1, "d2 = ", d2
-				print *, "u = ", u_face
-			endif
+!			if((i.eq.3.and.j.eq.17.and.k.eq.1).or.(i.eq.4.and.j.eq.17.and.k.eq.1)) then
+!				print *, "d1 = ", d1, "d2 = ", d2
+!				print *, "u = ", u_face
+!			endif
 
 				call electric(q(i-1,j-1,k,:),Ecen,3)
 				a = 2.d0*(flxy(i-1,j,k,QMAGX) - Ecen)
@@ -314,16 +314,16 @@ implicit none
 				dd2 = 0.125*(d1 - d2)
 
 				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
-                                                   +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2
-				if((i.eq.3.and.j.eq.17.and.k.eq.1).or.(i.eq.4.and.j.eq.17.and.k.eq.1)) then
-					print *, "Electric Z at ", i,j,k
-					print *, E(i,j,k)
-					print *,"Flux x", - flxx(i,j-1,k, QMAGY) , flxx(i,j,k,QMAGY)
-					print *,"Flux y", flxy(i-1,j,k,QMAGX) , flxy(i,j,k,QMAGX)
-					print *, "Q at", i, j, k, q(i,j,k,:)
-					print *, "dd1 = ", dd1, "dd2 = ", dd2
+                                                   +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX))! + dd1 + dd2
+				!if((i.eq.3.and.j.eq.17.and.k.eq.1).or.(i.eq.4.and.j.eq.17.and.k.eq.1)) then
+				!	print *, "Electric Z at ", i,j,k
+				!	print *, E(i,j,k)
+				!	print *,"Flux x", - flxx(i,j-1,k, QMAGY) , flxx(i,j,k,QMAGY)
+				!	print *,"Flux y", flxy(i-1,j,k,QMAGX) , flxy(i,j,k,QMAGX)
+				!	print *, "Q at", i, j, k, q(i,j,k,:)
+				!	print *, "dd1 = ", dd1, "dd2 = ", dd2
 				!	pause
-				endif
+				!endif
 			enddo
 		enddo
 	enddo
