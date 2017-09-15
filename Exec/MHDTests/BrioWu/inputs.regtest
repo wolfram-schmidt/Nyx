@@ -1,5 +1,5 @@
 # ------------------  INPUTS TO MAIN PROGRAM  -------------------
-max_step = 2#000000
+max_step = 1000000
 stop_time =  0.005
 
 amr.checkpoint_files_output = 0
@@ -12,12 +12,12 @@ nyx.gamma = 2
 nyx.initial_z = 0.
 
 # PROBLEM SIZE & GEOMETRY
-geometry.is_periodic = 0 0 0
+geometry.is_periodic = 1 0 1
 geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
 geometry.prob_lo     =  0      0     0
-geometry.prob_hi     =  0.03125  1.    0.03125
+geometry.prob_hi     =  0.125  1.    0.125
 
-amr.n_cell           = 4     128      4
+amr.n_cell           = 4     32      4
 amr.max_level        = 0       # maximum level number allowed
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
@@ -25,8 +25,8 @@ amr.max_level        = 0       # maximum level number allowed
 # 1 = Inflow             4 = SlipWall
 # 2 = Outflow            5 = NoSlipWall
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
-nyx.lo_bc       =  2   2   2
-nyx.hi_bc       =  2   2   2
+nyx.lo_bc       =  0   2   0
+nyx.hi_bc       =  0   2   0
 
 # WHICH PHYSICS
 nyx.do_hydro = 1 #with MHD = TRUE, does MHD

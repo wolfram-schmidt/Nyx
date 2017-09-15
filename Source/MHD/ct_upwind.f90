@@ -264,36 +264,36 @@ enddo
 
         write(*,*) "SECND CALL TO ELECTRIC_* : Do Electric Field 1D"
 
-        work_lo(1) = ex_l1+2
-        work_lo(2) = ex_l2+2
-        work_lo(3) = ex_l3+2
-        work_hi(1) = ex_h1-2
-        work_hi(2) = ex_h2-2
-        work_hi(3) = ex_h3-2
+        work_lo(1) = ex_l1+1!+2
+        work_lo(2) = ex_l2+1!+2
+        work_lo(3) = ex_l3+1!+2
+        work_hi(1) = ex_h1-1!-2
+        work_hi(2) = ex_h2-1!-2
+        work_hi(3) = ex_h3-1!-2
 	call electric_edge_x(work_lo, work_hi, &
                          q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			     Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
 			     flxy1D, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
 			     flxz1D, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
 
-        work_lo(1) = ey_l1+2
-        work_lo(2) = ey_l2+2
-        work_lo(3) = ey_l3+2
-        work_hi(1) = ey_h1-2
-        work_hi(2) = ey_h2-2
-        work_hi(3) = ey_h3-2
+        work_lo(1) = ey_l1+1!+2
+        work_lo(2) = ey_l2+1!+2
+        work_lo(3) = ey_l3+1!+2
+        work_hi(1) = ey_h1-1!-2
+        work_hi(2) = ey_h2-1!-2
+        work_hi(3) = ey_h3-1!-2
 	call electric_edge_y(work_lo, work_hi, &
                          q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			     Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
 			     flxx1D, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
 			     flxz1D, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
 
-        work_lo(1) = ez_l1+2
-        work_lo(2) = ez_l2+2
-        work_lo(3) = ez_l3+2
-        work_hi(1) = ez_h1-2
-        work_hi(2) = ez_h2-2
-        work_hi(3) = ez_h3-2
+        work_lo(1) = ez_l1+1!+2
+        work_lo(2) = ez_l2+1!+2
+        work_lo(3) = ez_l3+1!+2
+        work_hi(1) = ez_h1-1!-2
+        work_hi(2) = ez_h2-1!-2
+        work_hi(3) = ez_h3-1!-2
 	call electric_edge_z(work_lo, work_hi, &
                          q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 			     Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
@@ -301,9 +301,9 @@ enddo
 			     flxy1D, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3)
 
 !Half Step conservative vars
-        work_lo(1) = q_l1+2
-        work_lo(2) = q_l2+2
-        work_lo(3) = q_l3+2
+        work_lo(1) = q_l1+1
+        work_lo(2) = q_l2+1
+        work_lo(3) = q_l3+1
         work_hi(1) = q_h1-2
         work_hi(2) = q_h2-2
         work_hi(3) = q_h3-2
@@ -374,37 +374,36 @@ print *, "Flux Half Step"
 
         write(*,*) "THIRD CALL TO ELECTRIC_* : Do Electric Field 1D"
 
-        work_lo(1) = ex_l1+3
-        work_lo(2) = ex_l2+3
-        work_lo(3) = ex_l3+3
-        work_hi(1) = ex_h1-3
-        work_hi(2) = ex_h2-3
-        work_hi(3) = ex_h3-3
+        work_lo(1) = ex_l1+2!+3
+        work_lo(2) = ex_l2+2!+3
+        work_lo(3) = ex_l3+2!+3
+        work_hi(1) = ex_h1-2!-3
+        work_hi(2) = ex_h2-2!-3
+        work_hi(3) = ex_h3-2!-3
 	call electric_edge_x(work_lo, work_hi, &
                          q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-!						 q, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 					     Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
 					     flxy, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
 					     flxz, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
 
-        work_lo(1) = ey_l1+3
-        work_lo(2) = ey_l2+3
-        work_lo(3) = ey_l3+3
-        work_hi(1) = ey_h1-3
-        work_hi(2) = ey_h2-3
-        work_hi(3) = ey_h3-3
+        work_lo(1) = ey_l1+2!+3
+        work_lo(2) = ey_l2+2!+3
+        work_lo(3) = ey_l3+2!+3
+        work_hi(1) = ey_h1-2!-3
+        work_hi(2) = ey_h2-2!-3
+        work_hi(3) = ey_h3-2!-3
 	call electric_edge_y(work_lo, work_hi, &
                          q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 					     Ey, ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
 					     flxx, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
 					     flxz, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3)
 
-        work_lo(1) = ez_l1+3
-        work_lo(2) = ez_l2+3
-        work_lo(3) = ez_l3+3
-        work_hi(1) = ez_h1-3
-        work_hi(2) = ez_h2-3
-        work_hi(3) = ez_h3-3
+        work_lo(1) = ez_l1+2!+3
+        work_lo(2) = ez_l2+2!+3
+        work_lo(3) = ez_l3+2!+3
+        work_hi(1) = ez_h1-2!-3
+        work_hi(2) = ez_h2-2!-3
+        work_hi(3) = ez_h3-2!-3
 	call electric_edge_z(work_lo, work_hi, &
                          q2D, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 					     Ez, ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
@@ -522,13 +521,15 @@ implicit none
 				uL(i,j,k,URHO:UEDEN,2,2) = um(i,j,k,URHO:UEDEN,2) - dt/(3.d0*dy)*(flxz(i,j,k+1,URHO:UEDEN) - flxz(i,j,k,URHO:UEDEN))! z corrected y
 				uL(i,j,k,URHO:UEDEN,3,1) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flxx(i+1,j,k,URHO:UEDEN) - flxx(i,j,k,URHO:UEDEN))! x corrected z
 				uL(i,j,k,URHO:UEDEN,3,2) = um(i,j,k,URHO:UEDEN,3) - dt/(3.d0*dz)*(flxy(i,j+1,k,URHO:UEDEN) - flxy(i,j,k,URHO:UEDEN))! y corrected z
-				!if(i.eq. 15 .and.j.eq. -2 .and.k.eq. -2) then 
-				!	print*, i, j, k
-				!	print*, "UL z corrected x  =", uL(i,j,k,2,1,2)
-				!	print*, "um = ",  um(i,j,k,2,1)
-				!	print*, "flxz = ", flxz(i,j,k+1,2) , flxz(i,j,k,2)
+				if(i.eq. 4 .and.j.eq. 16 .and.k.eq. 1) then 
+					print*, "Corner Couple" 
+					print*, i, j, k
+					print*, "UL y corrected x  =", uL(i,j,k,URHO:UEDEN,1,1)
+					print*, "um = ",  um(i,j,k,:,1)
+					print*, "flxy i, j+1/2, k = ", flxy(i,j+1,k,:) 
+					print*, "flxy, i, j-1/2,k = ", flxy(i,j,k,:)
 				!	pause
-				!endif
+				endif
 
 				u = uL(i,j,k,UMX,1,1)/uL(i,j,k,URHO,1,1)
 				v = uL(i,j,k,UMY,1,1)/uL(i,j,k,URHO,1,1)
@@ -641,7 +642,7 @@ implicit none
 				!X-direction 
 				!-> Affected by Y flux
 				uL(i,j,k,QMAGX,1,1) = um(i,j,k,QMAGX,1) + dt/(3.d0*dx)*(Ez(i,j+1,k) - Ez(i,j,k))
-				uL(i,j,k,QMAGZ,1,1) = um(i,j,k,QMAGZ,1) + dt/(6.d0*dx)*&
+				uL(i,j,k,QMAGZ,1,1) = um(i,j,k,QMAGZ,1) + dt/(6.d0*dx)* &
 										((Ex(i,j+1,k+1) - Ex(i,j,k+1)) + &
 										 (Ex(i,j+1,k  ) - Ex(i,j,k)))
 				!-> Affected by Z flux
@@ -982,9 +983,9 @@ implicit none
 	real(rt)				:: dx, dy, dz, dt	
 	integer					::i, j, k
 !	q2D = q
-	do k = q_l3,q_h3
-		do j = q_l2,q_h2
-			do i = q_l1,q_h1
+	do k = q_l3+1,q_h3-1
+		do j = q_l2+1,q_h2-1
+			do i = q_l1+1,q_h1-1
 				flx_sum = (flxx(i+1,j,k,:) - flxx(i,j,k,:)) + (flxy(i,j+1,k,:) - flxy(i,j,k,:)) + (flxz(i,j,k+1,:) - flxz(i,j,k,:)) 
 				call qflux(qflx,flx_sum,q(i,j,k,:))
 				q2D(i,j,k,:) = q(i,j,k,:) - 0.5d0*dt/dx*qflx
@@ -999,7 +1000,7 @@ implicit none
 					print *, flxz(i,j,k,QMAGX:QMAGY)
 					print *, "flux sum = ", flx_sum(QMAGX:QMAGY)
 					print *, "qflux = ", qflx(QMAGX:QMAGY)
-					pause
+				!	pause
 				endif
 			enddo
 		enddo

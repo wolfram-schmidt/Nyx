@@ -217,7 +217,7 @@ subroutine hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 	
 	!Energy *Stored in Pressure slot
 	UsL(QPRES) = (sL - qL(QVELN))*eL - ptL*qL(QVELN) + pst*sM + &
-                      qL(QMAGN)*( dot_product(qL(QU:QW),qL(QMAGX:QMAGZ)) &
+                      qL(QMAGN)*(dot_product(qL(QU:QW),qL(QMAGX:QMAGZ)) &
 		                 -dot_product(UsL(QU:QW)/UsL(QRHO),UsL(QMAGX:QMAGZ)))
 	UsL(QPRES) = UsL(QPRES)/(sL - sM)
 	UsR(QPRES) = (sR - qR(QVELN))*eR - ptR*qR(QVELN) + pst*sM + &
@@ -299,16 +299,17 @@ subroutine hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 	   choice = "FR"
 	endif
 
-	if(dir.eq.1.and.i.eq.3.and.j.eq.64.and.k.eq.2) then
-		print*, "flux is ", choice, " = ", flx(i,j,k,:)
-		print*, "FsR = ", FsR
-		print*, "ssR = ", ssR
-		print*, "UsR = ", UsR 
-		print*, "UssR = ", UssR
+	if(dir.eq.2.and.((i.eq.3.and.j.eq.16.and.k.eq.1).or.(i.eq.4.and.j.eq.16.and.k.eq.1))) then
 		print*, "dir, i, j, k =", dir, i, j, k
-		print*, "qL = ", qL
-		print*, "qR = ", qR
-		pause
+		print*, "flux is ", choice, " = ", flx(i,j,k,UMX:UMZ), flx(i,j,k,QMAGX:QMAGZ)
+		print*, "FL = ",  FL(UMX:UMZ), FL(QMAGX:QMAGZ)
+		print*, "FsL = ", FsL(UMX:UMZ), FsL(QMAGX:QMAGZ)
+		print*, "ssL = ", ssL, "sL = ", sL, "sM =", sM
+		print*, "UsL = ", UsL(UMX:UMZ), UsL(QMAGX:QMAGZ) 
+		print*, "UssL = ", UssL(UMX:UMZ), UssL(QMAGX:QMAGZ) 
+		print*, "qL = ", qL(QMAGX:QMAGZ)
+		print*, "qR = ", qR(QMAGX:QMAGZ)
+	!	pause
 	endif
    end do
    end do

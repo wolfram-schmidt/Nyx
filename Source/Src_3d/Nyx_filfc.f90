@@ -60,7 +60,7 @@ contains
 	endif
 
       nlft = max(0,domlo(1)-q_l1)
-	  nrgt = max(0,q_h1-(domhi(1)))
+      nrgt = max(0,q_h1-(domhi(1)))
       nbot = max(0,domlo(2)-q_l2)
       ntop = max(0,q_h2-(domhi(2)))
       ndwn = max(0,domlo(3)-q_l3)
@@ -99,8 +99,17 @@ contains
             end do
             end do
 	    end do
-	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
+	 else !periodic
+		if(q_h1.gt.domhi(1)) then
+		 ihi = domhi(1)
+		   do n = 1,nlft
+			do k = q_l3, q_h3
+			do j = q_l2, q_h2
+			q(ilo-n,j,k) = q(ihi-n+1,j,k)
+			enddo
+			enddo
+		   enddo
+		endif
 	 end if
       end if
 !
@@ -136,7 +145,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
+	    if(q_l1.lt.domlo(1)) then
+	    ilo = domlo(1)
+	    do n = 1, nrgt
+            do k = q_l3,q_h3
+            do j = q_l2,q_h2
+               q(ihi+n,j,k) = q(ilo+(n-1),j,k)
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 !
@@ -167,7 +185,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(2,1)")
+	    if(q_h2.gt.domhi(2)) then
+	    jhi = domhi(2)
+	    do n = 1, nbot
+            do k = q_l3,q_h3
+            do i = q_l1,q_h1
+               q(i,jlo-n,k) = q(i,jhi-(n-1),k)
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -199,7 +226,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(2,2)")
+	    if(q_l2.lt.domlo(2)) then
+	    jlo = domlo(2)
+	    do n = 1, ntop
+            do k = q_l3,q_h3
+            do i = q_l1,q_h1
+               q(i,jhi+n,k) = q(i,jlo+(n-1),k)
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -231,7 +267,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(3,1)")
+	    if(q_h3.gt.domhi(3)) then
+	    khi = domhi(3)
+	    do n = 1, ndwn
+            do j = q_l2,q_h2
+            do i = q_l1,q_h1
+               q(i,j,klo-n) = q(i,j,khi-(n-1))
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -263,7 +308,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(3,2)")
+	    if(q_l3.lt.domlo(3)) then
+	    klo = domlo(3)
+	    do n = 1, nup
+            do j = q_l2,q_h2
+            do i = q_l1,q_h1
+               q(i,j,khi+n) = q(i,j,klo+(n-1))
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -295,7 +349,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
+	if(q_h1.gt.domhi(1)) then
+		 ihi = domhi(1)
+		   do n = 1,nlft
+			do k = q_l3, q_h3
+			do j = q_l2, q_h2
+			q(ilo-n,j,k) = q(ihi-n+1,j,k)
+			enddo
+			enddo
+		   enddo
+		endif
 	 end if
       end if
 !
@@ -325,7 +388,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
+	    if(q_l1.lt.domlo(1)) then
+	    ilo = domlo(1)
+	    do n = 1, nrgt
+            do k = q_l3,q_h3
+            do j = q_l2,q_h2
+               q(ihi+n,j,k) = q(ilo+(n-1),j,k)
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 !
@@ -362,7 +434,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(2,1)")
+	    if(q_h2.gt.domhi(2)) then
+	    jhi = domhi(2)
+	    do n = 1, nbot
+            do k = q_l3,q_h3
+            do i = q_l1,q_h1
+               q(i,jlo-n,k) = q(i,jhi-(n-1),k)
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -400,7 +481,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(2,2)")
+	    if(q_l2.lt.domlo(2)) then
+	    jlo = domlo(2)
+	    do n = 1, ntop
+            do k = q_l3,q_h3
+            do i = q_l1,q_h1
+               q(i,jhi+n,k) = q(i,jlo+(n-1),k)
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -432,7 +522,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(3,1)")
+	    if(q_h3.gt.domhi(3)) then
+	    khi = domhi(3)
+	    do n = 1, ndwn
+            do j = q_l2,q_h2
+            do i = q_l1,q_h1
+               q(i,j,klo-n) = q(i,j,khi-(n-1))
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -464,7 +563,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(3,2)")
+	    if(q_l3.lt.domlo(3)) then
+	    klo = domlo(3)
+	    do n = 1, nup
+            do j = q_l2,q_h2
+            do i = q_l1,q_h1
+               q(i,j,khi+n) = q(i,j,klo+(n-1))
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -496,7 +604,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(1,1)")
+	if(q_h1.gt.domhi(1)) then
+		 ihi = domhi(1)
+		   do n = 1,nlft
+			do k = q_l3, q_h3
+			do j = q_l2, q_h2
+			q(ilo-n,j,k) = q(ihi-n+1,j,k)
+			enddo
+			enddo
+		   enddo
+		endif
 	 end if
       end if
 !
@@ -526,7 +643,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(1,2)")
+	    if(q_l1.lt.domlo(1)) then
+	    ilo = domlo(1)
+	    do n = 1, nrgt
+            do k = q_l3,q_h3
+            do j = q_l2,q_h2
+               q(ihi+n,j,k) = q(ilo+(n-1),j,k)
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 !
@@ -557,7 +683,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(2,1)")
+	    if(q_h2.gt.domhi(2)) then
+	    jhi = domhi(2)
+	    do n = 1, nbot
+            do k = q_l3,q_h3
+            do i = q_l1,q_h1
+               q(i,jlo-n,k) = q(i,jhi-(n-1),k)
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -589,7 +724,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(2,2)")
+	    if(q_l2.lt.domlo(2)) then
+	    jlo = domlo(2)
+	    do n = 1, ntop
+            do k = q_l3,q_h3
+            do i = q_l1,q_h1
+               q(i,jhi+n,k) = q(i,jlo+(n-1),k)
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -627,7 +771,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(3,1)")
+	    if(q_h3.gt.domhi(3)) then
+	    khi = domhi(3)
+	    do n = 1, ndwn
+            do j = q_l2,q_h2
+            do i = q_l1,q_h1
+               q(i,j,klo-n) = q(i,j,khi-(n-1))
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
 
@@ -665,7 +818,16 @@ contains
             end do
 	    end do
 	 else 
-	    call bl_abort("Dont know how to fill this bc(3,2)")
+	    if(q_l3.lt.domlo(3)) then
+	    klo = domlo(3)
+	    do n = 1, nup
+            do j = q_l2,q_h2
+            do i = q_l1,q_h1
+               q(i,j,khi+n) = q(i,j,klo+(n-1))
+            end do
+            end do
+	    end do
+	    endif
 	 end if
       end if
  end if

@@ -123,7 +123,6 @@
     
       ngq = NHYP
       ngf = 1
-
       q_l1 = lo(1)-NHYP
       q_l2 = lo(2)-NHYP
       q_l3 = lo(3)-NHYP
@@ -768,6 +767,15 @@ end subroutine fort_advance_mhd
 	enddo
 	enddo
 	enddo
+			print *, "byout = ", byout(2,17,1), "at ", 2, 17 ,1
+			print *, "byin = ", byin(2,17,1)
+			print *, "Ez =", Ez(3,17,1), Ez(2,17,1)
+			print *, "Ex =", Ex(2,17,2), Ex(2,17,1)
+			print *, "byout = ", byout(3,17,1), "at ", 3,17,1
+			print *, "byin = ", byin(3,17,1)
+			print *, "Ez =", Ez(4,17,1), Ez(3,17,1)
+			print *, "Ex =", Ex(3,17,2), Ex(3,17,1)
+		!	pause
 	!------------------------------- bz --------------------------------------------------
 	do k = lo(3), hi(3)+1
 	do j = lo(2), hi(2)

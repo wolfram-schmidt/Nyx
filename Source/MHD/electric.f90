@@ -246,7 +246,7 @@ implicit none
 
 	integer			:: i ,j ,k	
 
-	E = 0.d0
+	!E = 0.d0
 
 ! ====  Ez i-1/2, j-1/2, k ====
 
@@ -281,7 +281,10 @@ implicit none
 					d2 = 0.5d0*(a+b)
 				endif
 				dd1 = 0.125d0*(d1 - d2)
-			
+			if((i.eq.3.and.j.eq.17.and.k.eq.1).or.(i.eq.4.and.j.eq.17.and.k.eq.1)) then
+				print *, "d1 = ", d1, "d2 = ", d2
+				print *, "u = ", u_face
+			endif
 
 				call electric(q(i-1,j-1,k,:),Ecen,3)
 				a = 2.d0*(flxy(i-1,j,k,QMAGX) - Ecen)
@@ -312,13 +315,14 @@ implicit none
 
 				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
                                                    +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2
-				if(i.eq.3.and.j.eq.64.and.k.eq.2) then
-					print *, "Electric Z at ", 3, 64, 2, "and", 4, 64, 2
-					print *, E(3,64,2)
-					print *,"Fluxes", - flxx(3,63,2, QMAGY) - flxx(3,64,2,QMAGY), flxy(2,64,2,QMAGX) + flxy(3,64,2,QMAGX)
-					print *, "Q", q(3,64,2,QMAGX:QMAGZ)
+				if((i.eq.3.and.j.eq.17.and.k.eq.1).or.(i.eq.4.and.j.eq.17.and.k.eq.1)) then
+					print *, "Electric Z at ", i,j,k
+					print *, E(i,j,k)
+					print *,"Flux x", - flxx(i,j-1,k, QMAGY) , flxx(i,j,k,QMAGY)
+					print *,"Flux y", flxy(i-1,j,k,QMAGX) , flxy(i,j,k,QMAGX)
+					print *, "Q at", i, j, k, q(i,j,k,:)
 					print *, "dd1 = ", dd1, "dd2 = ", dd2
-					pause
+				!	pause
 				endif
 			enddo
 		enddo
