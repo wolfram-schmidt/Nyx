@@ -682,6 +682,21 @@ end subroutine fort_advance_mhd
 		   v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
    		   w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
 		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+			if(uout(i,j,k,UEINT).lt.0.d0) then
+				print*, "Negative energy = ", uout(i,j,k,UEINT), "at ", i, j, k
+				print*, "Total Energy = ", uout(i,j,k,UEDEN)
+				print*, "velocities = ", u,v,w
+				print*, "rho = ", uout(i,j,k,URHO)
+				print*, "1/2r|v|^2 = ", 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+				print*, " " 
+				print*, "Total Energy in = ", uin(i,j,k,UEDEN)
+				print*, "U j +1  = ", uin(i,j+1,k,:)
+				print*, "flux x = ", - dt/dx*(fluxx(i+1,j,k,UEDEN) - fluxx(i,j,k,UEDEN))
+				print*, "flux y = ", - dt/dy*(fluxy(i,j+1,k,UEDEN) - fluxy(i,j,k,UEDEN))
+				print*, "j + 1", fluxy(i,j+1,k,UEDEN), " j ", fluxy(i,j,k,UEDEN)
+				print*, "flux z = ", - dt/dz*(fluxz(i,j,k+1,UEDEN) - fluxz(i,j,k,UEDEN))
+				pause
+			endif
 		enddo
 		enddo
 		enddo
@@ -739,6 +754,7 @@ end subroutine fort_advance_mhd
 	real(rt), intent(out) :: byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
 	real(rt), intent(out) :: bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
 
+	real(rt)			  :: bx, by ,bz
 	integer				  :: i, j, k
 		
 		
@@ -788,8 +804,10 @@ end subroutine fort_advance_mhd
 	do k = lo(3), hi(3)
 	do j = lo(2), hi(2)
 	do i = lo(1), hi(1)
-		uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*((0.5d0*(bxout(i+1,j,k)+bxout(i,j,k)))**2 + &
-						       (0.5d0*(byout(i,j+1,k)+byout(i,j,k)))**2 + (0.5d0*(bzout(i,j,k+1) + bzout(i,j,k)))**2)
+		bx = 0.5d0*(bxout(i+1,j,k)+bxout(i,j,k))
+		by = 0.5d0*(byout(i,j+1,k)+byout(i,j,k))
+		bz = 0.5d0*(bzout(i,j,k+1)+bzout(i,j,k))
+		uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*(bx**2 + by**2 + bz**2)
 	enddo
 	enddo
 	enddo			

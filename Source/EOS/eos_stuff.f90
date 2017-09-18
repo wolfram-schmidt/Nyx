@@ -142,14 +142,6 @@ contains
 
      ! Pressure = p_thermal + p_magnetic
      P = R * e * gamma_minus_1 + 0.5d0*(bx*bx + by*by + bz*bz)
-	if(P.gt. 1d14) then
-		write(*,*)"Zero Density!" 
-		write(*,*) R
-		write(*,*) "internal energy =", e
-		write(*,*) "magnetic pressure =", 0.5d0*(bx*bx + by*by + bz*bz)
-		write(*,*) "bx =", bx, "by = ", by, "bz = ", bz
-	endif
-
      ! sound speed
      c = sqrt(gamma_const * P / R)
 
