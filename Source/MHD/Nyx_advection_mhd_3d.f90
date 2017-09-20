@@ -690,7 +690,7 @@ end subroutine fort_advance_mhd
 		   u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
 		   v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
    		   w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
-		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN)! - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
 			if(uout(i,j,k,UEINT).lt.0.d0) then
 				print*, "Negative energy = ", uout(i,j,k,UEINT), "at ", i, j, k
 				print*, "Total Energy = ", uout(i,j,k,UEDEN)

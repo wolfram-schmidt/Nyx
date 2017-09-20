@@ -1,4 +1,5 @@
 f90EXE_sources += hlld.f90
+f90EXE_sources += hll.f90
 f90EXE_sources += mhd_plm_3d.f90
 f90EXE_sources += electric.f90
 f90EXE_sources += ct_upwind.f90

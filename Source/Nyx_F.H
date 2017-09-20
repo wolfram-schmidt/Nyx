@@ -27,6 +27,16 @@ extern "C"
      const int lo[], const int hi[],
      const amrex::Real dx[], amrex::Real* dt, amrex::Real* comoving_a);
 
+#ifdef MHD
+  void fort_estdt_mhd
+    (const BL_FORT_FAB_ARG(state),
+     const BL_FORT_FAB_ARG(Bx),
+     const BL_FORT_FAB_ARG(By),
+     const BL_FORT_FAB_ARG(Bz),
+     const int lo[], const int hi[],
+     const amrex::Real dx[], amrex::Real* dt, amrex::Real* comoving_a);
+#endif
+
   void fort_estdt_comoving_a
     (amrex::Real* old_a, amrex::Real* new_dummy_a, amrex::Real* dt, amrex::Real* change_allowed,
      amrex::Real* final_a, int* dt_modified);

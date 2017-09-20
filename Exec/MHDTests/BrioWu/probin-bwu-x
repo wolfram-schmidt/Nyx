@@ -3,14 +3,14 @@
   u_l   = 0.0d0
   rho_l = 1.0d0
   B_x_l = 0.75d0
-  B_y_l = 0.d0 !1.0d0
+  B_y_l = 1.0d0
   B_z_l = 0.0d0
 
-  p_r   = 1.0d0 !0.1d0
+  p_r   = 0.1d0
   u_r   = 0.0d0
-  rho_r = 1.0d0 !0.128d0
+  rho_r = 0.128d0
   B_x_r = 0.75d0
-  B_y_r = 0.d0 !-1.0d0
+  B_y_r = -1.0d0
   B_z_r = 0.0d0
 
   idir = 1

@@ -800,6 +800,11 @@ Nyx::est_time_step (Real dt_old)
 
 #ifndef NO_HYDRO
     const MultiFab& stateMF = get_new_data(State_Type);
+#ifdef MHD
+    const MultiFab& bxMF    = get_new_data(Mag_Type_x);
+    const MultiFab& byMF    = get_new_data(Mag_Type_y);
+    const MultiFab& bzMF    = get_new_data(Mag_Type_z);
+#endif
 #endif
 
 #ifdef NO_HYDRO
@@ -822,10 +827,20 @@ Nyx::est_time_step (Real dt_old)
 	  for (MFIter mfi(stateMF,true); mfi.isValid(); ++mfi)
 	    {
 	      const Box& box = mfi.tilebox();
+#ifdef MHD
 
+	    fort_estdt_mhd
+                (BL_TO_FORTRAN(stateMF[mfi]),
+		 BL_TO_FORTRAN(bxMF[mfi]),
+		 BL_TO_FORTRAN(byMF[mfi]),
+		 BL_TO_FORTRAN(bzMF[mfi]),
+		 box.loVect(), box.hiVect(), dx,
+                 &dt, &a);
+#else //*/
 	      fort_estdt
                 (BL_TO_FORTRAN(stateMF[mfi]), box.loVect(), box.hiVect(), dx,
                  &dt, &a);
+#endif
 	    }
           est_dt = std::min(est_dt, dt);
 	}

@@ -114,7 +114,9 @@ implicit none
 				dd2 = 0.125*(d1 - d2)
 
 				E(i,j,k) = 0.25d0*(-flxy(i,j,k-1,QMAGZ) - flxy(i,j,k,QMAGZ) + &
-                                                    flxz(i,j-1,k,QMAGY) + flxz(i,j,k,QMAGY))! + dd1 + dd2
+                                                    flxz(i,j-1,k,QMAGY) + flxz(i,j,k,QMAGY)) + dd1 + dd2
+!				E(i,j,k) = 0.5d0*(-flxy(i,j,k-1,QMAGZ) + flxz(i,j-1,k,QMAGY))
+
 			
 			enddo
 		enddo
@@ -210,7 +212,8 @@ implicit none
 				dd2 = 0.125*(d1 - d2)
 
 				E(i,j,k) = 0.25d0*( flxx(i,j,k-1,QMAGZ) + flxx(i,j,k,QMAGZ) &
-                                                   -flxz(i-1,j,k,QMAGX) - flxz(i,j,k,QMAGX))!  + dd1 + dd2
+                                                   -flxz(i-1,j,k,QMAGX) - flxz(i,j,k,QMAGX))  + dd1 + dd2
+!				E(i,j,k) = 0.5d0*( flxx(i,j,k-1,QMAGZ) -flxz(i-1,j,k,QMAGX))
 			enddo
 		enddo
 	enddo
@@ -315,6 +318,7 @@ implicit none
 
 				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
                                                    +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX))! + dd1 + dd2
+!				 E(i,j,k) = 0.5d0*(-flxx(i,j-1,k,QMAGY) + flxy(i-1,j,k,QMAGX))
 				!if((i.eq.3.and.j.eq.17.and.k.eq.1).or.(i.eq.4.and.j.eq.17.and.k.eq.1)) then
 				!	print *, "Electric Z at ", i,j,k
 				!	print *, E(i,j,k)
