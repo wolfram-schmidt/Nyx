@@ -97,7 +97,9 @@
 
       ! Automatic arrays for workspace
       real(rt), pointer :: q(:,:,:,:)
-      real(rt), pointer :: c(:,:,:)
+      real(rt), pointer :: cx(:,:,:)
+      real(rt), pointer :: cy(:,:,:)
+      real(rt), pointer :: cz(:,:,:)
       real(rt), pointer :: csml(:,:,:)
 	  real(rt), pointer :: flatn(:,:,:)
  !     real(rt), pointer :: div(:,:,:)
@@ -141,7 +143,9 @@
 		
       call bl_allocate(     q, lo-NHYP, hi+NHYP, QVAR)
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
-      call bl_allocate(     c, lo-NHYP, hi+NHYP      )
+      call bl_allocate(    cx, lo-NHYP, hi+NHYP      )
+      call bl_allocate(    cy, lo-NHYP, hi+NHYP      )
+      call bl_allocate(    cz, lo-NHYP, hi+NHYP      )
       call bl_allocate(  csml, lo-NHYP, hi+NHYP      )
       call bl_allocate(  srcQ, lo-1, hi+1, QVAR)
 
@@ -209,7 +213,7 @@
 	  	 bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
 		 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
 		 bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
-                 q , c , csml, flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
+                 q , cx,cy,cz , csml, flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
                  src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                  srcQ, srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
                  grav,gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
@@ -274,7 +278,9 @@ flxz = 0.d0
       ! We are done with these here so can go ahead and free up the space
       call bl_deallocate(q)
       call bl_deallocate(flatn)
-      call bl_deallocate(c)
+      call bl_deallocate(cx)
+      call bl_deallocate(cy)
+      call bl_deallocate(cz)
       call bl_deallocate(csml)
 !      call bl_deallocate(div)
       call bl_deallocate(srcQ)
@@ -319,7 +325,7 @@ end subroutine fort_advance_mhd
 			 bx, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
 			 by, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
 			 bz, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
-                         q,c,csml,flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
+                         q,cx, cy, cz,csml,flatn,  q_l1,  q_l2,  q_l3,  q_h1,  q_h2,  q_h3, &
                          src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                          srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
                          grav,gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
@@ -365,7 +371,9 @@ end subroutine fort_advance_mhd
       real(rt) :: bz(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
 
       real(rt) :: q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR) !Contains Cell Centered Mag Field
-      real(rt) :: c(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
+      real(rt) :: cx(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
+      real(rt) :: cy(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
+      real(rt) :: cz(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) :: csml(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) :: flatn(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3)
       real(rt) :: src( src_l1: src_h1, src_l2: src_h2, src_l3: src_h3,NTHERM)
@@ -378,7 +386,7 @@ end subroutine fort_advance_mhd
       integer          :: ngp, ngf, loq(3), hiq(3)
       integer          :: n, nq
       integer          :: iadv, ispec
-      real(rt) :: courx, coury, courz, courmx, courmy, courmz
+      real(rt) :: courx, coury, courz, courmx, courmy, courmz, cad
       real(rt) :: a_half, a_dot, rhoInv
       real(rt) :: dtdxaold, dtdyaold, dtdzaold, small_pres_over_dens
 
@@ -497,8 +505,17 @@ end subroutine fort_advance_mhd
                end if
 
                ! Define the soundspeed from the EOS
-               call nyx_eos_soundspeed(c(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT), &
-					   q(i,j,k,QMAGX), q(i,j,k,QMAGY), q(i,j,k,QMAGZ))
+			   cad = (q(i,j,k,QMAGX)**2)/q(i,j,k,QRHO)
+               call nyx_eos_soundspeed(cx(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT), &
+					   q(i,j,k,QMAGX), q(i,j,k,QMAGY), q(i,j,k,QMAGZ), cad)
+
+			   cad = (q(i,j,k,QMAGY)**2)/q(i,j,k,QRHO)
+               call nyx_eos_soundspeed(cy(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT), &
+					   q(i,j,k,QMAGX), q(i,j,k,QMAGY), q(i,j,k,QMAGZ), cad)
+
+			   cad = (q(i,j,k,QMAGZ)**2)/q(i,j,k,QRHO)
+               call nyx_eos_soundspeed(cz(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT), &
+					   q(i,j,k,QMAGX), q(i,j,k,QMAGY), q(i,j,k,QMAGZ), cad)
 
                ! Set csmal based on small_pres and small_dens
                csml(i,j,k) = sqrt(gamma_const * small_pres_over_dens)
@@ -509,7 +526,6 @@ end subroutine fort_advance_mhd
                ! Pressure = (gamma - 1) * rho * e + 0.5 B dot B
                q(i,j,k,QPRES) = gamma_minus_1 * q(i,j,k,QREINT) &
 				+ 0.5d0*(q(i,j,k,QMAGX)**2 + q(i,j,k,QMAGY)**2 + q(i,j,k,QMAGZ)**2)
-			!	write(*,*) "pressure = ", q(i,j,k,QPRES), i, j, k
             end do
          end do
       end do
@@ -574,9 +590,9 @@ end subroutine fort_advance_mhd
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)
 
-               courx = ( c(i,j,k)+abs(q(i,j,k,QU)) ) * dtdxaold
-               coury = ( c(i,j,k)+abs(q(i,j,k,QV)) ) * dtdyaold
-               courz = ( c(i,j,k)+abs(q(i,j,k,QW)) ) * dtdzaold
+               courx = ( cx(i,j,k)+abs(q(i,j,k,QU)) ) * dtdxaold
+               coury = ( cy(i,j,k)+abs(q(i,j,k,QV)) ) * dtdyaold
+               courz = ( cz(i,j,k)+abs(q(i,j,k,QW)) ) * dtdzaold
 
                courmx = max( courmx, courx )
                courmy = max( courmy, coury )
@@ -589,7 +605,9 @@ end subroutine fort_advance_mhd
                   print *,'   '
                   print *,'>>> ... (u+c) * a * dt / dx > 1 ', courx
                   print *,'>>> ... at cell (i,j,k)   : ',i,j,k
-                  print *,'>>> ... u, c                ',q(i,j,k,QU), c(i,j,k)
+                  print *,'>>> ... u, c                ',q(i,j,k,QU), cx(i,j,k)
+				  print *,'>>> ... B                   ',q(i,j,k,QMAGX:QMAGZ)
+				  print *,'>>> ... pressure            ',q(i,j,k,QPRES)
                   print *,'>>> ... density             ',q(i,j,k,QRHO)
                   call bl_error("Error:: Nyx_advection_3d.f90 :: CFL violation in x-dir in ctoprim")
                end if
@@ -601,7 +619,9 @@ end subroutine fort_advance_mhd
                   print *,'   '
                   print *,'>>> ... (v+c) * a * dt / dx > 1 ', coury
                   print *,'>>> ... at cell (i,j,k)   : ',i,j,k
-                  print *,'>>> ... v, c                ',q(i,j,k,QV), c(i,j,k)
+                  print *,'>>> ... v, c                ',q(i,j,k,QV), cy(i,j,k)
+				  print *,'>>> ... B                   ',q(i,j,k,QMAGX:QMAGZ)
+				  print *,'>>> ... pressure            ',q(i,j,k,QPRES)
                   print *,'>>> ... density             ',q(i,j,k,QRHO)
                   call bl_error("Error:: Nyx_advection_3d.f90 :: CFL violation in y-dir in ctoprim")
                end if
@@ -613,7 +633,9 @@ end subroutine fort_advance_mhd
                   print *,'   '
                   print *,'>>> ... (w+c) * a * dt / dx > 1 ', courz
                   print *,'>>> ... at cell (i,j,k)   : ',i,j,k
-                  print *,'>>> ... w, c                ',q(i,j,k,QW), c(i,j,k)
+                  print *,'>>> ... w, c                ',q(i,j,k,QW), cz(i,j,k)
+				  print *,'>>> ... B                   ',q(i,j,k,QMAGX:QMAGZ)
+				  print *,'>>> ... pressure            ',q(i,j,k,QPRES)
                   print *,'>>> ... density             ',q(i,j,k,QRHO)
                   call bl_error("Error:: Nyx_advection_3d.f90 :: CFL violation in z-dir in ctoprim")
                end if
@@ -788,9 +810,9 @@ end subroutine fort_advance_mhd
 	do k = lo(3), hi(3)
 	do j = lo(2), hi(2)
 	do i = lo(1), hi(1)
-		bx = bxout(i,j,k)!0.5d0*(bxout(i+1,j,k)+bxout(i,j,k))
-		by = byout(i,j,k)!0.5d0*(byout(i,j+1,k)+byout(i,j,k))
-		bz = bzout(i,j,k)!0.5d0*(bzout(i,j,k+1)+bzout(i,j,k))
+		bx = 0.5d0*(bxout(i+1,j,k)+bxout(i,j,k))!bxout(i,j,k)!
+		by = 0.5d0*(byout(i,j+1,k)+byout(i,j,k))!byout(i,j,k)!
+		bz = 0.5d0*(bzout(i,j,k+1)+bzout(i,j,k))!bzout(i,j,k)!
 		uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*(bx**2 + by**2 + bz**2)
 	enddo
 	enddo

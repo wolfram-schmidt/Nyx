@@ -128,22 +128,25 @@ contains
   end subroutine nyx_eos_soundspeed_hydro
 
 !======= Sound speed calc for ideal MHD ================
-  subroutine nyx_eos_soundspeed_mhd(c, R, e, bx, by, bz)
+  subroutine nyx_eos_soundspeed_mhd(c, R, e, bx, by, bz, cd)
 
      use amrex_fort_module, only : rt => amrex_real
      use meth_params_module, only: gamma_const, gamma_minus_1
 
      ! In/out variables
-     real(rt), intent(in   ) :: R, e, bx , by, bz
+     real(rt), intent(in   ) :: R, e, bx , by, bz, cd !density, internal energy, magnetic fields, directional alfven speed
      real(rt), intent(  out) :: c
 
-     ! Pressure
+     !Gas Pressure
      real(rt) :: P
+     !Sound Speed, Alfven Speed
+     real(rt) :: as, ca
 
-     ! Pressure = p_thermal + p_magnetic
-     P = R * e * gamma_minus_1 + 0.5d0*(bx*bx + by*by + bz*bz)
-     ! sound speed
-     c = sqrt(gamma_const * P / R)
+     P = R * e * gamma_minus_1
+     as = gamma_const * P/R
+     ca = (bx**2 + by**2 + bz**2)/R
+     !Fast Magneto-Sonic Wave
+     c = sqrt(0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.0d0*as*cd)))
 
   end subroutine nyx_eos_soundspeed_mhd
 
