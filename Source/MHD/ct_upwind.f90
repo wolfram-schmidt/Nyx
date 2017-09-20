@@ -465,8 +465,9 @@ implicit none
  			q(i,j,k,QU)    = u(i,j,k,UMX)/q(i,j,k,QRHO)
  			q(i,j,k,QV)    = u(i,j,k,UMY)/q(i,j,k,QRHO)
  			q(i,j,k,QW)    = u(i,j,k,UMZ)/q(i,j,k,QRHO)
-			q(i,j,k,QPRES) = u(i,j,k,UEINT)*gamma_minus_1 + 0.5*dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ))
-			q(i,j,k,QREINT) = (q(i,j,k,QPRES) - 0.5d0*dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ)))/gamma_minus_1
+			q(i,j,k,QREINT) = u(i,j,k,UEDEN) - 0.5d0*q(i,j,k,QRHO)*dot_product(q(i,j,k,QU:QW),q(i,j,k,QU:QW)) &
+			                  - 0.5d0*dot_product(u(i,j,k,QMAGX:QMAGZ), u(i,j,k,QMAGX:QMAGZ))			 
+			q(i,j,k,QPRES) = q(i,j,k,QREINT)*gamma_minus_1 + 0.5*dot_product(u(i,j,k,QMAGX:QMAGZ),u(i,j,k,QMAGX:QMAGZ))
 			q(i,j,k,QMAGX:QMAGZ) = u(i,j,k,QMAGX:QMAGZ)
 		 enddo
 	 enddo

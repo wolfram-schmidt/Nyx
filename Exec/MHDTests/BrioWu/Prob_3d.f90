@@ -218,7 +218,7 @@
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)+1
                xcen = xlo(1) + delta(1)*(float(i-lo(1)) + 0.5d0)
-               if (xcen <= center(1)) then
+               if (xcen <= center(1)+1) then
                   mag_x(i,j,k,1) = B_x_l
                else
 		  mag_x(i,j,k,1) = B_x_r
@@ -275,7 +275,7 @@
             ycen = xlo(2) + delta(2)*(float(j-lo(2)) + 0.5d0)
             do i = lo(1), hi(1)
 
-               if (ycen <= center(2)) then
+               if (ycen <= center(2)+1) then
 		  mag_y(i,j,k,1) = B_y_l
                else
 		  mag_y(i,j,k,1) = B_y_r
@@ -337,7 +337,7 @@
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
 
-               if (zcen <= center(3)) then
+               if (zcen <= center(3)+1) then
 		  mag_z(i,j,k,1) = B_z_l
                else
 		  mag_z(i,j,k,1) = B_z_r

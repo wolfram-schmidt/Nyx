@@ -95,7 +95,7 @@ subroutine hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
       ! Note this is actually (rho e)
       eL   = (qL(QPRES) - 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)))/(gamma_minus_1) &
                         + 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)) &
-   	                + 0.5d0*dot_product(qL(QU:QW),qL(QU:QW))*qL(QRHO)
+   	                    + 0.5d0*dot_product(qL(QU:QW),qL(QU:QW))*qL(QRHO)
 
       FL(URHO)  = qL(QRHO)*qL(QVELN)
       FL(UMN)   = qL(QRHO)*qL(QVELN)**2 + qL(QPRES) - qL(QMAGN)**2

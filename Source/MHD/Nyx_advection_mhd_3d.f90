@@ -222,6 +222,11 @@
 		   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
            qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
 
+!do i =1,3
+!    qp(:,:,:,:,i) = q
+!    qm(:,:,:,:,i) = q
+!enddo    
+
 flxx = 0.d0
 flxy = 0.d0
 flxz = 0.d0
@@ -446,17 +451,7 @@ end subroutine fort_advance_mhd
       do k = loq(3),hiq(3)
          do j = loq(2),hiq(2)
             do i = loq(1),hiq(1)
-				if(bx(i+1,j,k).eq.0.d0.or.i.eq.hiq(1)) then 
-					q(i,j,k,QMAGX) = bx(i,j,k)
-				else
 		  	 	    q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
-				endif
-			!	if(q(i,j,k,QMAGX).eq.0.d0) then 
-			!		print*, "Bx is 0, at ", i, j, k
-			!		print*, bx(i+1,j,k), bx(i, j, k), bx(i-1,j,k)
-			!		print*, "hiq(1) = ", hiq(1), "bxhi1 = ", bxin_h1
-			!		pause
-			!	endif
 	 	   end do
 	 	 end do
       end do
@@ -464,11 +459,7 @@ end subroutine fort_advance_mhd
       do k = loq(3),hiq(3)
          do j = loq(2),hiq(2)
             do i = loq(1),hiq(1)
-			  if(by(i,j+1,k).eq.0.d0.or.j.eq.hiq(2)) then 
-				q(i,j,k,QMAGY) = by(i,j,k)
-			  else
 		 	      q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
-			  endif
             end do
 	  	end do
       end do
@@ -476,11 +467,7 @@ end subroutine fort_advance_mhd
       do k = loq(3),hiq(3)
          do j = loq(2),hiq(2)
             do i = loq(1),hiq(1)
-			  if(bz(i,j,k+1).eq.0.d0.or.k.eq.hiq(3)) then 
-				q(i,j,k,QMAGZ) = bz(i,j,k)
-			  else
 		 	      q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
-			  endif
             end do
 		end do
       end do
@@ -688,14 +675,11 @@ end subroutine fort_advance_mhd
 				print*, "velocities = ", u,v,w
 				print*, "rho = ", uout(i,j,k,URHO)
 				print*, "1/2r|v|^2 = ", 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
-				print*, " " 
-				print*, "Total Energy in = ", uin(i,j,k,UEDEN)
-				print*, "U j +1  = ", uin(i,j+1,k,:)
-				print*, "flux x = ", - dt/dx*(fluxx(i+1,j,k,UEDEN) - fluxx(i,j,k,UEDEN))
-				print*, "flux y = ", - dt/dy*(fluxy(i,j+1,k,UEDEN) - fluxy(i,j,k,UEDEN))
-				print*, "j + 1", fluxy(i,j+1,k,UEDEN), " j ", fluxy(i,j,k,UEDEN)
-				print*, "flux z = ", - dt/dz*(fluxz(i,j,k+1,UEDEN) - fluxz(i,j,k,UEDEN))
-				pause
+				print*, " "
+				print*, "Umx = ", uin(i,j,k,UMX), uout(i,j,k,UMX)
+				print*, "Umy = ", uin(i,j,k,UMY), uout(i,j,k,UMY)
+				print*, "Umz = ", uin(i,j,k,UMZ), uout(i,j,k,UMZ)
+			!	pause
 			endif
 		enddo
 		enddo
@@ -804,9 +788,9 @@ end subroutine fort_advance_mhd
 	do k = lo(3), hi(3)
 	do j = lo(2), hi(2)
 	do i = lo(1), hi(1)
-		bx = 0.5d0*(bxout(i+1,j,k)+bxout(i,j,k))
-		by = 0.5d0*(byout(i,j+1,k)+byout(i,j,k))
-		bz = 0.5d0*(bzout(i,j,k+1)+bzout(i,j,k))
+		bx = bxout(i,j,k)!0.5d0*(bxout(i+1,j,k)+bxout(i,j,k))
+		by = byout(i,j,k)!0.5d0*(byout(i,j+1,k)+byout(i,j,k))
+		bz = bzout(i,j,k)!0.5d0*(bzout(i,j,k+1)+bzout(i,j,k))
 		uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*(bx**2 + by**2 + bz**2)
 	enddo
 	enddo

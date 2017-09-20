@@ -44,7 +44,7 @@ contains
 
     real(rt), intent(in   ) :: 		dx,dy,dz,dt,a_old
 
-    real(rt) 				:: 	dQL(7), dQR(7), dW(7), leig(7,7), reig(7,7), lam(7), summ(7)
+    real(rt) 				:: 	dQL(7), dQR(7), dW, dL, dR, leig(7,7), reig(7,7), lam(7), summ(7)
     real(rt)				:: 	temp(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1,8), smhd(7)
     real(rt)				::      tbx(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
     real(rt)				::      tby(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
@@ -351,10 +351,10 @@ contains
 			dQL(6:7) = 	temp(i,j,k,ibx+1:8) - temp(i-1,j,k,ibx+1:8)	!mag			
 			dQR(1:5) = 	temp(i+1,j,k,1:ibx-1) - temp(i,j,k,1:ibx-1)
 			dQR(6:7) = 	temp(i+1,j,k,ibx+1:8) - temp(i,j,k,ibx+1:8)				
-			do ii = 1,7
-				call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
-				!call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
-			enddo
+!			do ii = 1,7
+!				!call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+!				call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+!			enddo
 			call evals(lam, s(i,j,k,:), 1) !!X dir eigenvalues
 			call lvecx(leig,s(i,j,k,:))    !!left eigenvectors
 			call rvecx(reig,s(i,j,k,:))    !!right eigenvectors
@@ -370,7 +370,10 @@ contains
 		!Plus
 				!!Using HLLD so sum over all eigenvalues
 			do ii = 1,7
-					summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
+			        dL = dot_product(leig(ii,:),dQL)
+			        dR = dot_product(leig(ii,:),dQR)
+			        call vanleer(dW,dL,dR)
+					summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dW*reig(:,ii)
 			enddo
 			Ip(i,j,k,QRHO:QPRES,1) 	 = temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 			Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
@@ -379,7 +382,10 @@ contains
 		!Minus
 			summ = 0.d0
 			do ii = 1,7
-					summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
+			        dL = dot_product(leig(ii,:),dQL)
+			        dR = dot_product(leig(ii,:),dQR)
+			        call vanleer(dW,dL,dR)			
+					summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
 			Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 			Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
@@ -403,16 +409,19 @@ contains
 			dQL(7) = 	temp(i,j,k,8) - temp(i,j-1,k,iby+1)		!bz			
 			dQR(1:6) = 	temp(i,j+1,k,1:ibx) - temp(i,j,k,1:ibx)
 			dQR(7) = 	temp(i,j+1,k,ibz) - temp(i,j,k,ibz)				
-			do ii = 1,7
-				call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
-				!call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting						
-			enddo
+			!do ii = 1,7
+			!	!call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+			!	call minmod(dW(ii),dQL(ii),dQR(ii)) !!slope limiting						
+			!enddo
 			call evals(lam, s(i,j,k,:), 2) !!Y dir eigenvalues
 			call lvecy(leig,s(i,j,k,:))    !!left eigenvectors
 			call rvecy(reig,s(i,j,k,:))    !!right eigenvectors
 			!!Using HLLD so sum over all eigenvalues
 			do ii = 1,7
-					summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
+			        dL = dot_product(leig(ii,:),dQL)
+			        dR = dot_product(leig(ii,:),dQR)
+			        call vanleer(dW,dL,dR)			
+					summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dW*reig(:,ii)
 			enddo
 	!MHD Source Terms 
 			smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -431,7 +440,10 @@ contains
 
 			summ = 0.d0
 			do ii = 1,7
-					summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
+			        dL = dot_product(leig(ii,:),dQL)
+			        dR = dot_product(leig(ii,:),dQR)
+			        call vanleer(dW,dL,dR)			
+					summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
 			Im(i,j,k,QRHO:QPRES,2)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 			Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
@@ -451,17 +463,20 @@ contains
 			!Skip Bz
 			dQL(1:7) = 	temp(i,j,k,1:iby) - temp(i,j,k-1,1:iby) 
 			dQR(1:7) = 	temp(i,j,k+1,1:iby) - temp(i,j,k,1:iby)
-			do ii = 1,7
-				call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
-				!call minmod(dW(ii), dQL(ii), dQR(ii))
-			enddo
+!			do ii = 1,7
+				!call vanleer(dW(ii),dQL(ii),dQR(ii)) !!slope limiting
+!				call minmod(dW(ii), dQL(ii), dQR(ii))
+!			enddo
 			call evals(lam, s(i,j,k,:), 3) !!Z dir eigenvalues
 			call lvecz(leig,s(i,j,k,:))    !!left eigenvectors
 			call rvecz(reig,s(i,j,k,:))    !!right eigenvectors
 
 			!!Characteristic Tracing
 			do ii = 1,7
-				summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dot_product(leig(ii,:),dW)*reig(:,ii)
+			        dL = dot_product(leig(ii,:),dQL)
+			        dR = dot_product(leig(ii,:),dQR)
+			        call vanleer(dW,dL,dR)			
+				summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dW*reig(:,ii)
 			enddo
 	!MHD Source Terms 
 			smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -479,41 +494,15 @@ contains
 			Ip(i,j,k,QPRES,3)       = Ip(i,j,k,QPRES,3) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,3),Ip(i,j,k,QMAGX:QMAGZ,3))
 			summ = 0.d0
 			do ii = 1,7
-				summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dot_product(leig(ii,:),dW)*reig(:,ii)
+			        dL = dot_product(leig(ii,:),dQL)
+			        dR = dot_product(leig(ii,:),dQR)
+			        call vanleer(dW,dL,dR)			
+				summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
 			Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 			Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 			Im(i,j,k,QPRES,3)       = Im(i,j,k,QPRES,3) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3))
-
-      if (isnan(Im(i,j,k,QMAGX,1))) then
-         print *,'IM:QMAGX1 IS NAN ', i,j,k
-         stop
-      else if (isnan(Im(i,j,k,QMAGX,2))) then
-         print *,'IM:QMAGX2 IS NAN ', i,j,k
-         stop
-      else if (isnan(Im(i,j,k,QMAGX,3))) then
-         print *,'IM:QMAGX3 IS NAN ', i,j,k
-         stop
-      else if (isnan(Im(i,j,k,QMAGY,1))) then
-         print *,'IM:QMAGY1 IS NAN ', i,j,k
-         stop
-      else if (isnan(Im(i,j,k,QMAGY,2))) then
-         print *,'IM:QMAGY2 IS NAN ', i,j,k
-         stop
-      else if (isnan(Im(i,j,k,QMAGY,3))) then
-         print *,'IM:QMAGY3 IS NAN ', i,j,k
-         stop
-      else if (isnan(Im(i,j,k,QMAGZ,1))) then
-         print *,'IM:QMAGZ1 IS NAN ', i,j,k
-         stop
-      else if (isnan(Im(i,j,k,QMAGZ,2))) then
-         print *,'IM:QMAGZ2 IS NAN ', i,j,k
-         stop
-      else if (isnan(Im(i,j,k,QMAGZ,3))) then
-         print *,'IM:QMAGZ3 IS NAN ', i,j,k
-         stop
-      end if
 
 		enddo
 		enddo
