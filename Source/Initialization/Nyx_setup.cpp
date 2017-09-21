@@ -44,7 +44,7 @@ static int tang_vel_bc[] =
 
 static int mag_field_bc[] =
 {
-    INT_DIR, EXT_DIR, FOEXTRAP, REFLECT_EVEN, FOEXTRAP, FOEXTRAP
+    INT_DIR, EXT_DIR, FOEXTRAP, REFLECT_EVEN, FOEXTRAP, HOEXTRAP
 };
 
 static

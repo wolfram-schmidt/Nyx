@@ -132,13 +132,13 @@ Nyx::initData ()
 #ifdef MHD
    // Same comment as Hydro
    MultiFab& Bx_new	= get_new_data(Mag_Type_x);
-   Bx_new.setVal(1.e200);
+   Bx_new.setVal(0.0);
 
    MultiFab& By_new	= get_new_data(Mag_Type_y);
-   By_new.setVal(1.e200);
+   By_new.setVal(0.0);
 
    MultiFab& Bz_new	= get_new_data(Mag_Type_z);
-   Bz_new.setVal(1.e200);
+   Bz_new.setVal(0.0);
 #endif
 
     // If you run a pure N-body simulation and Nyx segfaults here, then
@@ -186,13 +186,15 @@ Nyx::initData ()
 		     nbz, BL_TO_FORTRAN(Bz_new[mfi]),
 #endif
 		     dx, gridloc.lo(), gridloc.hi());
+		std::cout<<S_new[mfi]<<std::endl;
+		std::cin.get();
             }
 
-           compute_new_temp();
+        compute_new_temp();
 #ifdef MHD
-
-#else
         enforce_mhd_consistent_e(S_new, Bx_new, By_new, Bz_new);
+#else
+        enforce_consistent_e(S_new);
 #endif
         }
         else
@@ -384,8 +386,15 @@ Nyx::init_from_plotfile ()
 
             if (rhoe_infile)
             {
+#ifdef MHD
+                fort_init_e_from_rhoe_mhd
+                    (BL_TO_FORTRAN(S_new[mfi]), &ns,
+		     BL_TO_FORTRAN(Bx_new[mfi]), BL_TO_FORTRAN(By_new[mfi]),BL_TO_FORTRAN(Bz_new[mfi]),
+		     bx.loVect(), bx.hiVect(), &old_a);
+#else
                 fort_init_e_from_rhoe
                     (BL_TO_FORTRAN(S_new[mfi]), &ns, bx.loVect(), bx.hiVect(), &old_a);
+#endif
             }
             else 
             {

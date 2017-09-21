@@ -75,16 +75,15 @@
               v = state(i,j,k,UMY) * rhoInv
               w = state(i,j,k,UMZ) * rhoInv
 	    	  b(1) = 0.5d0*(bx(i,j,k) + bx(i+1,j,k))!Average Face Centered Quantaties for Cell Centered Approximations
-			  b(2) = 0.5d0*(by(i,j,k) + by(i,j+1,k))
+		  b(2) = 0.5d0*(by(i,j,k) + by(i,j+1,k))
 	    	  b(3) = 0.5d0*(bz(i,j,k) + bz(i,j,k+1))
 
               state(i,j,k,UEDEN) = state(i,j,k,UEINT) + &
-					               0.5d0 * state(i,j,k,URHO) * (u*u + v*v + w*w) + &
-								   0.5d0 *(b(1)**2 + b(2)**2 + b(3)**2)
+				   0.5d0 * state(i,j,k,URHO) * (u*u + v*v + w*w) + &
+				   0.5d0 *(b(1)**2 + b(2)**2 + b(3)**2)
 
            end do
         end do
      end do
-
    end subroutine fort_mhd_enforce_consistent_e
 

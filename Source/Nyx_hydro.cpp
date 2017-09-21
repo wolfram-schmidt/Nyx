@@ -92,7 +92,7 @@ Nyx::just_the_hydro (Real time,
 
     if (add_ext_src && !strang_split)
     {
-#ifndef NO_OLD_SRC
+#ifndef NO_OLD_SRC 
         get_old_source(prev_time, dt, ext_src_old);
 #endif //#ifndef NO_OLD_SRC
         ext_src_old.FillBoundary();

@@ -41,7 +41,10 @@ Nyx::advance (Real time,
            if (do_dm_particles)
 #endif
            {
+#ifdef MHD
+#else
                return advance_hydro_plus_particles(time, dt, iteration, ncycle);
+#endif
            } 
         }
         else
@@ -80,6 +83,7 @@ Nyx::advance (Real time,
 //      then this will only be a single level advance.
 //
 #ifndef NO_HYDRO
+#ifndef MHD
 Real
 Nyx::advance_hydro_plus_particles (Real time,
                                    Real dt,
@@ -276,7 +280,6 @@ Nyx::advance_hydro_plus_particles (Real time,
             }
         }
     }
-
 #endif
 
     //
@@ -482,7 +485,7 @@ Nyx::advance_hydro_plus_particles (Real time,
     // Redistribution happens in post_timestep
     return dt;
 }
-
+#endif
 
 #ifdef MHD
 Real
@@ -538,9 +541,12 @@ Nyx::advance_mhd (Real time,
     // Call the mhd advance itself
     just_the_mhd(time, dt, a_old, a_new);
 
-    MultiFab& S_new = get_new_data(State_Type); 
-    MultiFab& D_new = get_new_data(DiagEOS_Type);
-    reset_internal_energy(S_new,D_new); 
+    MultiFab& S_new  = get_new_data(State_Type); 
+    MultiFab& D_new  = get_new_data(DiagEOS_Type);
+    MultiFab& Bx_new = get_new_data(Mag_Type_x);
+    MultiFab& By_new = get_new_data(Mag_Type_y);
+    MultiFab& Bz_new = get_new_data(Mag_Type_z);
+    reset_internal_energy(S_new,D_new, Bx_new, By_new, Bz_new); 
 
     return dt;
 }

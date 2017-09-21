@@ -198,7 +198,6 @@
                      state(i,j,k,UEDEN) = rhoe_r + 0.5d0*rho_r*u_r*u_r + 0.5d0*(B_x_r**2 + B_y_r**2 + B_z_r**2)
                      state(i,j,k,UEINT) = rhoe_r
                   endif
-
                else
                   call bl_abort('invalid idir')
                endif
@@ -207,7 +206,6 @@
                    state(i,j,k,UFS  ) =         XHYDROGEN * state(i,j,k,URHO)
                    state(i,j,k,UFS+1) = (1.d0 - XHYDROGEN)* state(i,j,k,URHO)
                end if
-
             enddo
          enddo
       enddo

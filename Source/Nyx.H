@@ -479,7 +479,11 @@ public:
     static int num_grow();
 
     // Synchronize (rho e) and (rho E) so they are consistent with each other
-	void reset_internal_energy(amrex::MultiFab& State, amrex::MultiFab& DiagEOS);
+	void reset_internal_energy(amrex::MultiFab& State, amrex::MultiFab& DiagEOS
+#ifdef MHD
+, amrex::MultiFab& Bx, amrex::MultiFab& By, amrex::MultiFab& Bz
+#endif
+);
 
     void compute_new_temp();
 

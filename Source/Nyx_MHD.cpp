@@ -124,22 +124,23 @@ Nyx::just_the_mhd (Real time,
     }
 
     BL_ASSERT(NUM_GROW == 4);
-
     Real  e_added = 0;
     Real ke_added = 0;
 
     // Create FAB for extended grid values (including boundaries) and fill.
-    MultiFab S_old_tmp(S_old.boxArray(), S_old.DistributionMap(), NUM_STATE, NUM_GROW);
-    FillPatch(*this, S_old_tmp, NUM_GROW, time, State_Type, 0, NUM_STATE);
-
     MultiFab Bx_old_tmp(Bx_old.boxArray(), Bx_old.DistributionMap(), 1, NUM_GROW);
     MultiFab By_old_tmp(By_old.boxArray(), By_old.DistributionMap(), 1, NUM_GROW);
     MultiFab Bz_old_tmp(Bz_old.boxArray(), Bz_old.DistributionMap(), 1, NUM_GROW);
 
-	
     FillPatch(*this, Bx_old_tmp, NUM_GROW, time, Mag_Type_x, 0, 1);
     FillPatch(*this, By_old_tmp, NUM_GROW, time, Mag_Type_y, 0, 1);
     FillPatch(*this, Bz_old_tmp, NUM_GROW, time, Mag_Type_z, 0, 1);
+
+    std::cout<<S_old[0]<<std::endl;
+    std::cin.get();
+
+    MultiFab S_old_tmp(S_old.boxArray(), S_old.DistributionMap(), NUM_STATE, NUM_GROW);
+    FillPatch(*this, S_old_tmp, NUM_GROW, time, State_Type, 0, NUM_STATE);
 
     MultiFab D_old_tmp(D_old.boxArray(), D_old.DistributionMap(), 2, NUM_GROW);
     FillPatch(*this, D_old_tmp, NUM_GROW, time, DiagEOS_Type, 0, 2);
@@ -157,6 +158,9 @@ Nyx::just_the_mhd (Real time,
        for (MFIter mfi(S_old_tmp,true); mfi.isValid(); ++mfi)
        {
         const Box& bx        = mfi.tilebox();
+	std::cout<<S_old_tmp[mfi]<<std::endl;
+	std::cin.get();
+
         FArrayBox& state     = S_old_tmp[mfi];
         FArrayBox& dstate    = D_old_tmp[mfi];
         FArrayBox& stateout  = S_new[mfi];

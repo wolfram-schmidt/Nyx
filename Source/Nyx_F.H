@@ -118,7 +118,12 @@ extern "C"
   void fort_init_e_from_rhoe
      (BL_FORT_FAB_ARG(state), const int* num_state,
       const int* lo, const int* hi, amrex::Real* comoving_a);
-	
+#ifdef MHD
+  void fort_init_e_from_rhoe_mhd
+     (BL_FORT_FAB_ARG(state),const int* num_state,
+      BL_FORT_FAB_ARG(Bx), BL_FORT_FAB_ARG(By), BL_FORT_FAB_ARG(Bz), 
+      const int* lo, const int* hi, amrex::Real* comoving_a);
+#endif	
   void fort_mhd_enforce_consistent_e
     (const int* lo, const int* hi, BL_FORT_FAB_ARG(state), 
 	BL_FORT_FAB_ARG(bx), BL_FORT_FAB_ARG(by), BL_FORT_FAB_ARG(bz));
@@ -137,6 +142,18 @@ extern "C"
      const int* print_fortran_warnings,
      amrex::Real* comoving_a, amrex::Real* sum_energy_added,
      amrex::Real* sum_energy_total);
+
+  void reset_internal_e_mhd
+    (BL_FORT_FAB_ARG(S_new),
+     BL_FORT_FAB_ARG(D_new),
+     BL_FORT_FAB_ARG(b_x),
+     BL_FORT_FAB_ARG(b_y),
+     BL_FORT_FAB_ARG(b_z),
+     const int lo[], const int hi[],
+     const int* print_fortran_warnings,
+     amrex::Real* comoving_a, amrex::Real* sum_energy_added,
+     amrex::Real* sum_energy_total);
+
 
   void hypfill
     (BL_FORT_FAB_ARG(state),

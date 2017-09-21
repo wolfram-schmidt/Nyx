@@ -2049,6 +2049,9 @@ Nyx::network_init ()
 #ifndef NO_HYDRO
 void
 Nyx::reset_internal_energy (MultiFab& S_new, MultiFab& D_new
+#ifdef MHD
+, MultiFab& Bx, MultiFab& By, MultiFab& Bz
+#endif
 )
 {
     BL_PROFILE("Nyx::reset_internal_energy()");
@@ -2071,10 +2074,19 @@ Nyx::reset_internal_energy (MultiFab& S_new, MultiFab& D_new
 
         Real s  = 0;
         Real se = 0;
+#ifdef MHD
+        reset_internal_e_mhd
+            (BL_TO_FORTRAN(S_new[mfi]), BL_TO_FORTRAN(D_new[mfi]),
+	     BL_TO_FORTRAN(Bx[mfi]), BL_TO_FORTRAN(By[mfi]), BL_TO_FORTRAN(Bz[mfi]),
+             bx.loVect(), bx.hiVect(),
+             &print_fortran_warnings, &a, &s, &se);
+
+#else
         reset_internal_e
             (BL_TO_FORTRAN(S_new[mfi]), BL_TO_FORTRAN(D_new[mfi]),
              bx.loVect(), bx.hiVect(),
              &print_fortran_warnings, &a, &s, &se);
+#endif
         sum_energy_added += s;
         sum_energy_total += se;
     }
@@ -2111,11 +2123,18 @@ Nyx::compute_new_temp ()
     BL_PROFILE("Nyx::compute_new_temp()");
     MultiFab& S_new = get_new_data(State_Type);
     MultiFab& D_new = get_new_data(DiagEOS_Type);
-
+#ifdef MHD
+    MultiFab& Bx_new = get_new_data(Mag_Type_x);
+    MultiFab& By_new = get_new_data(Mag_Type_y);
+    MultiFab& Bz_new = get_new_data(Mag_Type_z);
+#endif
     Real cur_time   = state[State_Type].curTime();
 
- //   reset_internal_energy(S_new,D_new);
-
+#ifdef MHD 
+   reset_internal_energy(S_new,D_new,Bx_new,By_new,Bz_new);
+#else
+   reset_internal_energy(S_new,D_new);
+#endif
     Real a = get_comoving_a(cur_time);
 
 #ifdef _OPENMP

@@ -70,7 +70,7 @@
       real(rt)  bzin(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
       real(rt)  bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
       real(rt)  src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, NTHERM)
-	  real(rt) ugdnvx(ugdnvx_l1:ugdnvx_h1,ugdnvx_l2:ugdnvx_h2,ugdnvx_l3:ugdnvx_h3)
+      real(rt) ugdnvx(ugdnvx_l1:ugdnvx_h1,ugdnvx_l2:ugdnvx_h2,ugdnvx_l3:ugdnvx_h3)
       real(rt) ugdnvy(ugdnvy_l1:ugdnvy_h1,ugdnvy_l2:ugdnvy_h2,ugdnvy_l3:ugdnvy_h3)
       real(rt) ugdnvz(ugdnvz_l1:ugdnvz_h1,ugdnvz_l2:ugdnvz_h2,ugdnvz_l3:ugdnvz_h3)
       real(rt)  grav( gv_l1:gv_h1, gv_l2:gv_h2, gv_l3:gv_h3, 3)
@@ -139,7 +139,7 @@
       srcq_h2 = hi(2)+1
       srcq_h3 = hi(3)+1
 		
-		uout(lo(1)-1:hi(1)+1,lo(2)-1:hi(2)+1,lo(3)-1:hi(3)+1,:) = uin(lo(1)-1:hi(1)+1,lo(2)-1:hi(2)+1,lo(3)-1:hi(3)+1,:)
+	!uout(lo(1)-1:hi(1)+1,lo(2)-1:hi(2)+1,lo(3)-1:hi(3)+1,:) = uin(lo(1)-1:hi(1)+1,lo(2)-1:hi(2)+1,lo(3)-1:hi(3)+1,:)
 		
       call bl_allocate(     q, lo-NHYP, hi+NHYP, QVAR)
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
@@ -398,6 +398,31 @@ end subroutine fort_advance_mhd
       ! Make q (all but p), except put e in slot for rho.e, fix after eos call.
       ! The temperature is used as an initial guess for the eos call and will be overwritten.
       !
+	  !Calculate Cell Centered Magnetic Field x
+
+      do k = loq(3),hiq(3)
+         do j = loq(2),hiq(2)
+            do i = loq(1),hiq(1)
+		q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
+	   end do
+	 end do
+      end do
+
+      do k = loq(3),hiq(3)
+         do j = loq(2),hiq(2)
+            do i = loq(1),hiq(1)
+		 q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
+            end do
+	end do
+      end do
+
+      do k = loq(3),hiq(3)
+         do j = loq(2),hiq(2)
+            do i = loq(1),hiq(1)
+		 q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
+            end do
+	end do
+      end do
       do k = loq(3),hiq(3)
          do j = loq(2),hiq(2)
             do i = loq(1),hiq(1)
@@ -420,6 +445,14 @@ end subroutine fort_advance_mhd
 
                ! Convert "rho e" to "e"
                q(i,j,k,QREINT ) = uin(i,j,k,UEINT)*rhoInv
+		print *, q(i,j,k,QREINT)
+		print *, uin(i,j,k,UEINT)
+		print *, uin(i,j,k,UEDEN)
+		print *, q(i,j,k,QRHO)
+		print *, q(i,j,k,QU:QW)
+		print *, q(i,j,k,QMAGX:QMAGZ)
+		print *, "i j k = ", i, j, k 
+		pause
 
             enddo
          enddo
@@ -454,31 +487,7 @@ end subroutine fort_advance_mhd
 !      end if ! UFS > 0
 
       small_pres_over_dens = small_pres / small_dens
-	  !Calculate Cell Centered Magnetic Field x
 
-      do k = loq(3),hiq(3)
-         do j = loq(2),hiq(2)
-            do i = loq(1),hiq(1)
-		  	 	    q(i,j,k,QMAGX) = 0.5d0*(bx(i+1,j,k) + bx(i,j,k))
-	 	   end do
-	 	 end do
-      end do
-
-      do k = loq(3),hiq(3)
-         do j = loq(2),hiq(2)
-            do i = loq(1),hiq(1)
-		 	      q(i,j,k,QMAGY) = 0.5d0*(by(i,j+1,k) + by(i,j,k))
-            end do
-	  	end do
-      end do
-
-      do k = loq(3),hiq(3)
-         do j = loq(2),hiq(2)
-            do i = loq(1),hiq(1)
-		 	      q(i,j,k,QMAGZ) = 0.5d0*(bz(i,j,k+1) + bz(i,j,k))
-            end do
-		end do
-      end do
 
       ! Get p, T, c, csml using q state
       do k = loq(3), hiq(3)
@@ -504,16 +513,16 @@ end subroutine fort_advance_mhd
                   end if
                end if
 
-               ! Define the soundspeed from the EOS
-			   cad = (q(i,j,k,QMAGX)**2)/q(i,j,k,QRHO)
+               ! Define the magneto-accoustic speed from the EOS
+			   cad = q(i,j,k,QMAGX)!(q(i,j,k,QMAGX)**2)/q(i,j,k,QRHO)
                call nyx_eos_soundspeed(cx(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT), &
 					   q(i,j,k,QMAGX), q(i,j,k,QMAGY), q(i,j,k,QMAGZ), cad)
 
-			   cad = (q(i,j,k,QMAGY)**2)/q(i,j,k,QRHO)
+			   cad = q(i,j,k,QMAGY)!(q(i,j,k,QMAGY)**2)/q(i,j,k,QRHO)
                call nyx_eos_soundspeed(cy(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT), &
 					   q(i,j,k,QMAGX), q(i,j,k,QMAGY), q(i,j,k,QMAGZ), cad)
 
-			   cad = (q(i,j,k,QMAGZ)**2)/q(i,j,k,QRHO)
+			   cad = q(i,j,k,QMAGZ)!(q(i,j,k,QMAGZ)**2)/q(i,j,k,QRHO)
                call nyx_eos_soundspeed(cz(i,j,k), q(i,j,k,QRHO), q(i,j,k,QREINT), &
 					   q(i,j,k,QMAGX), q(i,j,k,QMAGY), q(i,j,k,QMAGZ), cad)
 
@@ -606,8 +615,9 @@ end subroutine fort_advance_mhd
                   print *,'>>> ... (u+c) * a * dt / dx > 1 ', courx
                   print *,'>>> ... at cell (i,j,k)   : ',i,j,k
                   print *,'>>> ... u, c                ',q(i,j,k,QU), cx(i,j,k)
-				  print *,'>>> ... B                   ',q(i,j,k,QMAGX:QMAGZ)
-				  print *,'>>> ... pressure            ',q(i,j,k,QPRES)
+		  print *,'>>> ... B                   ',q(i,j,k,QMAGX:QMAGZ)
+		  print *,'>>> ... Internal e          ',q(i,j,k,QREINT)
+		  print *,'>>> ... pressure            ',q(i,j,k,QPRES)
                   print *,'>>> ... density             ',q(i,j,k,QRHO)
                   call bl_error("Error:: Nyx_advection_3d.f90 :: CFL violation in x-dir in ctoprim")
                end if
@@ -690,9 +700,10 @@ end subroutine fort_advance_mhd
 		   u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
 		   v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
    		   w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
-		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN)! - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
-			if(uout(i,j,k,UEINT).lt.0.d0) then
-				print*, "Negative energy = ", uout(i,j,k,UEINT), "at ", i, j, k
+		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+!			if(uout(i,j,k,UEINT).gt. 9.0) then
+			if(i.eq.18.and.j.eq.0.and.k.eq.0) then
+				print*, "Internal energy = ", uout(i,j,k,UEINT), "at ", i, j, k
 				print*, "Total Energy = ", uout(i,j,k,UEDEN)
 				print*, "velocities = ", u,v,w
 				print*, "rho = ", uout(i,j,k,URHO)
@@ -701,7 +712,10 @@ end subroutine fort_advance_mhd
 				print*, "Umx = ", uin(i,j,k,UMX), uout(i,j,k,UMX)
 				print*, "Umy = ", uin(i,j,k,UMY), uout(i,j,k,UMY)
 				print*, "Umz = ", uin(i,j,k,UMZ), uout(i,j,k,UMZ)
-			!	pause
+				print*, "Flux x = ", fluxx(i+1,j,k,URHO:UEDEN) , fluxx(i,j,k,URHO:UEDEN)
+				print*, "Flux y = ", fluxy(i,j+1,k,URHO:UEDEN) , fluxy(i,j,k,URHO:UEDEN)
+				print*, "Flux z = ", fluxz(i,j,k+1,URHO:UEDEN) , fluxz(i,j,k,URHO:UEDEN)
+!				pause
 			endif
 		enddo
 		enddo
@@ -813,7 +827,12 @@ end subroutine fort_advance_mhd
 		bx = 0.5d0*(bxout(i+1,j,k)+bxout(i,j,k))!bxout(i,j,k)!
 		by = 0.5d0*(byout(i,j+1,k)+byout(i,j,k))!byout(i,j,k)!
 		bz = 0.5d0*(bzout(i,j,k+1)+bzout(i,j,k))!bzout(i,j,k)!
+		print*, "Regular internal energy = ", uout(i,j,k,UEINT)
 		uout(i,j,k,UEINT) = uout(i,j,k,UEINT) - 0.5d0*(bx**2 + by**2 + bz**2)
+		print*, "internal energy after = ", uout(i,j,k,UEINT)
+		print*, "bx = ", bx, "by =", by , "bz = ", bz
+		print*, "-1/2|B|^2 =", - 0.5d0*(bx**2 + by**2 + bz**2)
+		pause
 	enddo
 	enddo
 	enddo			
