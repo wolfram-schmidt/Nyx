@@ -2080,7 +2080,6 @@ Nyx::reset_internal_energy (MultiFab& S_new, MultiFab& D_new
 	     BL_TO_FORTRAN(Bx[mfi]), BL_TO_FORTRAN(By[mfi]), BL_TO_FORTRAN(Bz[mfi]),
              bx.loVect(), bx.hiVect(),
              &print_fortran_warnings, &a, &s, &se);
-
 #else
         reset_internal_e
             (BL_TO_FORTRAN(S_new[mfi]), BL_TO_FORTRAN(D_new[mfi]),

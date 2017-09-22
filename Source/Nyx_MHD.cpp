@@ -136,9 +136,6 @@ Nyx::just_the_mhd (Real time,
     FillPatch(*this, By_old_tmp, NUM_GROW, time, Mag_Type_y, 0, 1);
     FillPatch(*this, Bz_old_tmp, NUM_GROW, time, Mag_Type_z, 0, 1);
 
-    std::cout<<S_old[0]<<std::endl;
-    std::cin.get();
-
     MultiFab S_old_tmp(S_old.boxArray(), S_old.DistributionMap(), NUM_STATE, NUM_GROW);
     FillPatch(*this, S_old_tmp, NUM_GROW, time, State_Type, 0, NUM_STATE);
 
@@ -158,8 +155,6 @@ Nyx::just_the_mhd (Real time,
        for (MFIter mfi(S_old_tmp,true); mfi.isValid(); ++mfi)
        {
         const Box& bx        = mfi.tilebox();
-	std::cout<<S_old_tmp[mfi]<<std::endl;
-	std::cin.get();
 
         FArrayBox& state     = S_old_tmp[mfi];
         FArrayBox& dstate    = D_old_tmp[mfi];
@@ -212,6 +207,7 @@ Nyx::just_the_mhd (Real time,
              BL_TO_FORTRAN(E[1]),
              BL_TO_FORTRAN(E[2]),
              &cflLoc, &a_old, &a_new, &se, &ske, &print_fortran_warnings, &do_grav);
+
 
         for (int i = 0; i < BL_SPACEDIM; ++i) {
            fluxes[i][mfi].copy(flux[i], mfi.nodaltilebox(i));

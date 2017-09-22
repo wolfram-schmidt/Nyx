@@ -540,7 +540,6 @@ Nyx::advance_mhd (Real time,
 
     // Call the mhd advance itself
     just_the_mhd(time, dt, a_old, a_new);
-
     MultiFab& S_new  = get_new_data(State_Type); 
     MultiFab& D_new  = get_new_data(DiagEOS_Type);
     MultiFab& Bx_new = get_new_data(Mag_Type_x);

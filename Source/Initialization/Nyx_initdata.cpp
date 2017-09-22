@@ -186,8 +186,6 @@ Nyx::initData ()
 		     nbz, BL_TO_FORTRAN(Bz_new[mfi]),
 #endif
 		     dx, gridloc.lo(), gridloc.hi());
-		std::cout<<S_new[mfi]<<std::endl;
-		std::cin.get();
             }
 
         compute_new_temp();

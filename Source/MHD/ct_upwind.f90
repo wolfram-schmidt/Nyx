@@ -103,7 +103,6 @@ Ey = 0.d0
 Ez = 0.d0
 
 !Calculate Flux 1D
-write(*,*) "Do Flux 1D"
 	!x-dir
         work_lo(1) = flxx_l1
         work_lo(2) = flxx_l2
@@ -157,7 +156,6 @@ enddo
 
 !Use "1D" fluxes To interpolate Temporary Edge Centered Electric Fields
 
-        write(*,*) "FIRST CALL TO ELECTRIC_* : Do Electric Field 1D"
 
         work_lo(1) = ex_l1+1
         work_lo(2) = ex_l2+1
@@ -195,7 +193,6 @@ enddo
 			     flxx1D, flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
 			     flxy1D, flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3)
 
-write(*,*) "Corner Couple Cons"
 !Corner Couple
 	
         work_lo(1) = q_l1+1
@@ -212,7 +209,6 @@ write(*,*) "Corner Couple Cons"
 			   flxz1D, flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
                            dx, dy, dz, dt) !Correct Conservative vars using Transverse Fluxes
 
-write(*,*) "Corner Couple Mag"
 	call corner_couple_mag(work_lo, work_hi, &
                                cons_temp_M, cons_temp_P, um, up, q_l1,q_l2,q_l3,q_h1,q_h2,q_h3,&
 			       Ex, ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
@@ -229,10 +225,8 @@ do i = 1,3
 	call ConsToPrim(q_temp_P(:,:,:,:,i,2), cons_temp_P(:,:,:,:,i,2), q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3)
 enddo
 
-print *, "Flux 2D"
 !Calculate Flux 2D
 do i = 1,2
-	print *, "x flux", i
         work_lo(1) = flxx_l1+1
         work_lo(2) = flxx_l2+1
         work_lo(3) = flxx_l3+1
@@ -245,7 +239,6 @@ do i = 1,2
 !	call hll(work_lo, work_hi, q_temp_M(:,:,:,:,:,i),q_temp_P(:,:,:,:,:,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 !                  flxx2D(:,:,:,:,i),flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, 1)
 
-	print *, "y flux", i	
 	!y-dir	
         work_lo(1) = flxy_l1+1
         work_lo(2) = flxy_l2+1
@@ -259,7 +252,6 @@ do i = 1,2
 !	call hll(work_lo, work_hi, q_temp_M(:,:,:,:,:,i),q_temp_P(:,:,:,:,:,i),q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
 !                  flxy2D(:,:,:,:,i),flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, 2)
 
-	print *, "z flux", i
 	!z-dir
 
         work_lo(1) = flxz_l1+1
@@ -281,7 +273,6 @@ enddo
 	flxy1D(:,:,:,:) = 0.5d0*(flxy2D(:,:,:,:,1) + flxy2D(:,:,:,:,2))
 	flxz1D(:,:,:,:) = 0.5d0*(flxz2D(:,:,:,:,1) + flxz2D(:,:,:,:,2))
 
-        write(*,*) "SECND CALL TO ELECTRIC_* : Do Electric Field 1D"
 
         work_lo(1) = ex_l1+1!+2
         work_lo(2) = ex_l2+1!+2
@@ -347,7 +338,6 @@ enddo
 
 !Final Fluxes
 
-print *, "Flux Half Step"
 
 	!x-dir
         work_lo(1) = flxx_l1+2
@@ -397,7 +387,6 @@ print *, "Flux Half Step"
 
 !Final Electric Field Update
 
-        write(*,*) "THIRD CALL TO ELECTRIC_* : Do Electric Field 1D"
 
         work_lo(1) = ex_l1+2!+3
         work_lo(2) = ex_l2+2!+3

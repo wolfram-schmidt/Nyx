@@ -60,7 +60,7 @@
 
      ! Local variables
      integer          :: i,j,k
-     real(rt) :: u, v, w, rhoInv, b(3)
+     real(rt) :: u, v, w, rhoInv, bcx, bcy, bcz
 
      ! 
      ! Make sure to enforce (rho E) = (rho e) + 1/2 rho (u^2 +_ v^2 + w^2) + 1/2 (|B|^2)
@@ -74,13 +74,25 @@
               u = state(i,j,k,UMX) * rhoInv
               v = state(i,j,k,UMY) * rhoInv
               w = state(i,j,k,UMZ) * rhoInv
-	    	  b(1) = 0.5d0*(bx(i,j,k) + bx(i+1,j,k))!Average Face Centered Quantaties for Cell Centered Approximations
-		  b(2) = 0.5d0*(by(i,j,k) + by(i,j+1,k))
-	    	  b(3) = 0.5d0*(bz(i,j,k) + bz(i,j,k+1))
+	   if(i.lt.hi(1)) then
+		   bcx    = 0.5d0 * (bx(i+1,j,k) + bx(i,j,k))
+	   else
+		bcx = bx(i,j,k)
+	   endif
+	   if(j.lt.hi(2)) then
+	   	bcy    = 0.5d0 * (by(i,j+1,k) + by(i,j,k))
+	   else
+		bcy    = by(i,j,k)
+	   endif
+	   if(k.lt.hi(3)) then
+      	        bcz    = 0.5d0 * (bz(i,j,k+1) + bz(i,j,k))
+	   else
+		bcz    = bz(i,j,k)
+	   endif
 
               state(i,j,k,UEDEN) = state(i,j,k,UEINT) + &
 				   0.5d0 * state(i,j,k,URHO) * (u*u + v*v + w*w) + &
-				   0.5d0 *(b(1)**2 + b(2)**2 + b(3)**2)
+				   0.5d0 *(bcx**2 + bcy**2 + bcz**2)
 
            end do
         end do
