@@ -688,18 +688,18 @@ end subroutine fort_advance_mhd
 		   uout(i,j,k,URHO:UEDEN) = uin(i,j,k,URHO:UEDEN) - dt/dx*(fluxx(i+1,j,k,URHO:UEDEN) - fluxx(i,j,k,URHO:UEDEN)) &
 		 						  - dt/dy*(fluxy(i,j+1,k,URHO:UEDEN) - fluxy(i,j,k,URHO:UEDEN)) &
 		 						  - dt/dz*(fluxz(i,j,k+1,URHO:UEDEN) - fluxz(i,j,k,URHO:UEDEN)) !Add source terms later
-!		   u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
-!		   v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
-!   		   w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
-		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) -0.5d0*dot_product(uout(i,j,k,UMX:UMZ),uout(i,j,k,UMX:UMZ))/uout(i,j,k,URHO)! - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
-	       	   if(uout(i,j,k,UEDEN).le.0.77d0) then
-			print*, uin(i,j,k,UEDEN), uout(i,j,k,UEDEN), "i j k = ", i, j, k
-			print*, "flux x = ", fluxx(i+1,j,k,UEDEN) , fluxx(i,j,k,UEDEN)
-			print*, "flux y = ", fluxy(i,j+1,k,UEDEN) , fluxy(i,j,k,UEDEN)
-			print*, "flux z = ", fluxz(i,j,k+1,UEDEN) , fluxz(i,j,k,UEDEN)
-			print*, " E = ", uout(i,j,k,UEDEN)
-			pause
-		   endif
+		   u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
+		   v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
+   		   w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
+		   uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*uout(i,j,k,URHO)*(u**2 + v**2 + w**2)
+     	   !if(uout(i,j,k,UEDEN).le.0.77d0) then
+			!print*, uin(i,j,k,UEDEN), uout(i,j,k,UEDEN), "i j k = ", i, j, k
+			!print*, "flux x = ", fluxx(i+1,j,k,UEDEN) , fluxx(i,j,k,UEDEN)
+			!print*, "flux y = ", fluxy(i,j+1,k,UEDEN) , fluxy(i,j,k,UEDEN)
+			!print*, "flux z = ", fluxz(i,j,k+1,UEDEN) , fluxz(i,j,k,UEDEN)
+			!print*, " E = ", uout(i,j,k,UEDEN)
+			!pause
+!		   endif
 		enddo
 		enddo
 		enddo
@@ -765,7 +765,7 @@ end subroutine fort_advance_mhd
 	do k = lo(3), hi(3)
 	do j = lo(2), hi(2)
 	do i = lo(1), hi(1)+1
-		bxout(i,j,k) = bxin(i,j,k) - dt/dx*((Ey(i,j,k+1) - Ey(i,j,k)) - (Ez(i,j+1,k) - Ez(i,j,k)))
+		bxout(i,j,k) = bxin(i,j,k) + dt/dz*(Ey(i,j,k+1) - Ey(i,j,k)) - dt/dy*(Ez(i,j+1,k) - Ez(i,j,k))
 	enddo
 	enddo
 	enddo
@@ -774,7 +774,7 @@ end subroutine fort_advance_mhd
 	do k = lo(3), hi(3)
 	do j = lo(2), hi(2)+1
 	do i = lo(1), hi(1)
-		byout(i,j,k) = byin(i,j,k) - dt/dy*((Ez(i+1,j,k) - Ez(i,j,k)) - (Ex(i,j,k+1) - Ex(i,j,k)))
+		byout(i,j,k) = byin(i,j,k) + dt/dx*(Ez(i+1,j,k) - Ez(i,j,k)) - dt/dz*(Ex(i,j,k+1) - Ex(i,j,k))
 		!if(i.eq.3.and.j.eq.64.and.k.eq.2) then
 		!	print *, "byout = ", byout(i,j,k), "at ", i, j ,k
 		!	print *, "byin = ", byin(i,j,k)
@@ -798,7 +798,7 @@ end subroutine fort_advance_mhd
 	do k = lo(3), hi(3)+1
 	do j = lo(2), hi(2)
 	do i = lo(1), hi(1)
-		bzout(i,j,k) = bzin(i,j,k) - dt/dz*((Ex(i,j+1,k) - Ex(i,j,k)) - (Ey(i+1,j,k) - Ey(i,j,k)))
+		bzout(i,j,k) = bzin(i,j,k) + dt/dy*(Ex(i,j+1,k) - Ex(i,j,k)) - dt/dx*(Ey(i+1,j,k) - Ey(i,j,k))
 	enddo
 	enddo
 	enddo
@@ -806,9 +806,9 @@ end subroutine fort_advance_mhd
 	do k = lo(3), hi(3)
 	do j = lo(2), hi(2)
 	do i = lo(1), hi(1)
-		bx = 0.5d0*(bxout(i+1,j,k)+bxout(i,j,k))!bxout(i,j,k)!
-		by = 0.5d0*(byout(i,j+1,k)+byout(i,j,k))!byout(i,j,k)!
-		bz = 0.5d0*(bzout(i,j,k+1)+bzout(i,j,k))!bzout(i,j,k)!
+		bx = 0.5d0*(bxout(i+1,j,k)+bxout(i,j,k))
+		by = 0.5d0*(byout(i,j+1,k)+byout(i,j,k))
+		bz = 0.5d0*(bzout(i,j,k+1)+bzout(i,j,k))
 		e = uout(i,j,k,UEINT)
 		uout(i,j,k,UEINT) = e - 0.5d0*(bx**2 + by**2 + bz**2)
 		if(uout(i,j,k,UEINT).le.0.d0) then
