@@ -695,17 +695,17 @@ implicit none
 									 (Ez(i  ,j+1,k) - Ez(i  ,j,k)))
 
 				uL(i,j,k,QMAGX:QMAGY,3,2) = um(i,j,k,QMAGY:QMAGZ,3)
-				uL(i,j,k,UEINT,1,1) = uL(i,j,k,UEDEN,1,1) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,1,1),uL(i,j,k,QMAGX:QMAGZ,1,1))
+				uL(i,j,k,UEINT,1,1) = uL(i,j,k,UEINT,1,1) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,1,1),uL(i,j,k,QMAGX:QMAGZ,1,1))
 
-				uL(i,j,k,UEINT,1,2) = uL(i,j,k,UEDEN,1,2) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,1,2),uL(i,j,k,QMAGX:QMAGZ,1,2))
+				uL(i,j,k,UEINT,1,2) = uL(i,j,k,UEINT,1,2) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,1,2),uL(i,j,k,QMAGX:QMAGZ,1,2))
 
-				uL(i,j,k,UEINT,2,1) = uL(i,j,k,UEDEN,2,1) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,2,1),uL(i,j,k,QMAGX:QMAGZ,2,1))
+				uL(i,j,k,UEINT,2,1) = uL(i,j,k,UEINT,2,1) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,2,1),uL(i,j,k,QMAGX:QMAGZ,2,1))
 
-				uL(i,j,k,UEINT,2,2) = uL(i,j,k,UEDEN,2,2) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,2,2),uL(i,j,k,QMAGX:QMAGZ,2,2))
+				uL(i,j,k,UEINT,2,2) = uL(i,j,k,UEINT,2,2) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,2,2),uL(i,j,k,QMAGX:QMAGZ,2,2))
 
-				uL(i,j,k,UEINT,3,1) = uL(i,j,k,UEDEN,3,1) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,3,1),uL(i,j,k,QMAGX:QMAGZ,3,1))
+				uL(i,j,k,UEINT,3,1) = uL(i,j,k,UEINT,3,1) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,3,1),uL(i,j,k,QMAGX:QMAGZ,3,1))
 
-				uL(i,j,k,UEINT,3,2) = uL(i,j,k,UEDEN,3,2) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,3,2),uL(i,j,k,QMAGX:QMAGZ,3,2))
+				uL(i,j,k,UEINT,3,2) = uL(i,j,k,UEINT,3,2) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,3,2),uL(i,j,k,QMAGX:QMAGZ,3,2))
 		!Right State
 				!X-direction 
 				!-> Affected by Y flux
@@ -750,17 +750,17 @@ implicit none
 
 				uR(i,j,k,QMAGX:QMAGY,3,2) = up(i,j,k,QMAGY:QMAGZ,3)
 
-				uR(i,j,k,UEINT,1,1) = uR(i,j,k,UEDEN,1,1) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,1,1),uR(i,j,k,QMAGX:QMAGZ,1,1))
+				uR(i,j,k,UEINT,1,1) = uR(i,j,k,UEINT,1,1) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,1,1),uR(i,j,k,QMAGX:QMAGZ,1,1))
 
-				uR(i,j,k,UEINT,1,2) = uR(i,j,k,UEDEN,1,2) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,1,2),uR(i,j,k,QMAGX:QMAGZ,1,2))
+				uR(i,j,k,UEINT,1,2) = uR(i,j,k,UEINT,1,2) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,1,2),uR(i,j,k,QMAGX:QMAGZ,1,2))
 
-				uR(i,j,k,UEINT,2,1) = uR(i,j,k,UEDEN,2,1) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,2,1),uR(i,j,k,QMAGX:QMAGZ,2,1))
+				uR(i,j,k,UEINT,2,1) = uR(i,j,k,UEINT,2,1) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,2,1),uR(i,j,k,QMAGX:QMAGZ,2,1))
 
-				uR(i,j,k,UEINT,2,2) = uR(i,j,k,UEDEN,2,2) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,2,2),uR(i,j,k,QMAGX:QMAGZ,2,2))
+				uR(i,j,k,UEINT,2,2) = uR(i,j,k,UEINT,2,2) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,2,2),uR(i,j,k,QMAGX:QMAGZ,2,2))
 
-				uR(i,j,k,UEINT,3,1) = uR(i,j,k,UEDEN,3,1) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,3,1),uR(i,j,k,QMAGX:QMAGZ,3,1))
+				uR(i,j,k,UEINT,3,1) = uR(i,j,k,UEINT,3,1) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,3,1),uR(i,j,k,QMAGX:QMAGZ,3,1))
 
-				uR(i,j,k,UEINT,3,2) = uR(i,j,k,UEDEN,3,2) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,3,2),uR(i,j,k,QMAGX:QMAGZ,3,2))
+				uR(i,j,k,UEINT,3,2) = uR(i,j,k,UEINT,3,2) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,3,2),uR(i,j,k,QMAGX:QMAGZ,3,2))
 			enddo
 		enddo
 	enddo
@@ -912,7 +912,7 @@ implicit none
 				uL(i,j,k,QMAGZ,3) = um(i,j,k,QMAGZ,3) - 0.5d0*dt/dz*((Ex(i,j+1,k) - Ex(i,j,k)) &
 									           - (Ey(i+1,j,k) - Ey(i,j,k)))
 				do n = 1,3
-					uL(i,j,k,UEINT,n) = uL(i,j,k,UEDEN,n) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,n),uL(i,j,k,QMAGX:QMAGZ,n))
+					uL(i,j,k,UEINT,n) = uL(i,j,k,UEINT,n) - 0.5d0*dot_product(uL(i,j,k,QMAGX:QMAGZ,n),uL(i,j,k,QMAGX:QMAGZ,n))
 				enddo
 
 	!---------------------------------------right state-----------------------------------------------------
@@ -960,7 +960,7 @@ implicit none
 				uR(i,j,k,QMAGZ,3) = up(i,j,k,QMAGZ,3) - 0.5d0*dt/dz*((Ex(i,j+1,k+1) - Ex(i,j,k+1)) &
 									           - (Ey(i+1,j,k+1) - Ey(i,j,k+1)))			
 				do n = 1,3
-					uR(i,j,k,UEINT,n) = uR(i,j,k,UEDEN,n) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,n),uR(i,j,k,QMAGX:QMAGZ,n))
+					uR(i,j,k,UEINT,n) = uR(i,j,k,UEINT,n) - 0.5d0*dot_product(uR(i,j,k,QMAGX:QMAGZ,n),uR(i,j,k,QMAGX:QMAGZ,n))
 				enddo	
 			enddo
 		enddo

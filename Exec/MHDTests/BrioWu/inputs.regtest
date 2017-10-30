@@ -1,5 +1,5 @@
 # ------------------  INPUTS TO MAIN PROGRAM  -------------------
-max_step = 18#0000
+max_step = 22#0000
 stop_time =  0.008
 
 amr.checkpoint_files_output = 0
@@ -15,9 +15,9 @@ nyx.initial_z = 0.
 geometry.is_periodic = 0 1 1
 geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
 geometry.prob_lo     =  0      0     0
-geometry.prob_hi     =  1.   0.01    0.01 !0.03125  0.03125
+geometry.prob_hi     =  1.   0.03125  0.03125
 
-amr.n_cell           = 400     4      4
+amr.n_cell           = 128     4      4
 amr.max_level        = 0       # maximum level number allowed
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
@@ -35,7 +35,7 @@ nyx.ppm_type    = 0
 nyx.use_colglaz = 0
 
 # TIME STEP CONTROL
-nyx.cfl            = 0.9     # cfl number for hyperbolic system
+nyx.cfl            = 0.49     # cfl number for hyperbolic system
 nyx.init_shrink    = 0.1     # scale back initial timestep
 nyx.change_max     = 1.05    # scale back initial timestep
 nyx.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
