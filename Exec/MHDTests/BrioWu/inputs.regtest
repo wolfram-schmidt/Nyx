@@ -35,7 +35,7 @@ nyx.ppm_type    = 0
 nyx.use_colglaz = 0
 
 # TIME STEP CONTROL
-nyx.cfl            = 0.49     # cfl number for hyperbolic system
+nyx.cfl            = 0.9     # cfl number for hyperbolic system
 nyx.init_shrink    = 0.1     # scale back initial timestep
 nyx.change_max     = 1.05    # scale back initial timestep
 nyx.dt_cutoff      = 5.e-20  # level 0 timestep below which we halt
