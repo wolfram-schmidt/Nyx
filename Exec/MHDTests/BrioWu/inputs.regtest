@@ -1,5 +1,5 @@
 # ------------------  INPUTS TO MAIN PROGRAM  -------------------
-max_step = 22#0000
+max_step = 3#0000
 stop_time =  0.008
 
 amr.checkpoint_files_output = 0

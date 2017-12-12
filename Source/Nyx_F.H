@@ -8,11 +8,17 @@
 extern "C"
 {
 #endif
-  void fort_integrate_comoving_a 
+
+  void fort_alloc_simd_vec();
+  void fort_dealloc_simd_vec();
+
+  void fort_integrate_comoving_a
     (amrex::Real* old_a, amrex::Real* new_a, amrex::Real* dt);
 
   void fort_integrate_comoving_a_to_z 
     (amrex::Real* old_a, amrex::Real* z_value, amrex::Real* dt);
+
+  void set_simd(const int *simd_width);
 
   //  void fort_get_omm    (amrex::Real* omm);
   //  void fort_get_omb    (amrex::Real* frac);
@@ -27,6 +33,7 @@ extern "C"
      const int lo[], const int hi[],
      const amrex::Real dx[], amrex::Real* dt, amrex::Real* comoving_a);
 
+<<<<<<< HEAD
 #ifdef MHD
   void fort_estdt_mhd
     (const BL_FORT_FAB_ARG(state),
@@ -36,6 +43,11 @@ extern "C"
      const int lo[], const int hi[],
      const amrex::Real dx[], amrex::Real* dt, amrex::Real* comoving_a);
 #endif
+=======
+  void fill_slice(const amrex::Real* fdata, const int* flo, const int* fhi, int* fstart, int* nfull, 
+                        amrex::Real* sdata, const int* slo, const int* shi,
+                        const int* tlo, const int* thi, int* ncomp);
+>>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
 
   void fort_estdt_comoving_a
     (amrex::Real* old_a, amrex::Real* new_dummy_a, amrex::Real* dt, amrex::Real* change_allowed,
@@ -55,15 +67,22 @@ extern "C"
      const int& heat_cool_type, const MPI_Comm& comm);
 #else
   void fort_set_method_params
-    (const int& dm, const int& NumAdv, const int& do_hydro,
+    (const int& dm, const int& NumAdv, const int& Ndiag, const int& do_hydro,
      const int& ppm_type, const int& ppm_ref,
      const int& ppm_flatten_before_integrals,
      const int& use_colglaz, const int& use_flattening,
      const int& corner_coupling,
      const int& version_2, const int& use_const_species,
      const amrex::Real& gamma_in, const int& normalize_species,
+<<<<<<< HEAD
      const int& heat_cool_type, const MPI_Comm& comm);
 #endif
+=======
+     const int& heat_cool_type, const int& inhomo_reion);
+
+  void fort_tabulate_rates();
+
+>>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
   void filcc
     (const amrex::Real * q, ARLIM_P(q_lo), ARLIM_P(q_hi),
      const int * domlo, const int * domhi,
@@ -106,6 +125,11 @@ extern "C"
 #endif
      const amrex::Real dx[], const amrex::Real xlo[],
      const amrex::Real xhi[]);
+
+  void fort_init_zhi
+    (const int* lo, const int* hi, 
+     const int& num_diag, BL_FORT_FAB_ARG(diag_eos),
+     const int& ratio, BL_FORT_FAB_ARG(zhi));
 
   void fort_check_initial_species
     (const int* lo, const int* hi, BL_FORT_FAB_ARG(state));
@@ -342,8 +366,20 @@ extern "C"
      amrex::Real* comoving_a,
      const int* print_fortran_warnings);
 
-  void fort_init_this_z
-    (amrex::Real* comoving_a);
+  void fort_compute_temp_vec
+    (const int lo[], const int hi[],
+     const BL_FORT_FAB_ARG(state),
+     const BL_FORT_FAB_ARG(diag_eos),
+     amrex::Real* comoving_a,
+     const int* print_fortran_warnings);
+
+  void fort_interp_to_this_z
+    (const amrex::Real* z);
+
+  void fort_setup_eos_params
+    (amrex::Real* eos_nr_eps,
+     amrex::Real* vode_rtol,
+     amrex::Real* vode_atol_scaled);
 
   void fort_compute_max_temp_loc
     (const int lo[], const int hi[],
@@ -357,8 +393,18 @@ extern "C"
      const BL_FORT_FAB_ARG(state),
      const BL_FORT_FAB_ARG(diag_eos),
      amrex::Real* rho_ave, amrex::Real* rho_T_sum, amrex::Real* T_sum,
-     amrex::Real* T_meanrho_sum, amrex::Real* rho_sum,
+     amrex::Real* Tinv_sum, amrex::Real* T_meanrho_sum, amrex::Real* rho_sum,
      amrex::Real* vol_sum, amrex::Real* vol_mn_sum);
+
+  void fort_compute_gas_frac
+    (const int lo[], const int hi[], const amrex::Real dx[],
+     const BL_FORT_FAB_ARG(state),
+     const BL_FORT_FAB_ARG(diag_eos),
+     amrex::Real* rho_ave, amrex::Real* T_cut, amrex::Real* rho_cut,
+     amrex::Real* whim_mass, amrex::Real* whim_vol,
+     amrex::Real* hh_mass, amrex::Real* hh_vol,
+     amrex::Real* igm_mass, amrex::Real* igm_vol,
+     amrex::Real* mass_sum, amrex::Real* vol_sum);
 
 #ifdef AUX_UPDATE
   void auxupdate
@@ -377,4 +423,5 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
 #endif

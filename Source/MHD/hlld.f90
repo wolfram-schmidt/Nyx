@@ -5,8 +5,8 @@ module hlld_solver
 
 contains
 
-subroutine hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
-                flx,flx_l1,flx_l2,flx_l3,flx_h1,flx_h2,flx_h3,dir)
+subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
+                flx ,flx_l1 ,flx_l2 ,flx_l3 ,flx_h1 ,flx_h2 ,flx_h3 ,dir)
 
   !Riemann solve:
   !Main assumption, the normal velocity/Mag field is constant in the Riemann fan, and is sM/Bn respectively. 
@@ -25,10 +25,10 @@ subroutine hlld(work_lo, work_hi, qm,qp,q_l1,q_l2,q_l3,q_h1,q_h2,q_h3, &
    real(rt), intent(out) :: flx(flx_l1:flx_h1,flx_l2:flx_h2,flx_l3:flx_h3,QVAR)
 
    real(rt)	  :: cfL, cfR, sL, sR, sM, ssL, ssR, pst, caL, canL
-   real(rt) 	  :: caR, canR, asL, asR, ptL, ptR, eL, eR
+   real(rt)   :: caR, canR, asL, asR, ptL, ptR, eL, eR
    real(rt)	  :: QL(QVAR), QR(QVAR)
    real(rt)	  :: FL(QVAR), FR(QVAR)
-   real(rt)       :: uL(QVAR), uR(QVAR)
+   real(rt)   :: uL(QVAR), uR(QVAR)
    real(rt)	  :: UsL(QVAR), FsL(QVAR)
    real(rt)	  :: UsR(QVAR), FsR(QVAR)
    real(rt)	  :: UssL(QVAR), FssL(QVAR)

@@ -214,8 +214,16 @@ Nyx::hydro_setup()
         cnt += NumAdv;
     }
 
+    int NDIAG_C;
     Temp_comp = 0;
       Ne_comp = 1;
+    if (inhomo_reion > 0)
+    {
+        NDIAG_C  = 3;
+        Zhi_comp = 2;
+    } else {
+        NDIAG_C  = 2;
+    }
 
     int dm = BL_SPACEDIM;
 
@@ -244,6 +252,7 @@ Nyx::hydro_setup()
 
     // Define NUM_GROW from the f90 module.
     fort_get_method_params(&NUM_GROW);
+<<<<<<< HEAD
 #ifdef MHD
      fort_set_mhd_method_params
         (dm, NumAdv, do_hydro, ppm_type, ppm_reference,
@@ -252,13 +261,27 @@ Nyx::hydro_setup()
          use_const_species, gamma, normalize_species,
          heat_cool_type, ParallelDescriptor::Communicator());
 #else
+=======
+
+    // Note that we must set NDIAG_C before we call set_method_params because
+    // we use the C++ value to set the Fortran value
+>>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
     fort_set_method_params
-        (dm, NumAdv, do_hydro, ppm_type, ppm_reference,
+        (dm, NumAdv, NDIAG_C, do_hydro, ppm_type, ppm_reference,
          ppm_flatten_before_integrals,
          use_colglaz, use_flattening, corner_coupling, version_2,
          use_const_species, gamma, normalize_species,
+<<<<<<< HEAD
          heat_cool_type, ParallelDescriptor::Communicator());
 #endif
+=======
+         heat_cool_type, inhomo_reion);
+
+#ifdef HEATCOOL
+    fort_tabulate_rates();
+#endif
+
+>>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
     if (use_const_species == 1)
         fort_set_eos_params(h_species, he_species);
 
@@ -282,7 +305,7 @@ Nyx::hydro_setup()
 
     // This has two components: Temperature and Ne
     desc_lst.addDescriptor(DiagEOS_Type, IndexType::TheCellType(),
-                           StateDescriptor::Point, 1, 2, interp,
+                           StateDescriptor::Point, 1, NDIAG_C, interp,
                            state_data_extrap, store_in_checkpoint);
 
 #ifdef MHD
@@ -321,8 +344,8 @@ Nyx::hydro_setup()
                            store_in_checkpoint);
 #endif
 
-    Array<BCRec> bcs(NUM_STATE);
-    Array<std::string> name(NUM_STATE);
+    Vector<BCRec> bcs(NUM_STATE);
+    Vector<std::string> name(NUM_STATE);
 
     BCRec bc;
     cnt = 0;
@@ -347,12 +370,12 @@ Nyx::hydro_setup()
     }
 
     // Get the species names from the network model.
-    Array<std::string> spec_names(NumSpec);
+    Vector<std::string> spec_names(NumSpec);
 
     for (int i = 0; i < NumSpec; i++)
     {
         int len = 20;
-        Array<int> int_spec_names(len);
+        Vector<int> int_spec_names(len);
 
         // This call return the actual length of each string in "len"
         fort_get_spec_names
@@ -380,12 +403,12 @@ Nyx::hydro_setup()
          }
     }
     // Get the auxiliary names from the network model.
-    Array<std::string> aux_names(NumAux);
+    Vector<std::string> aux_names(NumAux);
 
     for (int i = 0; i < NumAux; i++)
     {
         int len = 20;
-        Array<int> int_aux_names(len);
+        Vector<int> int_aux_names(len);
 
         // This call return the actual length of each string in "len"
         fort_get_aux_names
@@ -422,6 +445,7 @@ Nyx::hydro_setup()
     desc_lst.setComponent(DiagEOS_Type, 1, "Ne", bc,
                           BndryFunc(generic_fill));
 
+<<<<<<< HEAD
     set_mag_field_bc(bc, phys_bc);
     desc_lst.setComponent(Mag_Type_x, 0, "b_x", bc,
                           BndryFunc(face_fillx));
@@ -429,6 +453,12 @@ Nyx::hydro_setup()
                           BndryFunc(face_filly));
     desc_lst.setComponent(Mag_Type_z, 0, "b_z", bc,
                           BndryFunc(face_fillz));
+=======
+    if (inhomo_reion > 0) {
+       desc_lst.setComponent(DiagEOS_Type, 2, "Z_HI", bc,
+                             BndryFunc(generic_fill));
+    }
+>>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
 
 #ifdef GRAVITY
     if (do_grav)
@@ -493,17 +523,6 @@ Nyx::hydro_setup()
     //derive_lst.addComponent("rhog",desc_lst,State_Type,Density,1);
     //derive_lst.addComponent("rhog",desc_lst,Gravity_Type,0,BL_SPACEDIM);
 #endif
-
-    //
-    // Entropy (S)
-    //
-    derive_lst.add("entropy", IndexType::TheCellType(), 1,
-                   BL_FORT_PROC_CALL(DERENTROPY, derentropy),
-                   the_same_box);
-    // We add exactly (Density,Xmom,Ymom,Zmom,Eden,Eint) from State and
-    //                (Temp   ,Ne) from Diag_EOS
-    derive_lst.addComponent("entropy", desc_lst, State_Type, Density, 6);
-    derive_lst.addComponent("entropy", desc_lst, DiagEOS_Type,     0, 2);
 
     //
     // Div(u)
@@ -760,15 +779,19 @@ Nyx::no_hydro_setup()
     Density = 0;
     NUM_STATE = 1;
 
+    int NDIAG_C = -1;
+
     // Define NUM_GROW from the f90 module.
     fort_get_method_params(&NUM_GROW);
 
     fort_set_method_params
-        (dm, NumAdv, do_hydro, ppm_type, ppm_reference,
+        (dm, NumAdv, NDIAG_C, do_hydro, ppm_type, ppm_reference,
          ppm_flatten_before_integrals,
          use_colglaz, use_flattening, corner_coupling, version_2,
          use_const_species, gamma, normalize_species,
-         heat_cool_type, ParallelDescriptor::Communicator());
+         heat_cool_type, inhomo_reion);
+
+    fort_tabulate_rates();
 
     int coord_type = Geometry::Coord();
     fort_set_problem_params(dm, phys_bc.lo(), phys_bc.hi(), Outflow, Symmetry, coord_type);
@@ -874,3 +897,22 @@ Nyx::no_hydro_setup()
 }
 #endif
 
+#ifdef USE_CVODE
+void
+Nyx::set_simd_width(const int simd_width)
+{
+    set_simd(&simd_width);
+}
+
+void
+Nyx::alloc_simd_vec()
+{
+    fort_alloc_simd_vec();
+}
+
+void
+Nyx::dealloc_simd_vec()
+{
+    fort_dealloc_simd_vec();
+}
+#endif

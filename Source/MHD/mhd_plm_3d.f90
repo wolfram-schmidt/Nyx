@@ -508,6 +508,8 @@ contains
 		enddo
 	enddo
 
+
+!! Maybe change this to EOS(QPRES)
 	Im(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,1)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
 	Im(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,2)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
 	Im(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,3)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
