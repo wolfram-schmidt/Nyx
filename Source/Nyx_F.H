@@ -33,7 +33,6 @@ extern "C"
      const int lo[], const int hi[],
      const amrex::Real dx[], amrex::Real* dt, amrex::Real* comoving_a);
 
-<<<<<<< HEAD
 #ifdef MHD
   void fort_estdt_mhd
     (const BL_FORT_FAB_ARG(state),
@@ -43,11 +42,10 @@ extern "C"
      const int lo[], const int hi[],
      const amrex::Real dx[], amrex::Real* dt, amrex::Real* comoving_a);
 #endif
-=======
+
   void fill_slice(const amrex::Real* fdata, const int* flo, const int* fhi, int* fstart, int* nfull, 
                         amrex::Real* sdata, const int* slo, const int* shi,
                         const int* tlo, const int* thi, int* ncomp);
->>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
 
   void fort_estdt_comoving_a
     (amrex::Real* old_a, amrex::Real* new_dummy_a, amrex::Real* dt, amrex::Real* change_allowed,
@@ -64,7 +62,7 @@ extern "C"
      const int& corner_coupling,
      const int& version_2, const int& use_const_species,
      const amrex::Real& gamma_in, const int& normalize_species,
-     const int& heat_cool_type, const MPI_Comm& comm);
+     const int& heat_cool_type, const int& inhomo_reion);
 #else
   void fort_set_method_params
     (const int& dm, const int& NumAdv, const int& Ndiag, const int& do_hydro,
@@ -74,15 +72,11 @@ extern "C"
      const int& corner_coupling,
      const int& version_2, const int& use_const_species,
      const amrex::Real& gamma_in, const int& normalize_species,
-<<<<<<< HEAD
-     const int& heat_cool_type, const MPI_Comm& comm);
-#endif
-=======
      const int& heat_cool_type, const int& inhomo_reion);
+#endif
 
   void fort_tabulate_rates();
 
->>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
   void filcc
     (const amrex::Real * q, ARLIM_P(q_lo), ARLIM_P(q_hi),
      const int * domlo, const int * domhi,

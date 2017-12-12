@@ -387,6 +387,7 @@ Nyx::read_params ()
       amrex::Print() << "                                                   " << std::endl;
       amrex::Print() << "----- WARNING WARNING WARNING WARNING WARNING -----" << std::endl;
       Vector<int> n_cell(BL_SPACEDIM);
+
       ParmParse pp("amr");
       pp.getarr("n_cell", n_cell, 0, BL_SPACEDIM);
       if (n_cell[0] % simd_width) {

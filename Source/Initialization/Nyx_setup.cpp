@@ -252,7 +252,7 @@ Nyx::hydro_setup()
 
     // Define NUM_GROW from the f90 module.
     fort_get_method_params(&NUM_GROW);
-<<<<<<< HEAD
+
 #ifdef MHD
      fort_set_mhd_method_params
         (dm, NumAdv, do_hydro, ppm_type, ppm_reference,
@@ -261,27 +261,20 @@ Nyx::hydro_setup()
          use_const_species, gamma, normalize_species,
          heat_cool_type, ParallelDescriptor::Communicator());
 #else
-=======
-
     // Note that we must set NDIAG_C before we call set_method_params because
     // we use the C++ value to set the Fortran value
->>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
     fort_set_method_params
         (dm, NumAdv, NDIAG_C, do_hydro, ppm_type, ppm_reference,
          ppm_flatten_before_integrals,
          use_colglaz, use_flattening, corner_coupling, version_2,
          use_const_species, gamma, normalize_species,
-<<<<<<< HEAD
-         heat_cool_type, ParallelDescriptor::Communicator());
-#endif
-=======
          heat_cool_type, inhomo_reion);
+#endif
 
 #ifdef HEATCOOL
     fort_tabulate_rates();
 #endif
 
->>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
     if (use_const_species == 1)
         fort_set_eos_params(h_species, he_species);
 
@@ -445,7 +438,7 @@ Nyx::hydro_setup()
     desc_lst.setComponent(DiagEOS_Type, 1, "Ne", bc,
                           BndryFunc(generic_fill));
 
-<<<<<<< HEAD
+#ifdef MHD
     set_mag_field_bc(bc, phys_bc);
     desc_lst.setComponent(Mag_Type_x, 0, "b_x", bc,
                           BndryFunc(face_fillx));
@@ -453,12 +446,12 @@ Nyx::hydro_setup()
                           BndryFunc(face_filly));
     desc_lst.setComponent(Mag_Type_z, 0, "b_z", bc,
                           BndryFunc(face_fillz));
-=======
+#endif
+
     if (inhomo_reion > 0) {
        desc_lst.setComponent(DiagEOS_Type, 2, "Z_HI", bc,
                              BndryFunc(generic_fill));
     }
->>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
 
 #ifdef GRAVITY
     if (do_grav)

@@ -245,19 +245,16 @@ Nyx::initData ()
 		     dx, gridloc.lo(), gridloc.hi());
             }
 
-<<<<<<< HEAD
-        compute_new_temp();
-#ifdef MHD
-        enforce_mhd_consistent_e(S_new, Bx_new, By_new, Bz_new);
-#else
-        enforce_consistent_e(S_new);
-#endif
-=======
             if (inhomo_reion) init_zhi();
 
             compute_new_temp();
+
+#ifdef MHD
+            enforce_mhd_consistent_e(S_new, Bx_new, By_new, Bz_new);
+#else
             enforce_consistent_e(S_new);
->>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
+#endif
+
         }
         else
         {

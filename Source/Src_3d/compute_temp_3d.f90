@@ -33,12 +33,6 @@
 
       z = 1.d0/comoving_a - 1.d0
 
-<<<<<<< HEAD
-      if (heat_cool_type.gt.0) then
-          if (z .ne. this_z) &
-             call interp_to_this_z(z)
-      end if
-=======
       ! Flash reionization?
       if ((flash_h .eqv. .true.) .and. (z .gt. zhi_flash)) then
          JH = 0
@@ -51,7 +45,6 @@
          JHe = 1
       endif
 
->>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
       do k = lo(3),hi(3)
          do j = lo(2),hi(2)
             do i = lo(1),hi(1)

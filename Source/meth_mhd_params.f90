@@ -19,9 +19,9 @@ module meth_params_module
 
   ! NTHERM: number of thermodynamic variables
   ! NMAG:   number of magnetic variables
-  integer         , save :: NTHERM, NVAR
+  integer         , save :: NTHERM, NDIAG, NVAR
   integer         , save :: URHO, UMX, UMY, UMZ, UEDEN, UEINT, UFA, UFS, UFX
-  integer         , save :: TEMP_COMP, NE_COMP
+  integer         , save :: TEMP_COMP, NE_COMP, ZHI_COMP
 
   ! QTHERM: number of primitive hydrodynamic variables
   ! QMAG:   number of primitive magnetic variables (Cell Centered Mag Vars)
@@ -42,6 +42,7 @@ module meth_params_module
   integer         , save :: use_const_species
   integer         , save :: normalize_species
   integer         , save :: heat_cool_type
+  integer         , save :: inhomo_reion
   integer         , save :: grav_source_type
 
   integer, save :: npassive

@@ -540,13 +540,7 @@ public:
 
     static int NUM_STATE;
     static int Density, Xmom, Ymom, Zmom, Eden, Eint;
-<<<<<<< HEAD
-    static int Temp_comp, Ne_comp;
-=======
-
     static int Temp_comp, Ne_comp, Zhi_comp;
-
->>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
     static int FirstSpec, FirstAux, FirstAdv;
     static int NumSpec, NumAux, NumAdv;
 
@@ -616,14 +610,12 @@ protected:
 
     void compute_average_density();
     void compute_average_temperature(amrex::Real& average_temperature);
-<<<<<<< HEAD
-    void compute_average_species(int nspec, int naux, amrex::Array<amrex::Real>& average_species);
+
     #ifdef MHD
 	//Maybe do something here
     #endif
-=======
+
     void compute_average_species(int nspec, int naux, amrex::Vector<amrex::Real>& average_species);
->>>>>>> 1a18932094ccf2a24e4ea3fb7e80b2dbc0e7db56
 
     void set_small_values();
 #endif
@@ -786,9 +778,9 @@ Nyx::num_grow()
 
 inline
 Nyx&
-Nyx::get_level(int level)
+Nyx::get_level(int lev)
 {
-    return *(Nyx *) &parent->getLevel(level);
+    return *(Nyx *) &parent->getLevel(lev);
 }
 
 #ifndef NO_HYDRO
@@ -804,9 +796,9 @@ Nyx::get_flux_reg()
 #endif 
 inline
 amrex::FluxRegister&
-Nyx::get_flux_reg(int level)
+Nyx::get_flux_reg(int lev)
 {
-    return get_level(level).get_flux_reg();
+    return get_level(lev).get_flux_reg();
 }
 #endif // NO_HYDRO
 

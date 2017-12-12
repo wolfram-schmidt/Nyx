@@ -452,8 +452,8 @@ implicit none
 							  + 0.5d0*(dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ)))
 			u(i,j,k,UEINT) = (q(i,j,k,QPRES) - 0.5d0*dot_product(q(i,j,k,QMAGX:QMAGZ),q(i,j,k,QMAGX:QMAGZ)))/(gamma_minus_1)
 			u(i,j,k,QMAGX:QMAGZ) = q(i,j,k,QMAGX:QMAGZ)
-			print(*,*) "UEINT = ", UEINT, "QMAGX = ", QMAGX
-			pause
+			write(*,*) "UEINT = ", UEINT, "QMAGX = ", QMAGX
+			! pause
 		 enddo
 	 enddo
  enddo
@@ -1038,8 +1038,8 @@ implicit none
 	qflx = 0.d0
 	qflx(QRHO)  = flx(URHO)
 	qflx(QU)    = q(QU)/q(QRHO)*flx(URHO) + 1.d0/q(URHO)*flx(UMX)
-	qflx(QV)    = q(QV)/q(QRHO)*flx(QRHO) + 1.d0//q(QRHO)*flx(UMY)
-	qflx(QW)    = q(QW)//q(QRHO)*flx(QRHO) + 1.d0/q(QRHO)*flx(UMZ)
+	qflx(QV)    = q(QV)/q(QRHO)*flx(QRHO) + 1.d0/q(QRHO)*flx(UMY)
+	qflx(QW)    = q(QW)/q(QRHO)*flx(QRHO) + 1.d0/q(QRHO)*flx(UMZ)
 	qflx(QPRES) = 0.5d0*(q(QU)**2+q(QV)**2+q(QW)**2)*flx(URHO) - q(QU)*flx(UMX) - q(QV)*flx(UMY) - q(QW)*flx(UMZ) - flx(UEDEN)  &
 	              -q(QMAGX)*flx(QMAGX) - q(QMAGY)*flx(QMAGY) - q(QMAGZ)*flx(QMAGZ)
 	qflx(QPRES) = qflx(QPRES)*gamma_minus_1	              

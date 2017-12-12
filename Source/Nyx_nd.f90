@@ -399,7 +399,8 @@
                  ppm_flatten_before_integrals_in, &
                  use_colglaz_in, use_flattening_in, &
                  corner_coupling_in, version_2_in, &
-                 use_const_species_in, gamma_in, normalize_species_in, heat_cool_in, comm) &
+                 use_const_species_in, gamma_in, normalize_species_in, &
+                 heat_cool_in, inhomo_reion_in) &
                  bind(C, name = "fort_set_mhd_method_params")
 
         ! Passing data from C++ into f90
@@ -429,7 +430,7 @@
         integer,  intent(in) :: use_const_species_in
         integer,  intent(in) :: normalize_species_in
         integer,  intent(in) :: heat_cool_in
-        integer,  intent(in), optional :: comm
+        integer,  intent(in) :: inhomo_reion_in
 
         integer             :: QNEXT
         integer             :: UNEXT
@@ -555,11 +556,8 @@
            corner_coupling              = corner_coupling_in
            normalize_species            = normalize_species_in
 
- !          heat_cool_type               = heat_cool_in
-
-        if (heat_cool_type .eq. 1 .or. heat_cool_type .eq. 3 .or. heat_cool_type .eq. 5) then
-           call tabulate_rates()
-        end if
+           heat_cool_type               = heat_cool_in
+           inhomo_reion                 = inhomo_reion_in
 
         ! Easy indexing for the passively advected quantities.  
         ! This lets us loop over all four groups (advected, species, aux)
