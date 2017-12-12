@@ -395,7 +395,7 @@
 ! :::
 
       subroutine fort_set_mhd_method_params( &
-                 dm, numadv, do_hydro, ppm_type_in, ppm_ref_in, &
+                 dm, numadv, ndiag_in, do_hydro, ppm_type_in, ppm_ref_in, &
                  ppm_flatten_before_integrals_in, &
                  use_colglaz_in, use_flattening_in, &
                  corner_coupling_in, version_2_in, &
@@ -430,6 +430,7 @@
         integer,  intent(in) :: use_const_species_in
         integer,  intent(in) :: normalize_species_in
         integer,  intent(in) :: heat_cool_in
+        integer,  intent(in) :: ndiag_in
         integer,  intent(in) :: inhomo_reion_in
 
         integer             :: QNEXT
@@ -452,8 +453,16 @@
 
         comoving_type = 1
 
+        NDIAG = ndiag_in
+
            TEMP_COMP = 1
              NE_COMP = 2
+
+            if (inhomo_reion_in .gt. 0) then
+               ZHI_COMP = 3
+            else
+               ZHI_COMP = -1
+            endif
 
            !---------------------------------------------------------------------
            ! conserved state components

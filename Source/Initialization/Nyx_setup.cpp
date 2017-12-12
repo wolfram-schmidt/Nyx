@@ -255,7 +255,7 @@ Nyx::hydro_setup()
 
 #ifdef MHD
      fort_set_mhd_method_params
-        (dm, NumAdv, do_hydro, ppm_type, ppm_reference,
+        (dm, NumAdv, NDIAG_C, do_hydro, ppm_type, ppm_reference,
          ppm_flatten_before_integrals,
          use_colglaz, use_flattening, corner_coupling, version_2,
          use_const_species, gamma, normalize_species,
