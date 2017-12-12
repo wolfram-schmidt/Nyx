@@ -11,6 +11,8 @@ nyx.gamma = 2
 
 nyx.initial_z = 0.
 
+nyx.inhomo_reion     = 0
+
 # PROBLEM SIZE & GEOMETRY
 geometry.is_periodic = 0 1 1
 geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
