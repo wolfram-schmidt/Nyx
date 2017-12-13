@@ -511,11 +511,11 @@ contains
 	            - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3)))/gamma_minus_1
 
         	Ip(i,j,k,QREINT,1) =  (Ip(i,j,k,QPRES,1) &
-	            - 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,1),Ip(i,j,k,QMAGX:QMAGZ,1)))/gamma_minus_1
+	            + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,1),Ip(i,j,k,QMAGX:QMAGZ,1)))/gamma_minus_1
         	Ip(i,j,k,QREINT,2) =  (Ip(i,j,k,QPRES,2) &
-	            - 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,2),Ip(i,j,k,QMAGX:QMAGZ,2)))/gamma_minus_1
+	            + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,2),Ip(i,j,k,QMAGX:QMAGZ,2)))/gamma_minus_1
         	Ip(i,j,k,QREINT,3) =  (Ip(i,j,k,QPRES,3) &
-    	        - 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,3),Ip(i,j,k,QMAGX:QMAGZ,3)))/gamma_minus_1	        	        
+    	        + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,3),Ip(i,j,k,QMAGX:QMAGZ,3)))/gamma_minus_1	        	        
 		enddo
 		enddo
 	enddo
@@ -776,7 +776,6 @@ contains
 	AAs = sqrt(as)*als*sqrt(Q(QRHO))
 	N = 0.5d0/as
 	
-!Need to double check the order
 	leig(1,:) = (/0.d0, -N*Cff, N*Qs*betx	, N*Qs*bety		, N*alf/Q(QRHO) , N*AAs*betx/Q(QRHO)		    , N*AAs*bety/Q(QRHO)			/) !w - cf
 	leig(2,:) = (/0.d0,  0.d0 , -0.5d0*bety , 0.5d0*betx	, 0.d0			, -0.5d0*S*bety/(sqrt(Q(QRHO))) , 0.5d0*betx*S/(sqrt(Q(QRHO)))	/) !w - cAz
 	leig(3,:) = (/0.d0, -N*Css, -N*Qf*betx  , -N*Qf*bety	, N*als/Q(QRHO) , -N*AAf*betx/Q(QRHO)		    , -N*AAf*bety/Q(QRHO)			/) !w - cs
