@@ -503,20 +503,22 @@ contains
 			Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
 			Im(i,j,k,QPRES,3)       = Im(i,j,k,QPRES,3) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3))
+        	Im(i,j,k,QREINT,1) = (Im(i,j,k,QPRES,1) &
+	            - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1)))/gamma_minus_1
+        	Im(i,j,k,QREINT,2) = (Im(i,j,k,QPRES,2) &
+	            - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2)))/gamma_minus_1
+        	Im(i,j,k,QREINT,3) = (Im(i,j,k,QPRES,3) &
+	            - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3)))/gamma_minus_1
 
+        	Ip(i,j,k,QREINT,1) =  (Ip(i,j,k,QPRES,1) &
+	            - 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,1),Ip(i,j,k,QMAGX:QMAGZ,1)))/gamma_minus_1
+        	Ip(i,j,k,QREINT,2) =  (Ip(i,j,k,QPRES,2) &
+	            - 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,2),Ip(i,j,k,QMAGX:QMAGZ,2)))/gamma_minus_1
+        	Ip(i,j,k,QREINT,3) =  (Ip(i,j,k,QPRES,3) &
+    	        - 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,3),Ip(i,j,k,QMAGX:QMAGZ,3)))/gamma_minus_1	        	        
 		enddo
 		enddo
 	enddo
-
-
-!! Maybe change this to EOS(QPRES)
-	Im(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,1)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
-	Im(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,2)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
-	Im(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,3)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
-	Ip(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,1)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
-	Ip(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,2)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
-	Ip(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT,3)       = s(s_l1:s_h1,s_l2:s_h2,s_l3:s_h3,QREINT)
-
 !Need to add source terms, heating cooling, gravity, etc.
 	end subroutine plm
 !======================================== Minmod TVD slope limiter =========================================
@@ -548,10 +550,10 @@ contains
 	
 	real(rt), intent(in )	::  WR, WL
 	real(rt), intent(out)	::  dW
-	dW = 0.0d0 	
+	dW = 0.d0 	
 	
-	if( WR*WL .gt. 0.0d0 ) then 
-	dW = 2.0d0*WR*WL/(WR + WL)
+	if( WR*WL .gt. 0.d0 ) then 
+	dW = 2.d0*WR*WL/(WR + WL)
 	endif 
 
 	end subroutine

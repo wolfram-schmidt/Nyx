@@ -140,14 +140,14 @@ contains
      !Gas Pressure
      real(rt) :: P
      !Sound Speed, Alfven Speed
-     real(rt) :: as, ca
+     real(rt) :: as, ca, cad
 
      P = R * e * gamma_minus_1
      as = gamma_const * P/R
      ca = (bx**2 + by**2 + bz**2)/R
+     cad = bd**2/R
      !Fast Magneto-Sonic Wave
-     c = gamma_const*P + (bx**2 + by**2 + bx**2) + sqrt((gamma_const*P + (bx**2+by**2+bz**2))**2 - 4.d0*gamma_const*P*(bd))
-     c = 0.5d0*c/R
+     c = 0.5d0*((as + ca) + sqrt((as + ca)**2 -4*as*cad))
      c = sqrt(c)
 
   end subroutine nyx_eos_soundspeed_mhd

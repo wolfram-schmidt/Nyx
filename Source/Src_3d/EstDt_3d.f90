@@ -53,11 +53,11 @@
 
                ! Protect against negative e
                if (e .gt. 0.d0) then
-		  cad = bcx**2!/u(i,j,k,URHO)
+            		  cad = bcx
                   call nyx_eos_soundspeed(cx ,u(i,j,k,URHO) ,e ,bcx, bcy, bcz, cad)
-		  cad = bcy**2!/u(i,j,k,URHO)
+        	    	  cad = bcy
                   call nyx_eos_soundspeed(cy ,u(i,j,k,URHO) ,e ,bcx, bcy, bcz, cad)
-		  cad = bcz**2!/u(i,j,k,URHO)
+            		  cad = bcz
                   call nyx_eos_soundspeed(cz ,u(i,j,k,URHO) ,e ,bcx, bcy, bcz, cad)
                else
                   cx = 0.d0
