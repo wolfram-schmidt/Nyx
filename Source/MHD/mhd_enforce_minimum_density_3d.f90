@@ -8,6 +8,9 @@
     subroutine enforce_minimum_density(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
                                        uout,uout_l1,uout_l2,uout_l3, &
                                        uout_h1,uout_h2,uout_h3, &
+                                       bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
+                                       byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
+                                       bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
                                        lo,hi,print_fortran_warnings)
 
       use amrex_fort_module, only : rt => amrex_real
@@ -18,10 +21,16 @@
       implicit none
 
       integer          :: lo(3), hi(3), print_fortran_warnings
-      integer          ::  uin_l1,  uin_l2,  uin_l3,  uin_h1,  uin_h2,  uin_h3
+      integer          :: uin_l1,  uin_l2,  uin_l3,  uin_h1,  uin_h2,  uin_h3
       integer          :: uout_l1, uout_l2, uout_l3, uout_h1, uout_h2, uout_h3
+      integer          :: bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
+      integer          :: byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
+      integer          :: bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
       real(rt) ::  uin( uin_l1: uin_h1, uin_l2: uin_h2, uin_l3: uin_h3,NVAR)
-      real(rt) :: uout(uout_l1:uout_h1,uout_l2:uout_h2,uout_l3:uout_h3,NVAR)
+      real(rt) ::  uout(uout_l1:uout_h1,uout_l2:uout_h2,uout_l3:uout_h3,NVAR)
+      real(rt) ::  bxout(bxout_l1:bxout_h1, bxout_l2:bxout_h2, bxout_l3:bxout_h3)
+      real(rt) ::  byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
+      real(rt) ::  bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
 
       ! Local variables
       integer          :: i,ii,ilo,ihi
@@ -223,7 +232,8 @@
 
                   uout(i,j,k,UEINT) = uout(i,j,k,URHO) * new_e
                   uout(i,j,k,UEDEN) = uout(i,j,k,UEINT) + 0.5d0 / uout(i,j,k,URHO) * &
-                    ( uout(i,j,k,UMX)**2 + uout(i,j,k,UMY)**2 + uout(i,j,k,UMZ)**2 )
+                    ( uout(i,j,k,UMX)**2 + uout(i,j,k,UMY)**2 + uout(i,j,k,UMZ)**2 ) &
+                    + 0.5d0*(bxout(i,j,k)**2 + byout(i,j,k)**2 + bzout(i,j,k)**2)
                   
                   ! Make sure the velocities didn't go nutty
                   if (do_diag) then

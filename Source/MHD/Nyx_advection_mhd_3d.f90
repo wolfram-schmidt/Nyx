@@ -226,10 +226,6 @@
 		   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
            qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
 
-!do i =1,3
-!    qp(:,:,:,:,i) = q
-!    qm(:,:,:,:,i) = q
-!enddo    
 
 flxx = 0.d0
 flxy = 0.d0
@@ -295,8 +291,11 @@ flxz = 0.d0
       ! Enforce the density >= small_dens.  Make sure we do this immediately after consup.
       call enforce_minimum_density(uin, uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
                                         uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
+                                        bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
+                                        byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
+                                        bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
                                         lo,hi,print_fortran_warnings)
-      
+!     print*, uout(:,:,:,1)
       if (do_grav .gt. 0)  then
           call add_grav_source(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
                                uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
@@ -523,9 +522,8 @@ end subroutine fort_advance_mhd
                ! Convert "e" back to "rho e"
                q(i,j,k,QREINT) = q(i,j,k,QREINT)*q(i,j,k,QRHO)
 
-               ! Pressure = (gamma - 1) * rho * e + 0.5 B dot B
-               q(i,j,k,QPRES) = gamma_minus_1 * q(i,j,k,QREINT) &
-				+ 0.5d0*(q(i,j,k,QMAGX)**2 + q(i,j,k,QMAGY)**2 + q(i,j,k,QMAGZ)**2)
+               ! Pressure = (gamma - 1) * rho * e
+               q(i,j,k,QPRES) = gamma_minus_1 * q(i,j,k,QREINT)
             end do
          end do
       end do

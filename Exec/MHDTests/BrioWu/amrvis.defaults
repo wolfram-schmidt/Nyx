@@ -1,9 +1,13 @@
 palette               Palette
+initialderived        temp
+initialderived        vfrac
 initialderived        density
 initialscale          1
-numberformat          %8.6e
+numberformat          %10.2e
 maxpixmapsize         1000000
-reservesystemcolors   35
+reservesystemcolors   34
+showboxes             FALSE
 showboxes             TRUE
-windowheight          650
-windowwidth           1100
+windowheight          750
+windowwidth           900
+filetype              newplt

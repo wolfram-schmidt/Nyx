@@ -335,7 +335,7 @@ contains
 	!============================================== PLM ================================================================
 	do k = s_l3, s_h3
 		do j = s_l2, s_h2
-		do i = s_l1, s_h1
+	    	do i = s_l1, s_h1
 	
 	!============================================ X Direction ==============================================
 			summ = 0.d0
@@ -378,7 +378,7 @@ contains
 			Ip(i,j,k,QRHO:QPRES,1) 	 = temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 			Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
 			Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
-			Ip(i,j,k,QPRES,1)        = Ip(i,j,k,QPRES,1) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,1),Ip(i,j,k,QMAGX:QMAGZ,1))
+!			Ip(i,j,k,QPRES,1)        = Ip(i,j,k,QPRES,1) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,1),Ip(i,j,k,QMAGX:QMAGZ,1))
 		!Minus
 			summ = 0.d0
 			do ii = 1,7
@@ -390,7 +390,7 @@ contains
 			Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 			Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
 			Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
-			Im(i,j,k,QPRES,1)        = Im(i,j,k,QPRES,1) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1))
+!			Im(i,j,k,QPRES,1)        = Im(i,j,k,QPRES,1) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1))
 
 
 	
@@ -436,7 +436,7 @@ contains
 			Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
 			Ip(i,j,k,QMAGY,2) 		= temp(i,j+1,k,iby) !! By stuff
 			Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
-			Ip(i,j,k,QPRES,2)       = Ip(i,j,k,QPRES,2) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,2),Ip(i,j,k,QMAGX:QMAGZ,2))
+!			Ip(i,j,k,QPRES,2)       = Ip(i,j,k,QPRES,2) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,2),Ip(i,j,k,QMAGX:QMAGZ,2))
 
 			summ = 0.d0
 			do ii = 1,7
@@ -449,7 +449,7 @@ contains
 			Im(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
 			Im(i,j,k,QMAGY,2)		= temp(i,j-1,k,iby) !! By stuff
 			Im(i,j,k,QMAGZ,2) 		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
-			Im(i,j,k,QPRES,2)       = Im(i,j,k,QPRES,2) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2))
+!			Im(i,j,k,QPRES,2)       = Im(i,j,k,QPRES,2) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2))
 			
 	!========================================= Z Direction ================================================				
 			summ = 0.d0
@@ -491,7 +491,7 @@ contains
 			Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 			Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Ip(i,j,k,QMAGZ,3) 		= temp(i,j,k+1,ibz) !! Bz stuff
-			Ip(i,j,k,QPRES,3)       = Ip(i,j,k,QPRES,3) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,3),Ip(i,j,k,QMAGX:QMAGZ,3))
+!			Ip(i,j,k,QPRES,3)       = Ip(i,j,k,QPRES,3) + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,3),Ip(i,j,k,QMAGX:QMAGZ,3))
 			summ = 0.d0
 			do ii = 1,7
 			        dL = dot_product(leig(ii,:),dQL)
@@ -502,20 +502,20 @@ contains
 			Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 			Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
-			Im(i,j,k,QPRES,3)       = Im(i,j,k,QPRES,3) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3))
-        	Im(i,j,k,QREINT,1) = (Im(i,j,k,QPRES,1) &
-	            - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1)))/gamma_minus_1
-        	Im(i,j,k,QREINT,2) = (Im(i,j,k,QPRES,2) &
-	            - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2)))/gamma_minus_1
-        	Im(i,j,k,QREINT,3) = (Im(i,j,k,QPRES,3) &
-	            - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3)))/gamma_minus_1
+!			Im(i,j,k,QPRES,3)       = Im(i,j,k,QPRES,3) + 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3))
+        	Im(i,j,k,QREINT,1) = (Im(i,j,k,QPRES,1))/gamma_minus_1! &
+	        !    - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,1),Im(i,j,k,QMAGX:QMAGZ,1)))/gamma_minus_1
+        	Im(i,j,k,QREINT,2) = (Im(i,j,k,QPRES,2))/gamma_minus_1! &
+	        !    - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,2),Im(i,j,k,QMAGX:QMAGZ,2)))/gamma_minus_1
+        	Im(i,j,k,QREINT,3) = (Im(i,j,k,QPRES,3))/gamma_minus_1! &
+	        !    - 0.5d0*dot_product(Im(i,j,k,QMAGX:QMAGZ,3),Im(i,j,k,QMAGX:QMAGZ,3)))/gamma_minus_1
 
-        	Ip(i,j,k,QREINT,1) =  (Ip(i,j,k,QPRES,1) &
-	            + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,1),Ip(i,j,k,QMAGX:QMAGZ,1)))/gamma_minus_1
-        	Ip(i,j,k,QREINT,2) =  (Ip(i,j,k,QPRES,2) &
-	            + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,2),Ip(i,j,k,QMAGX:QMAGZ,2)))/gamma_minus_1
-        	Ip(i,j,k,QREINT,3) =  (Ip(i,j,k,QPRES,3) &
-    	        + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,3),Ip(i,j,k,QMAGX:QMAGZ,3)))/gamma_minus_1	        	        
+        	Ip(i,j,k,QREINT,1) =  (Ip(i,j,k,QPRES,1))/gamma_minus_1! &
+	        !    + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,1),Ip(i,j,k,QMAGX:QMAGZ,1)))/gamma_minus_1
+        	Ip(i,j,k,QREINT,2) =  (Ip(i,j,k,QPRES,2))/gamma_minus_1! &
+	        !    + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,2),Ip(i,j,k,QMAGX:QMAGZ,2)))/gamma_minus_1
+        	Ip(i,j,k,QREINT,3) =  (Ip(i,j,k,QPRES,3))/gamma_minus_1! &
+    	    !    + 0.5d0*dot_product(Ip(i,j,k,QMAGX:QMAGZ,3),Ip(i,j,k,QMAGX:QMAGZ,3)))/gamma_minus_1	        	        
 		enddo
 		enddo
 	enddo
@@ -575,7 +575,7 @@ contains
 	real(rt)				:: cfx, cfy, cfz, cax, cay, caz, csx, csy, csz, ca, as
 
 	!Speeeeeeeedssssss
-	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
+	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca  = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cax = (Q(QMAGX)**2)/Q(QRHO)
@@ -636,7 +636,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, bety, betz
 
 	!Speeeeeeeedssssss
-	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
+	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cax = (Q(QMAGX)**2)/Q(QRHO)
@@ -692,7 +692,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, betz
 
 	!Speeeeeeeedssssss
-	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
+	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cay = (Q(QMAGY)**2)/Q(QRHO)
@@ -748,7 +748,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, bety
 
 	!Speeeeeeeedssssss
-	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
+	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	caz = (Q(QMAGZ)**2)/Q(QRHO)
@@ -801,7 +801,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, bety, betz
 
 	!Speeeeeeeedssssss
-	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
+	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cax = (Q(QMAGX)**2)/Q(QRHO)
@@ -856,7 +856,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, betz
 
 	!Speeeeeeeedssssss
-	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
+	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	cay = (Q(QMAGY)**2)/Q(QRHO)
@@ -911,7 +911,7 @@ contains
 	real(rt)				:: cff, css, Qf, Qs, AAf, AAs, alf, als, betx, bety
 
 	!Speeeeeeeedssssss
-	as = gamma_const * (Q(QPRES) - 0.5d0*dot_product(Q(QMAGX:QMAGZ),Q(QMAGX:QMAGZ)))/Q(QRHO)
+	as = gamma_const * Q(QPRES)/Q(QRHO)
 	!Alfven
 	ca = (Q(QMAGX)**2 + Q(QMAGY)**2 + Q(QMAGZ)**2)/Q(QRHO)
 	caz = (Q(QMAGZ)**2)/Q(QRHO)

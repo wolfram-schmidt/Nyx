@@ -93,9 +93,9 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
       call PToC(qL,uL)
       call PToC(qR,uR)
       ! Note this is actually (rho e)
-      eL   = (qL(QPRES) - 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)))/(gamma_minus_1) &
-                        + 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)) &
-   	                    + 0.5d0*dot_product(qL(QU:QW),qL(QU:QW))*qL(QRHO)
+      eL   = qL(QPRES)/(gamma_minus_1) &
+             + 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)) &
+   	         + 0.5d0*dot_product(qL(QU:QW),qL(QU:QW))*qL(QRHO)
 
       FL(URHO)  = qL(QRHO)*qL(QVELN)
       FL(UMN)   = qL(QRHO)*qL(QVELN)**2 + qL(QPRES) - qL(QMAGN)**2
@@ -107,9 +107,9 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
       FL(QMAGP2) = qL(QVELN)*qL(QMAGP2) - qL(QVELP2)*qL(QMAGN)
 
       ! Note this is actually (rho e)
-      eR   = (qR(QPRES) - 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)))/(gamma_minus_1) &
-                        + 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)) &
-      	                + 0.5d0*dot_product(qR(QU:QW),qR(QU:QW))*qR(QRHO)
+      eR   = (qR(QPRES))/(gamma_minus_1) &
+             + 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)) &
+      	     + 0.5d0*dot_product(qR(QU:QW),qR(QU:QW))*qR(QRHO)
 
       FR(URHO)  = qR(QRHO)*qR(QVELN)
       FR(UMN)   = qR(QRHO)*qR(QVELN)**2 + qR(QPRES) - qR(QMAGN)**2
@@ -139,8 +139,8 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
 	sM   = ((sR - qR(QVELN))*qR(QRHO)*qR(QVELN) - (sL - qL(QVELN))*qL(QRHO)*qL(QVELN) - qR(QPRES) + qL(QPRES))/((sR - qR(QVELN))*qR(QRHO) - (sL - qL(QVELN))*qL(QRHO))
 
 	!Pressures in the Riemann Fan
-	ptL  = qL(QPRES)
-	ptR  = qR(QPRES)
+	ptL  = qL(QPRES) + 0.5d0*(qL(QMAGX)**2 + qL(QMAGY)**2 + qL(QMAGZ)**2)
+	ptR  = qR(QPRES) + 0.5d0*(qR(QMAGX)**2 + qR(QMAGY)**2 + qR(QMAGZ)**2)
 	pst  = (sR - qR(QVELN))*qR(QRHO)*ptL - (sL - qL(QVELN))*qL(QRHO)*ptR + qL(QRHO)*qR(QRHO)*(sR - qR(QVELN))*(sL - qL(QVELN))*(qR(QVELN) - qL(QVELN))
 	pst  = pst/((sR - qR(QVELN))*qR(QRHO) - (sL - qL(QVELN))*qL(QRHO))
 
@@ -189,7 +189,7 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
 	
         !Normal dir
 	UsL(QMAGN) = qL(QMAGN)
-	UsR(QMAGN) = qL(QMAGN) 
+	UsR(QMAGN) = qR(QMAGN) 
 
         !Perpendicular dir
 	if(abs(qL(QMAGP1)*(qL(QRHO)*(sL - qL(QVELN))**2 - qL(QMAGN)**2)).lt.1d-14) then
@@ -334,7 +334,7 @@ subroutine PToC(q, u)
    u(UMX)        = q(QRHO)*q(QU)
    u(UMY)        = q(QRHO)*q(QV)
    u(UMZ)        = q(QRHO)*q(QW)
-  u(UEINT)       = (q(QPRES) - 0.5d0*dot_product(q(QMAGX:QMAGZ),q(QMAGX:QMAGZ)))/(gamma_minus_1)
+  u(UEINT)       = q(QPRES)/(gamma_minus_1)
   u(UEDEN)       = u(UEINT)  + 0.5d0*q(QRHO)*dot_product(q(QU:QW),q(QU:QW)) &
 		             + 0.5d0*(dot_product(q(QMAGX:QMAGZ),q(QMAGX:QMAGZ)))
   u(QMAGX:QMAGZ) = q(QMAGX:QMAGZ)
