@@ -284,10 +284,6 @@ implicit none
 					d2 = 0.5d0*(a+b)
 				endif
 				dd1 = 0.125d0*(d1 - d2)
-!			if((i.eq.3.and.j.eq.17.and.k.eq.1).or.(i.eq.4.and.j.eq.17.and.k.eq.1)) then
-!				print *, "d1 = ", d1, "d2 = ", d2
-!				print *, "u = ", u_face
-!			endif
 
 				call electric(q(i-1,j-1,k,:),Ecen,3)
 				a = 2.d0*(flxy(i-1,j,k,QMAGX) - Ecen)

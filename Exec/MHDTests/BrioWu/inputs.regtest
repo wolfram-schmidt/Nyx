@@ -1,5 +1,5 @@
 # ------------------  INPUTS TO MAIN PROGRAM  -------------------
-max_step = 3#0000
+max_step = 12#0000
 stop_time =  0.008
 
 amr.checkpoint_files_output = 0
@@ -17,9 +17,9 @@ nyx.inhomo_reion     = 0
 geometry.is_periodic = 0 1 1
 geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
 geometry.prob_lo     =  0      0     0
-geometry.prob_hi     =  1.     0.25  0.25 # 0.03125  0.03125
+geometry.prob_hi     =  1.     0.03125  0.03125
 
-amr.n_cell           = 16     4      4
+amr.n_cell           = 128     4      4
 amr.max_level        = 0       # maximum level number allowed
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<

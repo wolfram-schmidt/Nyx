@@ -103,8 +103,8 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
       FL(UMP2)  = qL(QRHO)*qL(QVELN)*qL(QVELP2) - qL(QMAGN)*qL(QMAGP2)
       FL(UEDEN) = qL(QVELN)*(eL + qL(QPRES)) - qL(QMAGN)*dot_product(qL(QMAGX:QMAGZ),qL(QU:QW))
       FL(QMAGN) = 0.d0
-      FL(QMAGP1) = qL(QVELN)*qL(QMAGP1) - qL(QVELP1)*qL(QMAGN) 
-      FL(QMAGP2) = qL(QVELN)*qL(QMAGP2) - qL(QVELP2)*qL(QMAGN)
+      FL(QMAGP1) = qL(QVELP1)*qL(QMAGN)  - qL(QVELN)*qL(QMAGP1) 
+      FL(QMAGP2) = qL(QVELP2)*qL(QMAGN) - qL(QVELN)*qL(QMAGP2)
 
       ! Note this is actually (rho e)
       eR   = (qR(QPRES))/(gamma_minus_1) &
@@ -117,8 +117,8 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
       FR(UMP2)  = qR(QRHO)*qR(QVELN)*qR(QVELP2) - qR(QMAGN)*qR(QMAGP2)
       FR(UEDEN) = qR(QVELN)*(eR + qR(QPRES)) - qR(QMAGN)*dot_product(qR(QMAGX:QMAGZ),qR(QU:QW))
       FR(QMAGN) = 0.d0
-      FR(QMAGP1) = qR(QVELN)*qR(QMAGP1) - qR(QVELP1)*qR(QMAGN)  
-      FR(QMAGP2) = qR(QVELN)*qR(QMAGP2) - qR(QVELP2)*qR(QMAGN)
+      FR(QMAGP1) = qR(QVELP1)*qR(QMAGN)  - qR(QVELN)*qR(QMAGP1)
+      FR(QMAGP2) = qR(QVELP2)*qR(QMAGN) - qR(QVELN)*qR(QMAGP2)
 
 	asL  = gamma_const * (qL(QPRES) - 0.5d0*dot_product(qL(QMAGX:QMAGZ),qL(QMAGX:QMAGZ)))/qL(QRHO)
 	asR  = gamma_const * (qR(QPRES) - 0.5d0*dot_product(qR(QMAGX:QMAGZ),qR(QMAGX:QMAGZ)))/qR(QRHO)

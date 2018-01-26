@@ -226,6 +226,10 @@
 		   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
            qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
 
+!do i = 1,3
+!    qp(:,:,:,:,i) = q
+!    qm(:,:,:,:,i) = q
+!enddo    
 
 flxx = 0.d0
 flxy = 0.d0
