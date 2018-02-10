@@ -491,6 +491,12 @@
            UEDEN = 5
            UEINT = 6
            UNEXT = 7
+	  
+           ! Not in the state var, but used to index flux for energy correction. 
+	   UMAGX  = 7   ! Bx centered
+	   UMAGY  = 8   ! By centered 
+	   UMAGZ  = 9   ! Bz centered
+
 
            UFA   = -1
            UFS   = -1
