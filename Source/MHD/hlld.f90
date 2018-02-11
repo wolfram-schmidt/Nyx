@@ -128,7 +128,7 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
 	asL  = gamma_const*qL(QPRES)/qL(QRHO)
 	asR  = gamma_const*qR(QPRES)/qR(QRHO)
 
-	caL  = (qL(QMAGN)**2 + qL(QMAGP1)**2 + qL(QMAGP2)**2)/qL(QRHO) !Magnetic Speeds
+	caL  = (qL(QMAGN)**2 + qL(QMAGP1)**2 + qL(QMAGP2)**2)/qL(QRHO)!Magnetic Speeds squared
 	caR  = (qR(QMAGN)**2 + qR(QMAGP1)**2 + qR(QMAGP2)**2)/qR(QRHO)
 
 	canL = (qL(QMAGN)**2)/qL(QRHO)
@@ -268,13 +268,13 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
 				*(UsR(QVELP2)/UsR(QRHO) - UsL(QVELP2)/UsR(QRHO))*sign(1.d0,UsR(QMAGN)))/(sqrt(UsL(QRHO)) + sqrt(UsR(QRHO)))
 	UssR(QMAGP2) = UssL(QMAGP2)
 
-	!Energy *Stored in Pressure slot
+	!Energy **Stored in Pressure slot
 	UssL(QPRES) = UsL(QPRES) - sqrt(UsL(QRHO))*(dot_product(UsL(QU:QW)/UsL(QRHO),UsL(QMAGX:QMAGZ)) &
 				- dot_product(UssL(QU:QW)/UssL(QRHO),UssL(QMAGX:QMAGZ)))*sign(1.d0, UsL(QMAGN))
 	UssR(QPRES) = UsR(QPRES) + sqrt(UsR(QRHO))*(dot_product(UsR(QU:QW)/UsR(QRHO),UsR(QMAGX:QMAGZ)) &
 				- dot_product(UssR(QU:QW)/UssR(QRHO),UssR(QMAGX:QMAGZ)))*sign(1.d0, UsR(QMAGN))
 
-	!--------------------------------------------------------- Fluxes ----------------------------------------------------------------------
+	!--------------------------------------------------------- Fluxes ----------------------------------------------
 
 	FsL  = FL + sL*UsL - sL*uL
 	FssL = FsL + ssL*UssL - ssL*UsL
@@ -302,18 +302,6 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
 	   choice = "FR"
 	endif
 
-	!if(dir.eq.2.and.((i.eq.3.and.j.eq.16.and.k.eq.1).or.(i.eq.4.and.j.eq.16.and.k.eq.1))) then
-	!	print*, "dir, i, j, k =", dir, i, j, k
-	!	print*, "flux is ", choice, " = ", flx(i,j,k,UMX:UMZ), flx(i,j,k,QMAGX:QMAGZ)
-	!	print*, "FL = ",  FL(UMX:UMZ), FL(QMAGX:QMAGZ)
-	!	print*, "FsL = ", FsL(UMX:UMZ), FsL(QMAGX:QMAGZ)
-	!	print*, "ssL = ", ssL, "sL = ", sL, "sM =", sM
-	!	print*, "UsL = ", UsL(UMX:UMZ), UsL(QMAGX:QMAGZ) 
-	!	print*, "UssL = ", UssL(UMX:UMZ), UssL(QMAGX:QMAGZ) 
-	!	print*, "qL = ", qL(QMAGX:QMAGZ)
-	!	print*, "qR = ", qR(QMAGX:QMAGZ)
-	!	pause
-	!endif
    end do
    end do
    end do
