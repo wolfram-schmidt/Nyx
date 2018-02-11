@@ -78,29 +78,29 @@ implicit none
 	integer	 :: i, work_lo(3), work_hi(3)
 
 
-um = 0.d0
-up = 0.d0
-cons_temp_M = 0.d0
-cons_temp_P = 0.d0
-q_temp_M = 0.d0
-q_temp_P = 0.d0
-cons_half_M = 0.d0
-cons_half_P = 0.d0
-q_half_M = 0.d0
-q_half_P = 0.d0
-q2D = 0.d0
+ um = 0.d0
+ up = 0.d0
+ cons_temp_M = 0.d0
+ cons_temp_P = 0.d0
+ q_temp_M = 0.d0
+ q_temp_P = 0.d0
+ cons_half_M = 0.d0
+ cons_half_P = 0.d0
+ q_half_M = 0.d0
+ q_half_P = 0.d0
+ q2D = 0.d0
 
-flxx1D = 0.d0
-flxy1D = 0.d0
-flxz1D = 0.d0
+ flxx1D = 0.d0
+ flxy1D = 0.d0
+ flxz1D = 0.d0
 
-flxx2D = 0.d0
-flxy2D = 0.d0
-flxz2D = 0.d0
+ flxx2D = 0.d0
+ flxy2D = 0.d0
+ flxz2D = 0.d0
 
-Ex = 0.d0
-Ey = 0.d0
-Ez = 0.d0
+ Ex = 0.d0
+ Ey = 0.d0
+ Ez = 0.d0
 
 !Calculate Flux 1D
 	!x-dir
