@@ -223,16 +223,16 @@
                 courno,dx,dy,dz,dt,ngq,ngf,a_old,a_new)
 
 !Step Two, Interpolate Cell centered values to faces
-	  call plm(lo, hi, q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
-	  	   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
-		   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
-		   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
-           qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
+!	  call plm(lo, hi, q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&	
+!	  	   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+!		   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+!		   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
+!           qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
 
-!do i = 1,3
-!    qp(:,:,:,:,i) = q
-!    qm(:,:,:,:,i) = q
-!enddo    
+do i = 1,3
+    qp(:,:,:,:,i) = q
+    qm(:,:,:,:,i) = q
+enddo    
 
 flxx = 0.d0
 flxy = 0.d0
