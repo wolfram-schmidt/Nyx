@@ -139,12 +139,16 @@ subroutine hlld(work_lo, work_hi, qm ,qp ,q_l1 ,q_l2 ,q_l3 ,q_h1 ,q_h2 ,q_h3 , &
 	cfR  = sqrt(0.5d0*((asR + caR) + sqrt((asR + caR)**2 - 4.0d0*asR*canR)))
 
 	!Riemann Speeds
-	sL   = min(qL(QVELN) - cfL,qR(QVELN) - cfR)
-	sR 	 = max(qL(QVELN) + cfL,qR(QVELN) + cfR)
-	sM   = ((sR - qR(QVELN))*qR(QRHO)*qR(QVELN) - (sL - qL(QVELN))*qL(QRHO)*qL(QVELN) - qR(QPRES) + qL(QPRES))/((sR - qR(QVELN))*qR(QRHO) - (sL - qL(QVELN))*qL(QRHO))
+!	sL   = min(qL(QVELN) - cfL,qR(QVELN) - cfR)
+!	sR 	 = max(qL(QVELN) + cfL,qR(QVELN) + cfR)
+    sL   = min(qL(QVELN),qR(QVELN)) - max(cfL, cfR))
+    sR   = max(qL(QVELN),qR(QVELN)) + max(cfL, cfR))
+	sM   = (sR - qR(QVELN))*qR(QRHO)*qR(QVELN) - (sL - qL(QVELN))*qL(QRHO)*qL(QVELN) - qR(QPRES) + qL(QPRES)
+    sM   = sM/((sR - qR(QVELN))*qR(QRHO) - (sL - qL(QVELN))*qL(QRHO))
 
 	!Pressures in the Riemann Fan
-	pst  = (sR - qR(QVELN))*qR(QRHO)*ptL - (sL - qL(QVELN))*qL(QRHO)*ptR + qL(QRHO)*qR(QRHO)*(sR - qR(QVELN))*(sL - qL(QVELN))*(qR(QVELN) - qL(QVELN))
+	pst  = (sR - qR(QVELN))*qR(QRHO)*ptL - (sL - qL(QVELN))*qL(QRHO)*ptR & 
+            + qL(QRHO)*qR(QRHO)*(sR - qR(QVELN))*(sL - qL(QVELN))*(qR(QVELN) - qL(QVELN))
 	pst  = pst/((sR - qR(QVELN))*qR(QRHO) - (sL - qL(QVELN))*qL(QRHO))
 
 	!------------------------------------------- Density * states-------------------------------------------------------------------------
