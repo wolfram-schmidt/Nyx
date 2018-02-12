@@ -16,10 +16,10 @@ nyx.inhomo_reion     = 0
 # PROBLEM SIZE & GEOMETRY
 geometry.is_periodic = 0 1 1
 geometry.coord_sys   = 0  # 0 => cart, 1 => RZ  2=>spherical
-geometry.prob_lo     =  0      0     0
-geometry.prob_hi     =  1.     0.03125  0.03125
+geometry.prob_lo     =  0      0      0 
+geometry.prob_hi     =  1.    0.015625   0.015625  #  0.03125  0.03125
 
-amr.n_cell           = 128     4      4
+amr.n_cell           = 256     4      4
 amr.max_level        = 0       # maximum level number allowed
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<

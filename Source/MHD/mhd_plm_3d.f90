@@ -46,19 +46,17 @@ contains
 
     real(rt) 				:: 	dQL(7), dQR(7), dW, dL, dR, leig(7,7), reig(7,7), lam(7), summ(7)
     real(rt)				:: 	temp(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1,8), smhd(7)
-    real(rt)				::      tbx(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
-    real(rt)				::      tby(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
-    real(rt)				::      tbz(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
+    real(rt)				::  tbx(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
+    real(rt)				::  tby(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
+    real(rt)				::  tbz(s_l1-1:s_h1+1,s_l2-1:s_h2+1,s_l3-1:s_h3+1)
     real(rt)				:: 	dt_over_a
-    integer          		        ::	ii,ibx,iby,ibz, i , j, k
+    integer          		::	ii,ibx,iby,ibz, i , j, k
 
     ibx = 6
     iby = 7
     ibz = 8
 
     dt_over_a = dt / a_old
-!    Ip = 0.d0
-!    Im = 0.d0
 
 !------------------------workspace variables---------------------------------------------
 		temp = 0.d0
@@ -361,7 +359,7 @@ contains
 			smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
 			smhd(6) = temp(i,j,k,3)
 			smhd(7) = temp(i,j,k,4)
-			smhd 	= smhd*(tbx(i+1,j,k) - tbx(i,j,k))/dx !cross-talk of normal magnetic field direction
+			smhd 	= smhd*(tbx(i+1,j,k) - tbx(i,j,k))/dx !normal magnetic field direction
 	!Interpolate
 		!Plus
 				!!Using HLLD so sum over all eigenvalues
@@ -369,7 +367,7 @@ contains
 			        dL = dot_product(leig(ii,:),dQL)
 			        dR = dot_product(leig(ii,:),dQR)
 			        call vanleer(dW,dL,dR)
-					summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dW*reig(:,ii)
+					summ(:) = summ(:) + (1.d0 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
 			Ip(i,j,k,QRHO:QPRES,1) 	 = temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 			Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
@@ -380,11 +378,11 @@ contains
 			        dL = dot_product(leig(ii,:),dQL)
 			        dR = dot_product(leig(ii,:),dQR)
 			        call vanleer(dW,dL,dR)			
-					summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
+					summ(:) = summ(:) + (-1.d0 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
-			Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
+			Im(i,j,k,QRHO:QPRES,1)	 = temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5)
 			Im(i,j,k,QMAGX,1)		 = temp(i-1,j,k,ibx) !! Bx stuff
-			Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) +0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
+			Im(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 
 
 	
@@ -411,7 +409,7 @@ contains
 			        dL = dot_product(leig(ii,:),dQL)
 			        dR = dot_product(leig(ii,:),dQR)
 			        call vanleer(dW,dL,dR)			
-					summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dW*reig(:,ii)
+					summ(:) = summ(:) + (1 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
 	!MHD Source Terms 
 			smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
@@ -460,7 +458,7 @@ contains
 			        dL = dot_product(leig(ii,:),dQL)
 			        dR = dot_product(leig(ii,:),dQR)
 			        call vanleer(dW,dL,dR)			
-				summ(:) = summ(:) + (1 - dt_over_a/dx)*lam(ii)*dW*reig(:,ii)
+				summ(:) = summ(:) + (1 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
 	!MHD Source Terms 
 			smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
