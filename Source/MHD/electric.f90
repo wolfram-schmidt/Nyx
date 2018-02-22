@@ -41,33 +41,33 @@ implicit none
 	integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
 	integer, intent(in)   :: ex_l1,ex_l2,ex_l3,ex_h1,ex_h2, ex_h3
 
-        integer, intent(in)   :: flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
-        integer, intent(in)   :: flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
+    integer, intent(in)   :: flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
+    integer, intent(in)   :: flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
 
-	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
+    real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
 
-        real(rt), intent(in) :: flxy(flxy_l1:flxy_h1,flxy_l2:flxy_h2,flxy_l3:flxy_h3,QVAR) 
-        real(rt), intent(in) :: flxz(flxz_l1:flxz_h1,flxz_l2:flxz_h2,flxz_l3:flxz_h3,QVAR)
+    real(rt), intent(in) :: flxy(flxy_l1:flxy_h1,flxy_l2:flxy_h2,flxy_l3:flxy_h3,QVAR) 
+    real(rt), intent(in) :: flxz(flxz_l1:flxz_h1,flxz_l2:flxz_h2,flxz_l3:flxz_h3,QVAR)
 
-	real(rt), intent(out)	:: E(ex_l1:ex_h1,ex_l2:ex_h2,ex_l3:ex_h3)
+    real(rt), intent(out)	:: E(ex_l1:ex_h1,ex_l2:ex_h2,ex_l3:ex_h3)
 	
-	real(rt)				::Ecen
-	real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
+    real(rt)				::Ecen
+    real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
 	
-	integer					::i ,j ,k	
+    integer					::i ,j ,k	
 
-	!E = 0.d0
-	do k = work_lo(3), work_hi(3)
-		do j = work_lo(2), work_hi(2)
-			do i = work_lo(1), work_hi(1)
+    !E = 0.d0
+    do k = work_lo(3), work_hi(3)
+        do j = work_lo(2), work_hi(2)
+            do i = work_lo(1), work_hi(1)
 
 !============================================= Ex i, j -1/2, k -1/2 ===========================================================================
     !----------------------------- Y derivatives -------------------------------------------------------
 				!dEx/dy i,j-3/4, k-1/2
 				call electric(q(i,j-1,k-1,:),Ecen,1)
-				a = 2.d0*(Ecen + flxy(i,j,k-1,QMAGZ)
+				a = 2.d0*(Ecen + flxy(i,j,k-1,QMAGZ))
 				call electric(q(i,j-1,k,:),Ecen,1)
-				b = 2.d0*(Ecen + flxy(i,j,k,QMAGZ) 
+				b = 2.d0*(Ecen + flxy(i,j,k,QMAGZ))
 	
 				!Upwind in the z direction to get dEx/dy i, j-3/4, k-1/2
 				if(flxz(i,j-1,k,QRHO) .gt. 0.d0) then !recall flxz(QRHO) = rho*w so sign(rho*w) = sign(w)
@@ -91,7 +91,7 @@ implicit none
                     d2 = b
                 else
                     d2 = 0.5d0*(a+b)
-                end
+                endif
 
                 !Calculate the "second derivative" in the y direction for d^2Ex/dy^2 i, j-1/2, k-1/2
                 dd1 = 0.125d0*(d1 - d2)
@@ -113,9 +113,9 @@ implicit none
                 
                 !dEx/dz i, j-1/2, k-1/4
                 call electric(q(i,j-1,k,:), Ecen, 1)
-                a = 2.d0*(flxz(i,j-1,k) - Ecen)
+                a = 2.d0*(flxz(i,j-1,k,QMAGY) - Ecen)
                 call electric(q(i,j,k,:), Ecen, 1)
-                b = 2.d0*(flxz(i,j,k) - Ecen)
+                b = 2.d0*(flxz(i,j,k,QMAGY) - Ecen)
                 
                 !Upwind in the y direction for i,j-1/2,k-1/2
 
@@ -152,84 +152,98 @@ use meth_params_module
 
 implicit none
 
-	integer, intent(in)   :: work_lo(3), work_hi(3)
-	integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
-	integer, intent(in)   :: ey_l1,ey_l2,ey_l3,ey_h1,ey_h2, ey_h3
-        integer, intent(in)   :: flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
-        integer, intent(in)   :: flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
+    integer, intent(in)   :: work_lo(3), work_hi(3)
+    integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+    integer, intent(in)   :: ey_l1,ey_l2,ey_l3,ey_h1,ey_h2, ey_h3
+    integer, intent(in)   :: flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
+    integer, intent(in)   :: flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3
 
-	real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
+    real(rt), intent(in)	::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
 
-        real(rt), intent(in) :: flxx(flxx_l1:flxx_h1,flxx_l2:flxx_h2,flxx_l3:flxx_h3,QVAR)
-        real(rt), intent(in) :: flxz(flxz_l1:flxz_h1,flxz_l2:flxz_h2,flxz_l3:flxz_h3,QVAR)
+    real(rt), intent(in) :: flxx(flxx_l1:flxx_h1,flxx_l2:flxx_h2,flxx_l3:flxx_h3,QVAR)
+    real(rt), intent(in) :: flxz(flxz_l1:flxz_h1,flxz_l2:flxz_h2,flxz_l3:flxz_h3,QVAR)
 
-	real(rt), intent(out)	:: E(ey_l1:ey_h1,ey_l2:ey_h2,ey_l3:ey_h3)
+    real(rt), intent(out)	:: E(ey_l1:ey_h1,ey_l2:ey_h2,ey_l3:ey_h3)
 	
-	real(rt)				::Ecen
-	real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
+    real(rt)				::Ecen
+    real(rt)				::a ,b ,d1 ,d2 ,dd1 ,dd2 
 	
-	integer					::i ,j ,k	
+    integer					::i ,j ,k	
 
-	E = 0.d0
-	do k = work_lo(3), work_hi(3)
-		do j = work_lo(2), work_hi(2)
-			do i = work_lo(1), work_hi(1)
+    E = 0.d0
+    do k = work_lo(3), work_hi(3)
+        do j = work_lo(2), work_hi(2)
+            do i = work_lo(1), work_hi(1)
 
 !============================================= Ey i-1/2, j, k-1/2 ===========================================================================
+    !----------------------------- X derivatives -------------------------------------------------------
+				!dEy/dx i-3/4,j, k-1/2
+                call electric(q(i-1,j,k-1,:), Ecen, 2) 
+                a = 2.d0*(Ecen - flxx(i,j,k-1,QMAGZ)) 
+                call electric(q(i-1,j,k,:), Ecen, 2)
+                b = 2.d0*(Ecen - flxx(i,j,k,QMAGZ))
+                !Upwind in z direction
+                if(flxz(i-1,j,k,QRHO).gt. 0.d0)  then
+                    d1 = a
+                elseif(flxz(i-1,j,k,QRHO).lt.0.d0) then
+                    d1 = b
+                else
+                    d1 = 0.5d0*(a+b)
+                endif
 
-				call electric(q(i-1,j,k-1,:),Ecen,2)
-				a = 2.d0*(-flxx(i,j,k-1,QMAGZ) - Ecen)
 
-				call electric(q(i,j,k-1,:),Ecen,2)
-				b = 2.d0*(Ecen - flxx(i,j,k-1,QMAGZ))
+				!dEy/dx i-1/4,j, k-1/2
+                call electric(q(i,j,k-1,:),Ecen,2)
+                a= 2.d0*(flxx(i,j,k-1,QMAGZ) - Ecen)
+                call electric(q(i,j,k,:), Ecen,2)
+                b= 2.d0*(flxx(i,j,k,QMAGZ) -Ecen)
+                !upwind in z direction
+                if(flxz(i,j,k,QRHO).gt. 0.d0) then 
+                    d2 = a
+                elseif(flxz(i,j,k,QRHO).lt. 0.d0) then
+                    d2 = b
+                else
+                    d2 = 0.5d0*(a+b)
+                endif
 
-				if(flxx(i,j,k-1,QRHO).gt. 0.d0) then
-					d1 = a
-				elseif(flxx(i,j,k-1,QRHO).lt. 0.d0) then
-					d1 = b
-				else
-					d1 = 0.5d0*(a+b)
-				endif
+        !Double derivative 
+                dd1 = 0.125d0*(d1 - d2)
 
-				a = b
-				b = 2.d0*(flxx(i+1,j,k-1,QMAGZ) - Ecen)
+    !------------------------------- Z derivatives --------------------------------------------------------
+				!dEy/dz i-1/2,j, k-3/4
+                call electric(q(i-1,j,k-1,:),Ecen,2)
+                a = 2.d0*(Ecen + flxz(i-1,j,k,QMAGX))
+                call electric(q(i,j,k-1,:), Ecen, 2)
+                b = 2.d0*(Ecen + flxz(i,j,k,QMAGX))
+                !upwind in x direction
+                if(flxx(i,j,k-1,QRHO).gt. 0.d0) then
+                    d1 = a
+                elseif(flxx(i,j,k-1,QRHO).lt. 0.d0) then
+                    d1 = b
+                else
+                    d1 = 0.5d0*(a+b)
+                endif
 
-				if(q(i,j,k-1,QU).gt. 0.d0) then
-					d2 = a
-				elseif(q(i,j,k-1,QU).lt. 0.d0) then
-					d2 = b
-				else
-					d2 = 0.5d0*(a+b)
-				endif
-				dd1 = 0.125d0*(d1 - d2)
+				!dEy/dz i-1/2,j, k-1/4
+                call electric(q(i-1,j,k,:),Ecen, 2)
+                a = 2.d0*(-flxz(i-1,j,k,QMAGX)- Ecen)
+                call electric(q(i,j,k,:),Ecen ,2)
+                b = 2.d0*(-flxz(i,j,k,QMAGX) - Ecen)
+                !upwind in x
+                if(flxx(i,j,k,QRHO).gt. 0.d0) then
+                    d2 = a
+                elseif(flxx(i,j,k,QRHO) .lt. 0.d0) then
+                    d2 = b
+                else
+                    d2 = 0.5d0*(a+b)
+                endif
+        !Double derivative
+                dd2 = 0.125d0*(d1 - d2)
+        
+        
+    !----------------------- Prescribe Ey i-1/2, j, k -1/2 ----------------------------------------
+               E(i,j,k) = 0.25d0*(-flxz(i,j,k,QMAGX) - flxz(i-1,j, k,QMAGX) + flxx(i,j,k-1,QMAGZ) + flxx(i,j,k,QMAGZ)) + dd1 +dd2                        
 
-				call electric(q(i-1,j,k-1,:),Ecen,2)
-				a = 2.d0*(flxz(i-1,j,k,QMAGX) - Ecen)
-
-    			        call electric(q(i-1,j,k,:),Ecen,2)
-				b = 2.d0*(Ecen - flxz(i-1,j,k,QMAGX))
-
-				if(flxz(i-1,j,k,QRHO).gt. 0.d0) then
-					d1 = a
-				elseif(flxz(i-1,j,k,QRHO).lt. 0.d0) then
-					d1 = b
-				else
-					d1 = 0.5d0*(a+b)
-				endif
-				a = b 
-				b = 2.d0*(flxz(i-1,j,k+1,QMAGX) - Ecen) 
-				if(q(i-1,j,k,QW).gt.0.d0) then
-					d2 = a
-				elseif(q(i-1,j,k,QW).lt. 0.d0) then
-					d2 = b
-				else 
-					d2 = 0.5d0*(a+b)
-				endif
-				dd2 = 0.125*(d1 - d2)
-
-				E(i,j,k) = 0.25d0*( flxx(i,j,k-1,QMAGZ) + flxx(i,j,k,QMAGZ) &
-                                                   -flxz(i-1,j,k,QMAGX) - flxz(i,j,k,QMAGX))!  + dd1 + dd2
-!				E(i,j,k) = 0.5d0*( flxx(i,j,k-1,QMAGZ) -flxz(i-1,j,k,QMAGX))
 			enddo
 		enddo
 	enddo
@@ -247,99 +261,95 @@ use meth_params_module
 
 implicit none
 	integer, intent(in)   :: work_lo(3), work_hi(3)
-        integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
-        integer, intent(in)   :: ez_l1,ez_l2,ez_l3,ez_h1,ez_h2, ez_h3
+    integer, intent(in)   :: q_l1,q_l2,q_l3,q_h1,q_h2, q_h3
+    integer, intent(in)   :: ez_l1,ez_l2,ez_l3,ez_h1,ez_h2, ez_h3
 
-        integer, intent(in)   :: flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
-        integer, intent(in)   :: flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
+    integer, intent(in)   :: flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
+    integer, intent(in)   :: flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
 
-        real(rt), intent(in)    ::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
+    real(rt), intent(in)    ::q(q_l1:q_h1,q_l2:q_h2,q_l3:q_h3,QVAR)
 
-        real(rt), intent(in) :: flxx(flxx_l1:flxx_h1,flxx_l2:flxx_h2,flxx_l3:flxx_h3,QVAR)
-        real(rt), intent(in) :: flxy(flxy_l1:flxy_h1,flxy_l2:flxy_h2,flxy_l3:flxy_h3,QVAR)
+    real(rt), intent(in) :: flxx(flxx_l1:flxx_h1,flxx_l2:flxx_h2,flxx_l3:flxx_h3,QVAR)
+    real(rt), intent(in) :: flxy(flxy_l1:flxy_h1,flxy_l2:flxy_h2,flxy_l3:flxy_h3,QVAR)
 
-        real(rt), intent(out)   :: E(ez_l1:ez_h1,ez_l2:ez_h2,ez_l3:ez_h3)
+    real(rt), intent(out)   :: E(ez_l1:ez_h1,ez_l2:ez_h2,ez_l3:ez_h3)
 	
-	real(rt)		:: Ecen, u_face, v_face
+	real(rt)		:: Ecen
 	real(rt)		:: a ,b ,d1 ,d2 ,dd1 ,dd2 
 
 	integer			:: i ,j ,k	
 
 	!E = 0.d0
 
-! ====  Ez i-1/2, j-1/2, k ====
-
 	do k = work_lo(3), work_hi(3)
 		do j = work_lo(2), work_hi(2)
 			do i = work_lo(1), work_hi(1)
+!============================================= Ez i-1/2, j-1/2, k ===========================================================================
+    !----------------------------- X derivatives -------------------------------------------------------
+				!dEz/dx i-3/4,j-1/2, k
+                call electric(q(i-1,j-1,k,:),Ecen,3)
+                a = 2.d0*(Ecen + flxx(i,j-1,k,QMAGY))
+                call electric(q(i-1,j,k,:),Ecen,3)
+                b = 2.d0*(Ecen + flxx(i,j,k,QMAGY))
+                !upwind in y 
+                if(flxy(i-1,j,k,QRHO).gt. 0.d0) then
+                    d1 = a
+                elseif(flxy(i-1,j,k,QRHO) .lt. 0.d0) then
+                    d1 = b
+                else
+                    d1 = 0.5d0*(a+b)
+                endif
+                
+                !dEx/dx i -1/4, j-1/2, k 
+                call electric(q(i,j-1,k,:),Ecen,3)
+                a = 2.d0*(-flxx(i,j-1,k,QMAGY) - Ecen)
+                call electric(q(i,j,k,:),Ecen,3)
+                b = 2.d0*(-flxx(i,j,k,QMAGY) - Ecen)
+                !upwind in y 
+                if(flxy(i,j,k,QRHO).gt. 0.d0) then
+                    d2 = a
+                elseif(flxy(i,j,k,QRHO) .lt. 0.d0) then
+                    d2 = b
+                else
+                    d2 = 0.5d0*(a+b)
+                endif
 
-				call electric(q(i-1,j-1,k,:),Ecen,3)
-				a = 2.d0*(-flxx(i,j-1,k,QMAGY) - Ecen)
+    !double derivative 
+                dd1 = 0.125d0*(d1 - d2)
+    !----------------------------- Y derivatives -------------------------------------------------------
+                !dEz/dy i-1/2,j-3/4, k       
+                call electric(q(i-1,j-1,k,:),Ecen,3)
+                a = 2.d0*(Ecen - flxy(i-1,j,k,QMAGX))
+                call electric(q(i,j-1,k,:),Ecen,3)
+                b = 2.d0*(Ecen - flxy(i,j,k,QMAGX))
+                !upwind in x
+                if(flxx(i,j-1,k,QRHO).gt. 0.d0) then 
+                    d1 = a
+                elseif(flxx(i,j-1,k,QRHO).lt. 0.d0) then
+                    d1 = b
+                else
+                    d1 = 0.5d0*(a+b)
+                endif
+                
+                !dEz/dy i-1/2, j-1/4, k
+                call electric(q(i-1,j,k,:),Ecen,3)
+                a = 2.d0*(flxy(i-1,j,k,QMAGX) - Ecen)
+                call electric(q(i,j,k,QRHO), Ecen, 3)
+                b = 2.d0*(flxy(i,j,k,QMAGX) - Ecen)
+                !upwind in x
+                if(flxx(i,j,k,QRHO).gt. 0.d0) then
+                    d2 = a
+                elseif(flxx(i,j,k,QRHO) .lt. 0.d0) then
+                    d2 = b
+                else
+                    d2 = 0.5d0*(a+b)
+                endif
+    !double derivative
+                dd2 = 0.125*(d1 - d2)
 
-				call electric(q(i,j-1,k,:),Ecen,3)
-				b = 2.d0*(Ecen + flxx(i,j-1,k,QMAGY))
-
-				u_face = flxx(i,j-1,k,QRHO)
-				if (u_face.gt. 0.d0) then
-					d1 = a
-				elseif (u_face.lt. 0.d0) then
-					d1 = b
-				else 
-					d1 = 0.5d0*(a+b)
-				endif
-
-				a = b
-				b = 2.d0*(-flxx(i+1,j-1,k,QMAGY) - Ecen)
-
-				u_face = q(i,j-1,k,QU)
-				if (u_face.gt. 0.d0) then
-					d2 = a
-				elseif (u_face.lt. 0.d0) then
-					d2 = b
-				else
-					d2 = 0.5d0*(a+b)
-				endif
-				dd1 = 0.125d0*(d1 - d2)
-
-				call electric(q(i-1,j-1,k,:),Ecen,3)
-				a = 2.d0*(flxy(i-1,j,k,QMAGX) - Ecen)
-
-				call electric(q(i-1,j,k,:),Ecen,3)
-				b = 2.d0*(Ecen - flxy(i-1,j,k,QMAGX))
-
-				v_face = flxy(i-1,j,k,QRHO)
-				if (v_face.gt. 0.d0) then
-					d1 = a
-				elseif (v_face.lt. 0.d0) then
-					d1 = b
-				else
-					d1 = 0.5d0*(a+b)
-				endif
-
-				a = b 
-				b = 2.d0*(flxy(i-1,j+1,k,QMAGX) - Ecen) 
-
-				if(q(i-1,j,k,QV).gt.0.d0) then
-					d2 = a
-				elseif(q(i-1,j,k,QV).lt. 0.d0) then
-					d2 = b
-				else 
-					d2 = 0.5d0*(a+b)
-				endif
-				dd2 = 0.125*(d1 - d2)
-
-				E(i,j,k) = 0.25d0*(-flxx(i,j-1,k,QMAGY) - flxx(i,j,k,QMAGY) &
-                                                   +flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX))! + dd1 + dd2
-!				 E(i,j,k) = 0.5d0*(-flxx(i,j-1,k,QMAGY) + flxy(i-1,j,k,QMAGX))
-				!if((i.eq.3.and.j.eq.17.and.k.eq.1).or.(i.eq.4.and.j.eq.17.and.k.eq.1)) then
-				!	print *, "Electric Z at ", i,j,k
-				!	print *, E(i,j,k)
-				!	print *,"Flux x", - flxx(i,j-1,k, QMAGY) , flxx(i,j,k,QMAGY)
-				!	print *,"Flux y", flxy(i-1,j,k,QMAGX) , flxy(i,j,k,QMAGX)
-				!	print *, "Q at", i, j, k, q(i,j,k,:)
-				!	print *, "dd1 = ", dd1, "dd2 = ", dd2
-				!	pause
-				!endif
+    !----------------------- Prescribe Ez i-1/2, j-1/2,k ----------------------------------------
+              E(i,j,k) = 0.25d0*(-flxx(i,j,k,QMAGZ) - flxx(i,j-1, k,QMAGZ) + flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2                        
+ 
 			enddo
 		enddo
 	enddo
