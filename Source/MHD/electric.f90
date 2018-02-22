@@ -62,62 +62,78 @@ implicit none
 			do i = work_lo(1), work_hi(1)
 
 !============================================= Ex i, j -1/2, k -1/2 ===========================================================================
+    !----------------------------- Y derivatives -------------------------------------------------------
+				!dEx/dy i,j-3/4, k-1/2
 				call electric(q(i,j-1,k-1,:),Ecen,1)
-				a = 2.d0*(flxz(i,j-1,k,QMAGY) - Ecen)
-
+				a = 2.d0*(Ecen + flxy(i,j,k-1,QMAGZ)
 				call electric(q(i,j-1,k,:),Ecen,1)
-				b = 2.d0*(Ecen - flxz(i,j-1,k,QMAGY))
-
-				if(flxz(i,j-1,k,QRHO).gt. 0.d0) then
+				b = 2.d0*(Ecen + flxy(i,j,k,QMAGZ) 
+	
+				!Upwind in the z direction to get dEx/dy i, j-3/4, k-1/2
+				if(flxz(i,j-1,k,QRHO) .gt. 0.d0) then !recall flxz(QRHO) = rho*w so sign(rho*w) = sign(w)
 					d1 = a
-				elseif(flxz(i,j-1,k,QRHO).lt. 0.d0) then
+				else if(flxz(i,j-1,k,QRHO) .lt. 0.d0) then 
 					d1 = b
-				else
-					d1 = 0.5d0*(a+b)
-				endif
-				a = b
-				b = 2.d0*(flxz(i,j-1,k+1,QMAGY) - Ecen)
-				
-				if(q(i,j-1,k,QW).gt. 0.d0) then
-					d2 = a
-				elseif(q(i,j-1,k,QW).lt. 0.d0) then
-					d2 = b
-				else
-					d2 = 0.5d0*(a+b)
-				endif
-				dd1 = 0.125d0*(d1 - d2)
-			
-				call electric(q(i,j-1,k-1,:),Ecen,1)
-				a = 2.d0*(-flxy(i,j,k-1,QMAGZ) - Ecen)
-
-				call electric(q(i,j,k-1,:),Ecen,1)
-				b = 2.d0*(Ecen + flxy(i,j,k-1,QMAGZ))
-
-				if(flxy(i,j,k-1,QRHO).gt. 0.d0) then
-					d1 = a
-				elseif(flxy(i,j,k-1,QRHO).lt. 0.d0) then
-					d1 = b
-				else
-					d1 = 0.5d0*(a+b)
-				endif
-
-				a = b 
-				b = 2.d0*(-flxy(i,j+1,k-1,QMAGZ) - Ecen) 
-
-				if(q(i,j,k-1,QV).gt.0.d0) then
-					d2 = a
-				elseif(q(i,j,k-1,QV).lt. 0.d0) then
-					d2 = b
 				else 
-					d2 = 0.5d0*(a+b)
+					d1 = 0.5d0*(a + b)
 				endif
-				dd2 = 0.125*(d1 - d2)
 
-				E(i,j,k) = 0.25d0*(-flxy(i,j,k-1,QMAGZ) - flxy(i,j,k,QMAGZ) + &
-                                                    flxz(i,j-1,k,QMAGY) + flxz(i,j,k,QMAGY))! + dd1 + dd2
-!				E(i,j,k) = 0.5d0*(-flxy(i,j,k-1,QMAGZ) + flxz(i,j-1,k,QMAGY))
+				!dEx/dy i,j-1/4, k-1/2
+                call electric(q(i,j,k-1,:),Ecen, 1) 
+                a = 2.d0*(-flxy(i,j,k-1,QMAGZ) - Ecen)
+                call electric(q(i,j,k,:),Ecen, 1)
+                b = 2.d0*(-flxy(i,j,k,QMAGZ) - Ecen)
 
-			
+                !Upwind in the z direction to get dEx/dy i, j-1/4, k-1/2
+                if(flxz(i,j,k,QRHO) .gt. 0.d0) then 
+                    d2 = a
+                else if(flxz(i,j,k,QRHO) .gt. 0.d0) then 
+                    d2 = b
+                else
+                    d2 = 0.5d0*(a+b)
+                end
+
+                !Calculate the "second derivative" in the y direction for d^2Ex/dy^2 i, j-1/2, k-1/2
+                dd1 = 0.125d0*(d1 - d2)
+
+    !------------------------ Z derivatives -----------------------------------------------
+                !dEx/dz i, j-1/2, k - 3/4
+                call electric(q(i,j-1,k-1,:),Ecen,1)
+                a = 2.d0*(Ecen - flxz(i,j-1,k,QMAGY))
+                call electric(q(i,j, k-1, :), Ecen, 1) 
+                b = 2.d0*(Ecen - flxz(i,j,k,QMAGY))
+                !upwind in the y direction to get dEx/dz i, j-1/2, k -3/4
+                if(flxy(i,j,k-1,QRHO).gt.0.d0) then 
+                    d1 = a
+                elseif(flxy(i,j,k-1,QRHO).lt.0.d0) then 
+                    d1 = b
+                else
+                    d1 = 0.5d0*(a + b)
+                endif
+                
+                !dEx/dz i, j-1/2, k-1/4
+                call electric(q(i,j-1,k,:), Ecen, 1)
+                a = 2.d0*(flxz(i,j-1,k) - Ecen)
+                call electric(q(i,j,k,:), Ecen, 1)
+                b = 2.d0*(flxz(i,j,k) - Ecen)
+                
+                !Upwind in the y direction for i,j-1/2,k-1/2
+
+                if(flxy(i,j,k,QRHO).gt.0.d0) then 
+                    d2 = a
+                elseif(flxy(i,j,k,QRHO).lt.0.d0) then 
+                    d2 = b
+                else 
+                    d2 = 0.5d0*(a + b)
+                endif
+
+                !calculate second derivative 
+
+                    dd2 = 0.125d0*(d1 - d2)
+
+    !----------------------- Prescribe Ex i, j -1/2, k -1/2 ----------------------------------------
+                E(i,j,k) = 0.25d0*(-flxy(i,j,k,QMAGZ) - flxy(i,j, k-1,QMAGZ) + flxz(i,j-1,k,QMAGY) + flxz(i,j,k,QMAGY)) + dd1 + dd2
+                			
 			enddo
 		enddo
 	enddo
