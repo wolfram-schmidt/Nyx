@@ -348,8 +348,8 @@ implicit none
                 dd2 = 0.125*(d1 - d2)
 
     !----------------------- Prescribe Ez i-1/2, j-1/2,k ----------------------------------------
-              E(i,j,k) = 0.25d0*(-flxx(i,j,k,QMAGZ) - flxx(i,j-1, k,QMAGZ) + flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) + dd1 + dd2                        
- 
+              E(i,j,k) = 0.25d0*(-flxx(i,j,k,QMAGZ) - flxx(i,j-1, k,QMAGZ) + flxy(i-1,j,k,QMAGX) + flxy(i,j,k,QMAGX)) !+ dd1 + dd2                        
+ !Need to look into dd1 and dd2. 
 			enddo
 		enddo
 	enddo
