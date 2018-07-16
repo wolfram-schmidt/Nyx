@@ -188,12 +188,12 @@ Nyx::just_the_mhd (Real time,
             (&time, bx.loVect(), bx.hiVect(), 
              BL_TO_FORTRAN(state),
              BL_TO_FORTRAN(stateout),
-	     BL_TO_FORTRAN(Bx),
-	     BL_TO_FORTRAN(By),
-	     BL_TO_FORTRAN(Bz),
-	     BL_TO_FORTRAN(Bxout),
-	     BL_TO_FORTRAN(Byout),
-	     BL_TO_FORTRAN(Bzout),
+    	     BL_TO_FORTRAN(Bx),
+    	     BL_TO_FORTRAN(By),
+    	     BL_TO_FORTRAN(Bz),
+    	     BL_TO_FORTRAN(Bxout),
+    	     BL_TO_FORTRAN(Byout),
+    	     BL_TO_FORTRAN(Bzout),
              BL_TO_FORTRAN(u_gdnv[0]),
              BL_TO_FORTRAN(u_gdnv[1]),
              BL_TO_FORTRAN(u_gdnv[2]),
@@ -207,7 +207,7 @@ Nyx::just_the_mhd (Real time,
              BL_TO_FORTRAN(E[1]),
              BL_TO_FORTRAN(E[2]),
              &cflLoc, &a_old, &a_new, &se, &ske, &print_fortran_warnings, &do_grav);
-
+// Needs to change to the new make_mhd_sources + update_mhd_state
 
         for (int i = 0; i < BL_SPACEDIM; ++i) {
            fluxes[i][mfi].copy(flux[i], mfi.nodaltilebox(i));
