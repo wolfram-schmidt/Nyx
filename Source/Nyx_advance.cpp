@@ -46,7 +46,11 @@ Nyx::advance (Real time,
         }
         else
         {
+#ifdef MHD
+           return advance_mhd(time, dt, iteration, ncycle);
+#else
            return advance_hydro(time, dt, iteration, ncycle);
+#endif
         }
     }
 #endif
@@ -279,6 +283,15 @@ Nyx::advance_hydro_plus_particles (Real time,
 
 #endif
 
+#ifdef MHD //do MHD Update
+    BL_PROFILE("just_the_mhd", just_the_mhd);
+    for (int lev = level; lev <= finest_level_to_advance; lev++)
+    {
+        get_level(lev).just_the_mhd(time, dt, a_old, a_new);
+    }
+    BL_PROFILE(just_the_mhd);
+#else
+
     //
     // Call the hydro advance at each level to be advanced
     //
@@ -297,7 +310,7 @@ Nyx::advance_hydro_plus_particles (Real time,
 #endif
     }
     BL_PROFILE_VAR_STOP(just_the_hydro);
-
+#endif
     //
     // We must reflux before doing the next gravity solve
     //
@@ -462,6 +475,68 @@ Nyx::advance_hydro_plus_particles (Real time,
     return dt;
 }
 
+#ifdef MHD
+Real
+Nyx::advance_mhd (Real time, 
+                  Real dt, 
+                  int iteration, 
+                  int ncycle)
+{
+    BL_PROFILE("Nyx::advance_mhd()");
+    if(!do_hydro)
+        amrex::Abort("In 'advance_mhd' but 'do_hydro' not true");
+#ifdef GRAVITY
+    if (!do_grav)
+        amrex::Abort("In `advance_mhd` with GRAVITY defined but `do_grav` is false");
+#endif
+#ifdef FORCING
+    if (!do_forcing)
+        amrex::Abort("In `advance_mhd` with FORCING defined but `do_forcing` is false");
+#endif
+
+    for (int k = 0; k < NUM_STATE_TYPE; k++)
+    {
+        state[k].allocOldData();
+        state[k].swapTimeLevels(dt);
+    }
+
+    const Real prev_time = state[State_Type].prevTime();
+    const Real cur_time  = state[State_Type].curTime();
+    const Real a_old     = get_comoving_a(prev_time);
+    const Real a_new     = get_comoving_a(cur_time);
+
+#ifdef GRAVITY
+    const int finest_level = parent->finestLevel();
+
+    if (do_reflux && level < finest_level)
+    {
+        gravity->zero_phi_flux_reg(level + 1);
+    }
+
+    gravity->swap_time_levels(level);
+
+#endif
+
+#ifdef FORCING
+    if (do_forcing)
+    {
+        forcing->evolve(dt);
+    }
+#endif
+
+    // Call the mhd advance itself
+    just_the_mhd(time, dt, a_old, a_new); //Use New Splitting?  
+    MultiFab& S_new  = get_new_data(State_Type);
+    MultiFab& D_new  = get_new_data(DiagEOS_Type);
+    MultiFab& Bx_new = get_new_data(Mag_Type_x);
+    MultiFab& By_new = get_new_data(Mag_Type_y);
+    MultiFab& Bz_new = get_new_data(Mag_Type_z);
+    reset_internal_energy(S_new,D_new, Bx_new, By_new, Bz_new);
+    compute_new_temp(S_new, D_new)
+    return dt;
+}
+#else
+
 Real
 Nyx::advance_hydro (Real time,
                     Real dt,
@@ -577,5 +652,6 @@ Nyx::advance_hydro (Real time,
 
     return dt;
 }
+#endif /*MHD or ELSE*/
 #endif
 

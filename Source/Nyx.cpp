@@ -812,6 +812,14 @@ Nyx::init ()
     FillCoarsePatch(S_new, 0, cur_time,   State_Type, 0, S_new.nComp());
     FillCoarsePatch(D_new, 0, cur_time, DiagEOS_Type, 0, D_new.nComp());
 #endif
+#ifdef MHD
+    MultiFab& Bx_new = get_new_data(Mag_Type_x); 
+    MultiFab& By_new = get_new_data(Mag_Type_y);
+    MultiFab& Bz_new = get_new_data(Mag_Type_z); 
+    FillCoarsePatch(Bx_new, 0, cur_time, Mag_Type_x, 0, Bx_new.nComp());
+    FillCoarsePatch(By_new, 0, cur_time, Mag_Type_y, 0, By_new.nComp());
+    FillCoarsePatch(Bz_new, 0, cur_time, Mag_Type_z, 0, Bz_new.nComp());
+#endif
 
 #ifdef GRAVITY
     MultiFab& Phi_new = get_new_data(PhiGrav_Type);
@@ -861,6 +869,11 @@ Nyx::est_time_step (Real dt_old)
 
 #ifndef NO_HYDRO
     const MultiFab& stateMF = get_new_data(State_Type);
+#ifdef MHD 
+    const MultiFab& bxMF = get_new_data(Mag_Type_x); 
+    const MultiFab& byMF = get_new_data(Mag_Type_y);
+    const MultiFab& bzMF = get_new_data(Mag_Type_z); 
+#endif
 #endif
 
 #ifdef NO_HYDRO
@@ -883,10 +896,19 @@ Nyx::est_time_step (Real dt_old)
 	  for (MFIter mfi(stateMF,true); mfi.isValid(); ++mfi)
 	    {
 	      const Box& box = mfi.tilebox();
-
+#ifdef MHD
+          fort_estdt_mhd
+                (BL_TO_FORTRAN(stateMF[mfi]), 
+                 BL_TO_FORTRAN(bxMF[mfi]), 
+                 BL_TO_FORTRAN(byMF[mfi]),
+                 BL_TO_FORTRAN(bzMF[mfi]),
+                 box.loVect(), box.hiVect(),
+                 dx, &dt, &a);
+#else
 	      fort_estdt
                 (BL_TO_FORTRAN(stateMF[mfi]), box.loVect(), box.hiVect(), dx,
                  &dt, &a);
+#endif
 	    }
           est_dt = std::min(est_dt, dt);
 	}
@@ -1968,6 +1990,28 @@ Nyx::enforce_nonnegative_species (MultiFab& S_new)
     }
 }
 
+
+
+#ifdef MHD
+void
+Nyx::enforce_mhd_consistent_e (MultiFab& S, MultiFab& Bx, MultiFab& By, MultiFab& Bz)
+{
+    BL_PROFILE("Nyx::enforce_mhd_consistent_e()");
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for (MFIter mfi(S,true); mfi.isValid(); ++mfi)
+    {
+        const Box& box = mfi.tilebox();
+        const int* lo = box.loVect();
+        const int* hi = box.hiVect();
+        fort_mhd_enforce_consistent_e(lo, hi, BL_TO_FORTRAN(S[mfi]),
+                                      BL_TO_FORTRAN(Bx[mfi]),
+                                      BL_TO_FORTRAN(By[mfi]),
+                                      BL_TO_FORTRAN(Bz[mfi]));
+    }
+}
+#else
 void
 Nyx::enforce_consistent_e (MultiFab& S)
 {
@@ -1984,6 +2028,7 @@ Nyx::enforce_consistent_e (MultiFab& S)
 	  (lo, hi, BL_TO_FORTRAN(S[mfi]));
     }
 }
+#endif
 #endif
 
 void
@@ -2215,12 +2260,23 @@ Nyx::reset_internal_energy (MultiFab& S_new, MultiFab& D_new, MultiFab& reset_e_
     for (MFIter mfi(S_new,true); mfi.isValid(); ++mfi)
     {
         const Box& bx = mfi.tilebox();
+#ifdef MHD
+        reset_internal_e_mhd
+            (BL_TO_FORTRAN(S_new[mfi]),
+             BL_TO_FORTRAN(D_new[mfi]),
+             BL_TO_FORTRAN(Bx[mfi]),
+             BL_TO_FORTRAN(By[mfi]),
+             BL_TO_FORTRAN(Bz[mfi]),
+             bx.loVect(), bx.hiVect(),
+             &print_fortran_warnings, &a, &s, &se);
 
+#else
         reset_internal_e
             (bx.loVect(), bx.hiVect(),
              BL_TO_FORTRAN(S_new[mfi]), BL_TO_FORTRAN(D_new[mfi]),
-	     BL_TO_FORTRAN(reset_e_src[mfi]),
+             BL_TO_FORTRAN(reset_e_src[mfi]),
              &print_fortran_warnings, &a);
+#endif
     }
 }
 #endif

@@ -187,6 +187,18 @@ Nyx::initData ()
     S_new.setVal(0.0);
 #endif
 
+#ifdef MHD
+    // Same comment as Hydro 
+    MultiFab& Bx_new = get_new_data(Mag_Type_x); 
+    Bx_new.setVal(0.0); 
+   
+    MultiFab& By_new = get_new_data(Mag_type_y); 
+    By_new.setVal(0.0); 
+     
+    MultiFab& Bz_new = get_new_data(Mag_type_z); 
+    Bz_new.setVal(0.0);
+#endif
+
     // If you run a pure N-body simulation and Nyx segfaults here, then
     // please check Prob_3d.f90... You might set other variables then density...
     if (verbose && ParallelDescriptor::IOProcessor())
@@ -201,7 +213,11 @@ Nyx::initData ()
 
 #ifndef NO_HYDRO
     int         ns       = S_new.nComp();
-
+#ifdef MHD
+    int         nbx      = Bx_new.nComp();
+    int         nby      = By_new.nComp();
+    int         nbz      = Bz_new.nComp(); 
+#endif
     Real  cur_time = state[State_Type].curTime();
 
     if ( (do_santa_barbara == 0) && (do_readin_ics == 0) && (particle_init_type != "Cosmological") )
@@ -222,6 +238,11 @@ Nyx::initData ()
                     (level, cur_time, bx.loVect(), bx.hiVect(), 
                      ns, BL_TO_FORTRAN(S_new[mfi]), 
                      nd, BL_TO_FORTRAN(D_new[mfi]), 
+#ifdef MHD
+                     nbx, BL_TO_FORTRAN(Bx_new[mfi]), 
+                     nby, BL_TO_FORTRAN(By_new[mfi]), 
+                     nbz, BL_TO_FORTRAN(Bz_new[mfi]),
+#endif
                      dx, gridloc.lo(), gridloc.hi());
             }
 
@@ -246,6 +267,11 @@ Nyx::initData ()
                     (level, cur_time, bx.loVect(), bx.hiVect(), 
                      ns, BL_TO_FORTRAN(S_new[mfi]), 
                      ns, BL_TO_FORTRAN(S_new[mfi]), 
+#ifdef MHD
+                     nbx, BL_TO_FORTRAN(Bx_new[mfi]),
+                     nby, BL_TO_FORTRAN(By_new[mfi]),
+                     nbz, BL_TO_FORTRAN(Bz_new[mfi]),
+#endif
                      dx, gridloc.lo(), gridloc.hi());
             }
         }
@@ -402,6 +428,11 @@ Nyx::init_from_plotfile ()
         Nyx& nyx_lev = get_level(lev);
         MultiFab& S_new = nyx_lev.get_new_data(State_Type);
         MultiFab& D_new = nyx_lev.get_new_data(DiagEOS_Type);
+#ifdef MHD
+        MultiFab& Bx_new = nyx_lev.get_new_data(Mag_Type_x);
+        MultiFab& By_new = nyx_lev.get_new_data(Mag_Type_y); 
+        MultiFab& Bz_new = nyx_lev.get_new_data(Mag_Type_z); 
+#endif
         int ns = S_new.nComp();
         int nd = D_new.nComp();
 
@@ -414,8 +445,17 @@ Nyx::init_from_plotfile ()
 
             if (rhoe_infile)
             {
+#ifdef MHD
+                fort_init_e_from_rhoe_mhd
+                    (BL_TO_FORTRAN(S_new[mfi]), &ns, 
+                     BL_TO_FORTRAN(Bx_new[mfi]),
+                     BL_TO_FORTRAN(By_new[mfi]), 
+                     BL_TO_FORTRAN(Bz_new[mfi]), 
+                     bx.loVect(), bx.hiVect(), &old_a); 
+#else
                 fort_init_e_from_rhoe
                     (BL_TO_FORTRAN(S_new[mfi]), &ns, bx.loVect(), bx.hiVect(), &old_a);
+#endif
             }
             else 
             {
@@ -426,7 +466,11 @@ Nyx::init_from_plotfile ()
         }
 
         // Define (rho E) given (rho e) and the momenta
+#ifdef MHD
+        nyx_lev.enforce_mhd_consistent_e(S_new ,Bx_new ,By_new ,Bz_new);
+#else
         nyx_lev.enforce_consistent_e(S_new);
+#endif
     }
 
     if (verbose && ParallelDescriptor::IOProcessor())

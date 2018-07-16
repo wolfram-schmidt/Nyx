@@ -43,6 +43,13 @@ module eos_module
 
   public eos_init_small_pres, nyx_eos_T_given_Re, nyx_eos_T_given_Re_vec, nyx_eos_S_given_Re, &
          nyx_eos_soundspeed, nyx_eos_given_RT, nyx_eos_given_RT_vec, eos
+  interface eos
+    module procedure eos_hydro, eos_mhd
+  end interface
+
+  interface nyx_eos_soundspeed
+    module procedure nyx_eos_soundspeed_hydro, syx_eos_soundspeed_mhd
+  end interface
 
 contains
 
@@ -98,7 +105,7 @@ contains
 
   end subroutine eos_init_small_pres
 
-  subroutine nyx_eos_soundspeed(c, R, e)
+  subroutine nyx_eos_soundspeed_hydro(c, R, e)
 
      use amrex_fort_module, only : rt => amrex_real
      use meth_params_module, only: gamma_const, gamma_minus_1
@@ -115,7 +122,32 @@ contains
      ! sound speed
      c = sqrt(gamma_const * P / R)
 
-  end subroutine nyx_eos_soundspeed
+  end subroutine nyx_eos_soundspeed_hydro
+
+!======= Sound speed calc for ideal MHD ================
+  subroutine nyx_eos_soundspeed_mhd(c, R, e, bx, by, bz, bd)
+
+     use amrex_fort_module, only : rt => amrex_real
+     use meth_params_module, only: gamma_const, gamma_minus_1
+
+     ! In/out variables
+     real(rt), intent(in   ) :: R, e, bx , by, bz, bd !density, internal energy, magnetic fields, directional mag field
+     real(rt), intent(  out) :: c
+
+     !Gas Pressure
+     real(rt) :: P
+     !Sound Speed, Alfven Speed
+     real(rt) :: as, ca, cad
+
+     P = R * e * gamma_minus_1
+     as = gamma_const * P/R
+     ca = (bx**2 + by**2 + bz**2)/R
+     cad = bd**2/R
+     !Fast Magneto-Sonic Wave
+     c = 0.5d0*((as + ca) + sqrt((as + ca)**2 - 4.d0*as*cad))
+     c = sqrt(c)
+
+  end subroutine nyx_eos_soundspeed_mhd
 
   subroutine nyx_eos_T_given_Re(JH, JHe, T, Ne, R, e, comoving_a)
 
@@ -269,7 +301,7 @@ contains
   !---------------------------------------------------------------------------
   ! The main interface -- this is used directly by MAESTRO
   !---------------------------------------------------------------------------
-  subroutine eos(input, dens, temp, &
+  subroutine eos_hydro(input, dens, temp, &
                  xmass, &
                  pres, eint, c_v, &
                  dPdT, dPdR, dEdT, &
@@ -387,7 +419,135 @@ contains
 
     c_v = dedT
 
-  end subroutine eos
+  end subroutine eos_hydro
+
+  !---------------------------------------------------------------------------
+  ! The main interface for total pressure -- this is used by Nyx MHD
+  !---------------------------------------------------------------------------
+  subroutine eos_mhd(input, dens, temp, &
+                 xmass, bx, by, bz, &
+                 pres, eint, c_v, &
+                 dPdT, dPdR, dEdT, &
+                 entropy, &
+                 do_eos_diag)
+
+     use amrex_fort_module, only : rt => amrex_real
+     use bl_error_module
+     use fundamental_constants_module, only: k_B, n_A, hbar
+     use meth_params_module, only: gamma_minus_1
+
+! dens     -- mass density (g/cc)
+! temp     -- temperature (K)
+! xmass    -- the mass fractions of the individual isotopes
+! bx - bz  -- the magnetic field components cell centered
+! pres     -- the pressure (dyn/cm**2)
+! eint     -- the internal energy (erg/g)
+! c_v      -- specific heat at constant volume
+! ne       -- number density of electrons + positrons
+! dPdT     -- d pressure/ d temperature
+! dPdR     -- d pressure/ d density
+! dEdT     -- d energy/ d temperature
+! entropy  -- entropy (erg/g/K)  NOTE: presently the entropy expression is 
+!             valid only for an ideal MONATOMIC gas (gamma = 5/3).
+!
+! input = 1 means temp, dens    , and xmass are inputs, return eint    , etc
+!       = 5 means dens, eint    , and xmass are inputs, return temp    , etc
+
+    implicit none
+
+    logical do_eos_diag
+    integer, intent(in) :: input
+
+    real(rt) :: dens, temp
+    real(rt) :: xmass(nspec)
+  real(rt) :: bx, by, bz
+    real(rt) :: pres, eint
+    real(rt) :: c_v
+    real(rt) :: dPdT, dPdR, dedT
+    real(rt) :: entropy
+
+    ! local variables
+    real(rt) :: ymass(nspec)    
+    real(rt) :: mu
+    real(rt) :: sum_y
+    real(rt) :: m_nucleon_over_kB
+    real(rt) :: t1,t2,t3
+
+    ! get the mass of a nucleon from Avogadro's number.
+    real(rt), parameter :: m_nucleon = 1.d0/n_A
+
+    integer :: n
+
+    !-------------------------------------------------------------------------
+    ! compute mu -- the mean molecular weight
+    !-------------------------------------------------------------------------
+
+    sum_y  = 0.d0
+
+    if (eos_assume_neutral) then
+       ! assume completely neutral atoms
+       do n = 1, nspec
+          ymass(n) = xmass(n)/aion(n)
+          sum_y = sum_y + ymass(n)
+       enddo
+    else
+       ! assume completely ionized species
+       do n = 1, nspec
+          ymass(n) = xmass(n)*(1.d0 + zion(n))/aion(n)
+          sum_y = sum_y + ymass(n)
+       enddo
+    endif
+
+    mu = 1.d0/sum_y
+
+    !-------------------------------------------------------------------------
+    ! for all EOS input modes EXCEPT eos_input_rt, first compute dens
+    ! and temp as needed from the inputs
+    !-------------------------------------------------------------------------
+
+    ! These are both very large numbers so we pre-divide
+    m_nucleon_over_kB = m_nucleon / k_B
+
+    if (input .eq. eos_input_rt) then
+
+       ! Compute e = k T / [(mu m_nucleon)*(gamma-1)] from T
+       eint = temp / (mu * m_nucleon_over_kB * gamma_minus_1)
+
+    else ! We are given eint instead of temp
+
+       ! Solve e = k T / [(mu m_nucleon)*(gamma-1)] for T
+       temp = eint * (mu * m_nucleon_over_kB * gamma_minus_1)
+
+    endif
+
+    !-------------------------------------------------------------------------
+    ! now we have the density and temperature (and mass fractions / mu)
+    ! regardless of the inputs.
+    !-------------------------------------------------------------------------
+
+    ! compute the thermal pressure simply from the ideal gas law
+    pres = gamma_minus_1 * dens * eint
+
+    ! entropy (per gram) of an ideal monoatomic gas (the Sactur-Tetrode equation)
+    ! NOTE: this expression is only valid for gamma = 5/3.
+
+    t1 = (mu*m_nucleon);     t1 = t1*t1*sqrt(t1)
+    t2 = (k_B*temp);         t2 = t2*sqrt(t2)
+    t3 = (2*M_PI*hbar*hbar); t3 = t3*sqrt(t3)
+
+    entropy = (1.d0 / (mu*m_nucleon_over_kB)) * (2.5d0 + log(t1/dens*t2/t3))
+
+    ! compute the thermodynamic derivatives and specific heats
+    dPdT = pres/temp
+    dPdR = pres/dens
+    dedT = eint/temp
+
+    c_v = dedT
+  
+  !Compute total pressure = thermal pressure + magnetic pressure 
+  !pres = pres + 0.5d0*(bx*bx + by*by + bz*bz)
+
+  end subroutine eos_mhd
 
 
   subroutine nyx_eos_T_given_Re_vec(T, Ne, R_in, e_in, a, veclen)
