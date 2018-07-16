@@ -32,6 +32,16 @@ extern "C"
     (const BL_FORT_FAB_ARG(state),
      const int lo[], const int hi[],
      const amrex::Real dx[], amrex::Real* dt, amrex::Real* comoving_a);
+ 
+#ifdef MHD
+  void fort_estdt_mhd
+    (const BL_FORT_FAB_ARG(state),
+     const BL_FORT_FAB_ARG(Bx),
+     const BL_FORT_FAB_ARG(By),
+     const BL_FORT_FAB_ARG(Bz),
+     const int lo[], const int hi[],
+     const amrex::Real dx[], amrex::Real* dt, amrex::Real* comoving_a);
+#endif 
 
   void fort_estdt_comoving_a
     (amrex::Real* old_a, amrex::Real* new_dummy_a, amrex::Real* dt, amrex::Real* change_allowed,
@@ -39,6 +49,17 @@ extern "C"
 
   void fort_get_method_params(int* HYP_GROW);
 
+#ifdef MHD
+  void fort_set_mhd_method_params
+    (const int& dm, const int& NumAdv, const int& Ndiag, const int& do_hydro,
+     const int& ppm_type, const int& ppm_ref,
+     const int& ppm_flatten_before_integrals,
+     const int& use_colglaz, const int& use_flattening,
+     const int& corner_coupling,
+     const int& version_2, const int& use_const_species,
+     const amrex::Real& gamma_in, const int& normalize_species,
+     const int& heat_cool_type, const int& inhomo_reion);
+#else  
   void fort_set_method_params
     (const int& dm, const int& NumAdv, const int& Ndiag, const int& do_hydro,
      const int& ppm_type, const int& ppm_ref,
@@ -48,7 +69,7 @@ extern "C"
      const int& version_2, const int& use_const_species,
      const amrex::Real& gamma_in, const int& normalize_species,
      const int& heat_cool_type, const int& inhomo_reion);
-
+#endif
   void fort_tabulate_rates();
 
   void filcc
@@ -85,7 +106,13 @@ extern "C"
   void fort_initdata
     (const int& level, const amrex::Real& time, const int* lo, const int* hi,
      const int& num_state, BL_FORT_FAB_ARG(state),
-     const int& num_diag,  BL_FORT_FAB_ARG(diag_eos), const amrex::Real dx[],
+     const int& num_diag,  BL_FORT_FAB_ARG(diag_eos),
+#ifdef MHD
+     const int& num_bx, BL_FORT_FAB_ARG(b_x),
+     const int& num_by, BL_FORT_FAB_ARG(b_y),
+     const int& num_bz, BL_FORT_FAB_ARG(b_z),
+#endif
+     const amrex::Real dx[],
      const amrex::Real xlo[], const amrex::Real xhi[]);
 
   void fort_init_zhi
@@ -104,6 +131,27 @@ extern "C"
   void fort_init_e_from_rhoe
      (BL_FORT_FAB_ARG(state), const int* num_state,
       const int* lo, const int* hi, amrex::Real* comoving_a);
+#ifdef MHD 
+  void fort_init_e_from_rhoe_mhd
+     (BL_FORT_FAB_ARG(state),const int* num_state,
+      BL_FORT_FAB_ARG(Bx), BL_FORT_FAB_ARG(By), BL_FORT_FAB_ARG(Bz),
+      const int* lo, const int* hi, amrex::Real* comoving_a);
+
+  void fort_mhd_enforce_consistent_e
+    (const int* lo, const int* hi, BL_FORT_FAB_ARG(state), 
+     BL_FORT_FAB_ARG(bx), BL_FORT_FAB_ARG(by), BL_FORT_FAB_ARG(state)); 
+
+  void reset_internal_e_mhd
+    (BL_FORT_FAB_ARG(S_new),
+     BL_FORT_FAB_ARG(D_new),
+     BL_FORT_FAB_ARG(b_x),
+     BL_FORT_FAB_ARG(b_y),
+     BL_FORT_FAB_ARG(b_z),
+     const int lo[], const int hi[],
+     const int* print_fortran_warnings,
+     amrex::Real* comoving_a, amrex::Real* sum_energy_added,
+     amrex::Real* sum_energy_total);
+#endif
 
   void fort_enforce_consistent_e
     (const int* lo, const int* hi, BL_FORT_FAB_ARG(state));
@@ -138,6 +186,69 @@ extern "C"
      const amrex::Real dx[], const amrex::Real glo[],
      const amrex::Real* time, const int bc[]);
 
+  void face_fillx
+    (BL_FORT_FAB_ARG(state),
+     const int dlo[], const int dhi[],
+     const amrex::Real dx[], const amrex::Real glo[],
+     const amrex::Real* time, const int bc[]);
+
+  void face_filly
+    (BL_FORT_FAB_ARG(state),
+     const int dlo[], const int dhi[],
+     const amrex::Real dx[], const amrex::Real glo[],
+     const amrex::Real* time, const int bc[]);
+
+  void face_fillz
+    (BL_FORT_FAB_ARG(state),
+     const int dlo[], const int dhi[],
+     const amrex::Real dx[], const amrex::Real glo[],
+     const amrex::Real* time, const int bc[]);
+
+
+#if MHD 
+  void fort_make_mhd_sources
+    (const amrex::Real* time, 
+     const int lo[], const int hi[], 
+     const BL_FORT_FAB_ARG(state), 
+     const BL_FORT_FAB_ARG(Bx), 
+     const BL_FORT_FAB_ARG(By), 
+     const BL_FORT_FAB_ARG(Bz), 
+     const BL_FORT_FAB_ARG(udgnvx), 
+     const BL_FORT_FAB_ARG(udgnvy), 
+     const BL_FORT_FAB_ARG(udgbvz), 
+     const BL_FORT_FAB_ARG(src), 
+           BL_FORT_FAB_ARG(hydro_src),  
+           BL_FORT_FAB_ARG(divu_cc), 
+     const BL_FORT_FAB_ARG(grav),
+     const amrex::Real dx[], const amrex::Real* dt, 
+     D_DECL(const BL_FORT_FAB_ARG(xflux),
+            const BL_FORT_FAB_ARG(yflux),
+            const BL_FORT_FAB_ARG(zflux)),
+     D_DECL(const BL_FORT_FAB_ARG(Ex),
+            const BL_FORT_FAB_ARG(Ey),
+            const BL_FORT_FAB_ARG(Ez)),
+     const amrex::Real* a_old, const amrex::Real* a_new, 
+     const int* print_fortran_warnings);
+           
+   void fort_update_mhd_state
+     ( const int lo[], const int hi[], 
+       const BL_FORT_FAB_ARG(u_in), 
+             BL_FORT_FAB_ARG(u_out),
+       const BL_FORT_FAB_ARG(Bx_in), 
+       const BL_FORT_FAB_ARG(By_in), 
+       const BL_FORT_FAB_ARG(Bz_in), 
+             BL_FORT_FAB_ARG(Bx_out), 
+             BL_FORT_FAB_ARG(By_out), 
+             BL_FORT_FAB_ARG(Bz_out), 
+       const BL_FORT_FAB_ARG(src), 
+       const BL_FORT_FAB_ARG(hydro_src), 
+       const BL_FORT_FAB_ARG(divu_cc), 
+       D_DECL(const BL_FORT_FAB_ARG(Ex), 
+              const BL_FORT_FAB_ARG(Ey),
+              const BL_FORT_FAB_ARG(Ez)), 
+       const amrex::Real* a_old, const amrex::Real* a_new, 
+       const int* print_fortran_warnings);        
+#else
   void fort_make_hydro_sources
     (const amrex::Real* time,
      const int lo[], const int hi[],
@@ -155,6 +266,8 @@ extern "C"
             const BL_FORT_FAB_ARG(zflux)),
      const amrex::Real* a_old, const amrex::Real* a_new,
      const int* print_fortran_warnings);
+#endif
+
 
   void fort_update_state
     ( const int lo[], const int hi[],
