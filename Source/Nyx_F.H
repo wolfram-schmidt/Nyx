@@ -139,7 +139,7 @@ extern "C"
 
   void fort_mhd_enforce_consistent_e
     (const int* lo, const int* hi, BL_FORT_FAB_ARG(state), 
-     BL_FORT_FAB_ARG(bx), BL_FORT_FAB_ARG(by), BL_FORT_FAB_ARG(state)); 
+     BL_FORT_FAB_ARG(bx), BL_FORT_FAB_ARG(by), BL_FORT_FAB_ARG(bz)); 
 
   void reset_internal_e_mhd
     (BL_FORT_FAB_ARG(S_new),
@@ -149,8 +149,7 @@ extern "C"
      BL_FORT_FAB_ARG(b_z),
      const int lo[], const int hi[],
      const int* print_fortran_warnings,
-     amrex::Real* comoving_a, amrex::Real* sum_energy_added,
-     amrex::Real* sum_energy_total);
+     amrex::Real* comoving_a);
 #endif
 
   void fort_enforce_consistent_e
@@ -212,7 +211,10 @@ extern "C"
      const BL_FORT_FAB_ARG(state), 
      const BL_FORT_FAB_ARG(Bx), 
      const BL_FORT_FAB_ARG(By), 
-     const BL_FORT_FAB_ARG(Bz), 
+     const BL_FORT_FAB_ARG(Bz),
+           BL_FORT_FAB_ARG(Bxout), 
+           BL_FORT_FAB_ARG(Byout), 
+           BL_FORT_FAB_ARG(Bzout),
      const BL_FORT_FAB_ARG(udgnvx), 
      const BL_FORT_FAB_ARG(udgnvy), 
      const BL_FORT_FAB_ARG(udgbvz), 
@@ -237,15 +239,16 @@ extern "C"
        const BL_FORT_FAB_ARG(Bx_in), 
        const BL_FORT_FAB_ARG(By_in), 
        const BL_FORT_FAB_ARG(Bz_in), 
-             BL_FORT_FAB_ARG(Bx_out), 
-             BL_FORT_FAB_ARG(By_out), 
-             BL_FORT_FAB_ARG(Bz_out), 
+       const BL_FORT_FAB_ARG(Bx_out), 
+       const BL_FORT_FAB_ARG(By_out), 
+       const BL_FORT_FAB_ARG(Bz_out), 
        const BL_FORT_FAB_ARG(src), 
        const BL_FORT_FAB_ARG(hydro_src), 
        const BL_FORT_FAB_ARG(divu_cc), 
        D_DECL(const BL_FORT_FAB_ARG(Ex), 
               const BL_FORT_FAB_ARG(Ey),
-              const BL_FORT_FAB_ARG(Ez)), 
+              const BL_FORT_FAB_ARG(Ez)),
+       const amrex::Real* dt, const amrex::Real dx[], 
        const amrex::Real* a_old, const amrex::Real* a_new, 
        const int* print_fortran_warnings);        
 #else
@@ -266,8 +269,6 @@ extern "C"
             const BL_FORT_FAB_ARG(zflux)),
      const amrex::Real* a_old, const amrex::Real* a_new,
      const int* print_fortran_warnings);
-#endif
-
 
   void fort_update_state
     ( const int lo[], const int hi[],
@@ -280,6 +281,7 @@ extern "C"
       const amrex::Real* a_old,
       const amrex::Real* a_new,
       const int* print_fortran_warnings);
+#endif
 
   void fort_add_grav_source
     ( const int lo[], const int hi[],

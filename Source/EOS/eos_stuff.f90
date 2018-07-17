@@ -48,7 +48,7 @@ module eos_module
   end interface
 
   interface nyx_eos_soundspeed
-    module procedure nyx_eos_soundspeed_hydro, syx_eos_soundspeed_mhd
+    module procedure nyx_eos_soundspeed_hydro, nyx_eos_soundspeed_mhd
   end interface
 
 contains

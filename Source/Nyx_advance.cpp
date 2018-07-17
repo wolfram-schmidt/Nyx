@@ -284,7 +284,7 @@ Nyx::advance_hydro_plus_particles (Real time,
 #endif
 
 #ifdef MHD //do MHD Update
-    BL_PROFILE("just_the_mhd", just_the_mhd);
+    BL_PROFILE("just_the_mhd");
     for (int lev = level; lev <= finest_level_to_advance; lev++)
     {
         get_level(lev).just_the_mhd(time, dt, a_old, a_new);
@@ -462,10 +462,21 @@ Nyx::advance_hydro_plus_particles (Real time,
     {
         MultiFab& S_new = get_level(lev).get_new_data(State_Type);
         MultiFab& D_new = get_level(lev).get_new_data(DiagEOS_Type);
+#ifdef MHD 
+        MultiFab& Bx_new = get_level(lev).get_new_data(Mag_Type_x); 
+        MultiFab& By_new = get_level(lev).get_new_data(Mag_Type_y); 
+        MultiFab& Bz_new = get_level(lev).get_new_data(Mag_Type_z); 
+#endif
         MultiFab reset_e_src(S_new.boxArray(), S_new.DistributionMap(), 1, NUM_GROW);
 	reset_e_src.setVal(0.0);
 
-	get_level(lev).reset_internal_energy(S_new,D_new,reset_e_src);
+	get_level(lev).reset_internal_energy(S_new,D_new,
+#ifdef MHD
+                                         Bx_new, 
+                                         By_new, 
+                                         Bz_new,
+#endif
+                                         reset_e_src);
 	
     }
 
@@ -531,8 +542,11 @@ Nyx::advance_mhd (Real time,
     MultiFab& Bx_new = get_new_data(Mag_Type_x);
     MultiFab& By_new = get_new_data(Mag_Type_y);
     MultiFab& Bz_new = get_new_data(Mag_Type_z);
-    reset_internal_energy(S_new,D_new, Bx_new, By_new, Bz_new);
-    compute_new_temp(S_new, D_new)
+    MultiFab reset_e_src(S_new.boxArray(), S_new.DistributionMap(), 1, NUM_GROW);
+	reset_e_src.setVal(0.0);
+
+    reset_internal_energy(S_new,D_new, Bx_new, By_new, Bz_new, reset_e_src);
+    compute_new_temp(S_new, D_new);
     return dt;
 }
 #else

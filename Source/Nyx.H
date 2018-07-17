@@ -44,6 +44,11 @@ enum StateType {
     PhiGrav_Type,
     Gravity_Type,
 #endif
+#ifdef MHD
+    Mag_Type_x, 
+    Mag_Type_y, 
+    Mag_Type_z,
+#endif
 #ifdef SDC
     SDC_IR_Type,
 #endif
@@ -387,10 +392,13 @@ public:
     virtual amrex::Real advance(amrex::Real time, amrex::Real dt, int iteration, int ncycle);
 
     amrex::Real advance_hydro(amrex::Real time, amrex::Real dt, int iteration, int ncycle);
+    amrex::Real advance_mhd(amrex::Real time, amrex::Real dt, int iteration, int ncycle); 
     amrex::Real advance_no_hydro(amrex::Real time, amrex::Real dt, int iteration, int ncycle);
     amrex::Real advance_hydro_plus_particles(amrex::Real time, amrex::Real dt, int iteration,
                                       int ncycle);
-
+#ifdef MHD
+    void just_the_mhd(amrex::Real time, amrex::Real dt, amrex::Real a_old, amrex::Real a_new);
+#endif
     void strang_hydro(amrex::Real time, amrex::Real dt, amrex::Real a_old, amrex::Real a_new);
 #ifdef SDC
     void    sdc_hydro(amrex::Real time, amrex::Real dt, amrex::Real a_old, amrex::Real a_new);
@@ -514,7 +522,11 @@ public:
     static int num_grow();
 
     // Synchronize (rho e) and (rho E) so they are consistent with each other
-    void reset_internal_energy(amrex::MultiFab& State, amrex::MultiFab& DiagEOS, amrex::MultiFab& reset_e_src);
+    void reset_internal_energy(amrex::MultiFab& State, amrex::MultiFab& DiagEOS,
+#ifdef MHD
+    amrex::MultiFab& Bx, amrex::MultiFab& By, amrex::MultiFab& Bz, 
+#endif
+         amrex::MultiFab& reset_e_src);
 
     // Note: this no longer includes the call to reset_internal_energy
     void compute_new_temp(amrex::MultiFab& S_new, amrex::MultiFab& D_new);
@@ -628,6 +640,10 @@ protected:
 
     void enforce_nonnegative_species(amrex::MultiFab& S_new);
     void enforce_consistent_e(amrex::MultiFab& S);
+#ifdef MHD
+    void enforce_mhd_consistent_e(amrex::MultiFab& S,  amrex::MultiFab& Bx, 
+                              amrex::MultiFab& By, amrex::MultiFab& Bz);
+#endif
 #endif
 
     void average_down();

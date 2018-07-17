@@ -23,6 +23,10 @@ ifeq ($(USE_SINGLE_PRECISION_PARTICLES), TRUE)
   DEFINES += -DBL_SINGLE_PRECISION_PARTICLES
 endif
 
+ifeq ($(USE_MHD), TRUE) 
+  DEFINES += -DMHD
+endif
+
 HENSON_INCLUDE_DIR ?= $(HOME)/Research/Sensei/henson-chai/include
 HENSON_LIBRARY_DIR ?= $(HOME)/Build/Sensei/henson-chai
 HENSON_LIBRARY ?= -L$(HENSON_LIBRARY_DIR) -lhenson
@@ -112,7 +116,14 @@ endif
 
 #These are the directories in Nyx 
 
-Bdirs 	:= Source Source/Src_3d Source/HydroFortran Source/Tagging Source/Initialization
+Bdirs 	:= Source Source/Src_3d Source/Tagging Source/Initialization
+
+ifeq ($(USE_MHD), TRUE)
+  Bdirs += Source/MHD
+else
+  Bdirs += Source/HydroFortran
+endif
+
 Bdirs 	+= Source/EOS Source/Network Source/HeatCool
 Bdirs 	+= Source/SourceTerms Source/DerivedQuantities
 ifeq ($(USE_MPI), TRUE)

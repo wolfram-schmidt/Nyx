@@ -58,10 +58,16 @@ Nyx::strang_second_step (Real time, Real dt, MultiFab& S_new, MultiFab& D_new)
 
     // Set a at the half of the time step in the second strang
     const Real a = get_comoving_a(time-half_dt);
-
+    MultiFab& Bx_new = get_new_data(Mag_Type_x);
+    MultiFab& By_new = get_new_data(Mag_Type_y);
+    MultiFab& Bz_new = get_new_data(Mag_Type_z);
     MultiFab reset_e_src(S_new.boxArray(), S_new.DistributionMap(), 1, NUM_GROW);
     reset_e_src.setVal(0.0);
-    reset_internal_energy(S_new,D_new,reset_e_src);
+    reset_internal_energy(S_new,D_new,
+#ifdef MHD 
+                          Bx_new, By_new, Bz_new, 
+#endif
+reset_e_src);
     compute_new_temp     (S_new,D_new);
 
 #ifndef FORCING

@@ -260,7 +260,7 @@ Nyx::hydro_setup()
                 StateDescriptor::Point, 1, 1,
                 interp, state_data_extrap, 
                 store_in_checkpoint); 
-
+#endif
 #ifdef SDC
     // This only has one component -- the update to rho_e from reactions
     store_in_checkpoint = true;

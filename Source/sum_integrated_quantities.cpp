@@ -277,11 +277,19 @@ Nyx::compute_average_temperature (Real& average_temperature)
         Nyx& nyx_lev = get_level(lev);
         MultiFab& S_new = nyx_lev.get_new_data(State_Type);
         MultiFab& D_new = nyx_lev.get_new_data(DiagEOS_Type);
-
+#ifdef MHD
+         MultiFab& Bx_new = nyx_lev.get_new_data(Mag_Type_x);
+         MultiFab& By_new = nyx_lev.get_new_data(Mag_Type_y);      
+         MultiFab& Bz_new = nyx_lev.get_new_data(Mag_Type_z);
+#endif
 	MultiFab reset_e_src(S_new.boxArray(), S_new.DistributionMap(), 1, NUM_GROW);
 	reset_e_src.setVal(0.0);
 
-        nyx_lev.reset_internal_energy(S_new,D_new,reset_e_src);
+        nyx_lev.reset_internal_energy(S_new,D_new,
+#ifdef MHD
+                                      Bx_new, By_new, Bz_new,
+#endif 
+        reset_e_src);
         nyx_lev.compute_new_temp     (S_new,D_new);
 
         average_temperature += nyx_lev.vol_weight_sum("Temp",time,true);

@@ -54,7 +54,6 @@ void
 nyx_main (int argc, char* argv[])
 {
     amrex::Initialize(argc, argv);
-
     // save the inputs file name for later
     if (argc > 1) {
       if (!strchr(argv[1], '=')) {
@@ -87,7 +86,6 @@ nyx_main (int argc, char* argv[])
     pp.query("max_step",  max_step);
     pp.query("strt_time", strt_time);
     pp.query("stop_time", stop_time);
-
     int how(-1);
     pp.query("how",how);
 
@@ -122,7 +120,6 @@ nyx_main (int argc, char* argv[])
 #endif
 
     bool finished(false);
-
     while ( ! finished) 
     {
      // If we set the regrid_on_restart flag and if we are *not* going to take

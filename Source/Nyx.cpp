@@ -1476,11 +1476,19 @@ Nyx::post_timestep (int iteration)
     {
        MultiFab& S_new = get_new_data(State_Type);
        MultiFab& D_new = get_new_data(DiagEOS_Type);
-
+#ifdef MHD
+       MultiFab& Bx_new = get_new_data(Mag_Type_x); 
+       MultiFab& By_new = get_new_data(Mag_Type_y); 
+       MultiFab& Bz_new = get_new_data(Mag_Type_z); 
+#endif 
        // First reset internal energy before call to compute_temp
        MultiFab reset_e_src(S_new.boxArray(), S_new.DistributionMap(), 1, NUM_GROW);
        reset_e_src.setVal(0.0);
-       reset_internal_energy(S_new,D_new,reset_e_src);
+       reset_internal_energy(S_new,D_new,
+#ifdef MHD 
+       Bx_new, By_new, Bz_new, 
+#endif
+       reset_e_src);
 
        // Re-compute temperature after all the other updates.
        compute_new_temp(S_new,D_new);
@@ -2246,7 +2254,11 @@ Nyx::network_init ()
 
 #ifndef NO_HYDRO
 void
-Nyx::reset_internal_energy (MultiFab& S_new, MultiFab& D_new, MultiFab& reset_e_src)
+Nyx::reset_internal_energy (MultiFab& S_new, MultiFab& D_new,
+#ifdef MHD
+                            MultiFab& Bx, MultiFab& By, MultiFab& Bz,
+#endif
+                             MultiFab& reset_e_src)
 {
     BL_PROFILE("Nyx::reset_internal_energy()");
     // Synchronize (rho e) and (rho E) so they are consistent with each other
@@ -2268,7 +2280,7 @@ Nyx::reset_internal_energy (MultiFab& S_new, MultiFab& D_new, MultiFab& reset_e_
              BL_TO_FORTRAN(By[mfi]),
              BL_TO_FORTRAN(Bz[mfi]),
              bx.loVect(), bx.hiVect(),
-             &print_fortran_warnings, &a, &s, &se);
+             &print_fortran_warnings, &a);
 
 #else
         reset_internal_e

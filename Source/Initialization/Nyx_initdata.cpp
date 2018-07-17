@@ -172,7 +172,6 @@ void
 Nyx::initData ()
 {
     BL_PROFILE("Nyx::initData()");
-
     // Here we initialize the grid data and the particles from a plotfile.
     if (!parent->theRestartPlotFile().empty())
     {
@@ -192,10 +191,10 @@ Nyx::initData ()
     MultiFab& Bx_new = get_new_data(Mag_Type_x); 
     Bx_new.setVal(0.0); 
    
-    MultiFab& By_new = get_new_data(Mag_type_y); 
+    MultiFab& By_new = get_new_data(Mag_Type_y); 
     By_new.setVal(0.0); 
      
-    MultiFab& Bz_new = get_new_data(Mag_type_z); 
+    MultiFab& Bz_new = get_new_data(Mag_Type_z); 
     Bz_new.setVal(0.0);
 #endif
 
@@ -233,7 +232,6 @@ Nyx::initData ()
             {
                 const Box& bx = mfi.tilebox();
                 RealBox gridloc = RealBox(bx, geom.CellSize(), geom.ProbLo());
-
                 fort_initdata
                     (level, cur_time, bx.loVect(), bx.hiVect(), 
                      ns, BL_TO_FORTRAN(S_new[mfi]), 
@@ -252,9 +250,19 @@ Nyx::initData ()
 	    MultiFab reset_e_src(S_new.boxArray(), S_new.DistributionMap(), 1, NUM_GROW);
 	    reset_e_src.setVal(0.0);
 
-            reset_internal_energy(S_new,D_new,reset_e_src);
+            reset_internal_energy(S_new,D_new,
+#ifdef MHD
+                                  Bx_new,
+                                  By_new, 
+                                  Bz_new, 
+#endif
+                                  reset_e_src);
             compute_new_temp     (S_new,D_new);
+#ifdef MHD 
+            enforce_mhd_consistent_e(S_new, Bx_new, By_new, Bz_new);
+#else
             enforce_consistent_e(S_new);
+#endif
         }
         else
         {

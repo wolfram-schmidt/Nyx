@@ -93,13 +93,13 @@
                             by,by_l1,by_l2,by_l3,by_h1,by_h2,by_h3, &
                             bz,bz_l1,bz_l2,bz_l3,bz_h1,bz_h2,bz_h3, &
                             lo,hi,print_fortran_warnings,&
-                            comoving_a,sum_energy_added,sum_energy_total) &
+                            comoving_a) &
                             bind(C, name="reset_internal_e_mhd")
 
       use amrex_fort_module, only : rt => amrex_real
       use eos_module
-      use meth_params_module, only : NVAR, URHO, UMX, UMY, UMZ, UEDEN, UEINT, small_temp, &
-                                     NE_COMP
+      use meth_params_module, only : NVAR, URHO, UMX, UMY, UMZ, UEDEN,& 
+                                     UEINT, small_temp, NE_COMP
       use  eos_params_module
 
       implicit none
@@ -118,8 +118,6 @@
       real(rt) :: bz(bz_l1:bz_h1,bz_l2:bz_h2,bz_l3:bz_h3)
 
       real(rt), intent(in   ) :: comoving_a
-      real(rt), intent(inout) :: sum_energy_added
-      real(rt), intent(inout) :: sum_energy_total
 
       ! Local variables
       integer          :: i,j,k
@@ -142,39 +140,9 @@
 
              rho_eint = u(i,j,k,UEDEN) - ke - mag_e
            ! Reset (e from e) if it's greater than 0.01% of big E.
-             if (rho_eint .gt. 0.d0 .and. rho_eint / u(i,j,k,UEDEN) .gt. 1.d-6) then
-                 u(i,j,k,UEINT) = rho_eint
-    
-           ! If (e from E) < 0 or (e from E) < .0001*E but (e from e) > 0.
-             else if (u(i,j,k,UEINT) .gt. 0.d0) then
+             u(i,j,k,UEINT) = rho_eint
 
-              ! Keep track of how much energy we are adding to (rho E)
-              sum_energy_added = sum_energy_added + (u(i,j,k,UEINT) + ke + mag_e - u(i,j,k,UEDEN))
-
-              u(i,j,k,UEDEN) = u(i,j,k,UEINT) + ke + mag_e
-           ! If not resetting and little e is negative ...
-             else if (u(i,j,k,UEINT) .le. 0.d0) then
-
-              call nyx_eos_given_RT(eint_new, dummy_pres, u(i,j,k,URHO), small_temp, &
-                                    d(i,j,k,NE_COMP),comoving_a)
-
-            if (print_fortran_warnings .gt. 0) then
-                 print *,'   '
-                 print *,'>>> Warning: Nyx_3d::reset_internal_energy  ',i,j,k
-                 print *,'>>> ... Resetting neg. e from EOS using small_temp: ',small_temp,&
-                         ' from ',u(i,j,k,UEINT)/u(i,j,k,URHO),' to ', eint_new
-                 call flush(6)
-              end if
-
-              u(i,j,k,UEINT) = u(i,j,k,URHO) *  eint_new
-
-              ! Keep track of how much energy we are adding to (rho E)
-              sum_energy_added = sum_energy_added + (u(i,j,k,UEINT) + ke + mag_e - u(i,j,k,UEDEN))
-
-              u(i,j,k,UEDEN) = u(i,j,k,UEINT) + ke + mag_e
-
-           end if
-           sum_energy_total = sum_energy_total + u(i,j,k,UEDEN)
+             u(i,j,k,UEDEN) = u(i,j,k,UEINT) + ke + mag_e
           enddo
         enddo
       enddo

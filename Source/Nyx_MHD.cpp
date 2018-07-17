@@ -19,7 +19,6 @@ Nyx::just_the_mhd (Real time,
                      Real a_new)
 {
     BL_PROFILE("Nyx::just_the_mhd()");
-
     const Real prev_time    = state[State_Type].prevTime();
     const Real cur_time     = state[State_Type].curTime();
     const int  finest_level = parent->finestLevel();
@@ -141,6 +140,12 @@ Nyx::just_the_mhd (Real time,
 
     MultiFab D_old_tmp(D_old.boxArray(), D_old.DistributionMap(), 2, NUM_GROW);
     FillPatch(*this, D_old_tmp, NUM_GROW, time, DiagEOS_Type, 0, 2);
+    
+    MultiFab hydro_src(grids, dmap, NUM_STATE, 0); 
+    hydro_src.setVal(0.); 
+
+    MultiFab divu_cc(grids, dmap, 1, 0); 
+    divu_cc.setVal(0.); 
 
     if (add_ext_src && strang_split) 
         strang_first_step(time,dt,S_old_tmp,D_old_tmp);
@@ -151,22 +156,20 @@ Nyx::just_the_mhd (Real time,
        {
        FArrayBox flux[BL_SPACEDIM], u_gdnv[BL_SPACEDIM], E[BL_SPACEDIM];
        Real cflLoc = -1.e+200;
-	//for (MFIter mfi(S_old_tmp,false); mfi.isValid(); ++mfi)
        for (MFIter mfi(S_old_tmp,true); mfi.isValid(); ++mfi)
        {
-        const Box& bx        = mfi.tilebox();
+            const Box& bx        = mfi.tilebox();
 
-        FArrayBox& state     = S_old_tmp[mfi];
-        FArrayBox& dstate    = D_old_tmp[mfi];
-        FArrayBox& stateout  = S_new[mfi];
+            FArrayBox& state     = S_old_tmp[mfi];
+            FArrayBox& dstate    = D_old_tmp[mfi];
 
-	FArrayBox& Bx		 = Bx_old_tmp[mfi];
-	FArrayBox& By		 = By_old_tmp[mfi];
-	FArrayBox& Bz		 = Bz_old_tmp[mfi];
+            FArrayBox& Bx		 = Bx_old_tmp[mfi];
+            FArrayBox& By		 = By_old_tmp[mfi];
+            FArrayBox& Bz		 = Bz_old_tmp[mfi];
 
-	FArrayBox& Bxout	 = Bx_new[mfi];
-	FArrayBox& Byout	 = By_new[mfi];
-	FArrayBox& Bzout	 = Bz_new[mfi];		
+            FArrayBox& Bxout	 = Bx_new[mfi];
+            FArrayBox& Byout	 = By_new[mfi];
+            FArrayBox& Bzout	 = Bz_new[mfi];		
 
 #ifdef SHEAR_IMPROVED
         FArrayBox& am_tmp = AveMom_tmp[mfi];
@@ -184,7 +187,7 @@ Nyx::just_the_mhd (Real time,
             u_gdnv[i].setVal(1.e200);
         }
 
-        fort_advance_mhd
+/*        fort_advance_mhd
             (&time, bx.loVect(), bx.hiVect(), 
              BL_TO_FORTRAN(state),
              BL_TO_FORTRAN(stateout),
@@ -206,8 +209,35 @@ Nyx::just_the_mhd (Real time,
              BL_TO_FORTRAN(E[0]),
              BL_TO_FORTRAN(E[1]),
              BL_TO_FORTRAN(E[2]),
-             &cflLoc, &a_old, &a_new, &se, &ske, &print_fortran_warnings, &do_grav);
+             &cflLoc, &a_old, &a_new, &se, &ske, &print_fortran_warnings, &do_grav); */ 
 // Needs to change to the new make_mhd_sources + update_mhd_state
+            fort_make_mhd_sources
+              (&time, bx.loVect(), bx.hiVect(), 
+                BL_TO_FORTRAN(state), 
+                BL_TO_FORTRAN(Bx), 
+                BL_TO_FORTRAN(By), 
+                BL_TO_FORTRAN(Bz),
+                BL_TO_FORTRAN(Bxout),
+                BL_TO_FORTRAN(Byout),
+                BL_TO_FORTRAN(Bzout),
+                BL_TO_FORTRAN(u_gdnv[0]), 
+                BL_TO_FORTRAN(u_gdnv[1]), 
+                BL_TO_FORTRAN(u_gdnv[2]), 
+                BL_TO_FORTRAN(ext_src_old[mfi]), 
+                BL_TO_FORTRAN(hydro_src[mfi]), 
+                BL_TO_FORTRAN(divu_cc[mfi]), 
+                BL_TO_FORTRAN(grav_vector[mfi]), 
+                dx, &dt, 
+                BL_TO_FORTRAN(flux[0]), 
+                BL_TO_FORTRAN(flux[1]), 
+                BL_TO_FORTRAN(flux[2]), 
+                BL_TO_FORTRAN(E[0]), 
+                BL_TO_FORTRAN(E[1]), 
+                BL_TO_FORTRAN(E[2]), 
+                &a_old, &a_new, &print_fortran_warnings);
+
+                               
+                
 
         for (int i = 0; i < BL_SPACEDIM; ++i) {
            fluxes[i][mfi].copy(flux[i], mfi.nodaltilebox(i));
@@ -217,9 +247,57 @@ Nyx::just_the_mhd (Real time,
          e_added += se;
         ke_added += ske;
        } // end of MFIter loop
-
 #ifdef _OPENMP
-#pragma omp critical (hydro_courno)
+#pragma omp parallel 
+#endif 
+    {
+       FArrayBox flux[BL_SPACEDIM], u_gdnv[BL_SPACEDIM], E[BL_SPACEDIM];
+       Real cflLoc = -1.e+200;
+       for (MFIter mfi(S_old_tmp,true); mfi.isValid(); ++mfi)
+       {
+            const Box& bx        = mfi.tilebox();
+
+            FArrayBox& state     = S_old_tmp[mfi];
+            FArrayBox& dstate    = D_old_tmp[mfi];
+            FArrayBox& stateout  = S_new[mfi];
+
+            FArrayBox& Bx		 = Bx_old_tmp[mfi];
+            FArrayBox& By		 = By_old_tmp[mfi];
+            FArrayBox& Bz		 = Bz_old_tmp[mfi];
+
+            FArrayBox& Bxout	 = Bx_new[mfi];
+            FArrayBox& Byout	 = By_new[mfi];
+            FArrayBox& Bzout	 = Bz_new[mfi];		
+
+#ifdef SHEAR_IMPROVED
+        FArrayBox& am_tmp = AveMom_tmp[mfi];
+#endif
+
+        Real se  = 0;
+        Real ske = 0;
+
+            fort_update_mhd_state
+              (bx.loVect(), bx.hiVect(), 
+               BL_TO_FORTRAN(state), 
+               BL_TO_FORTRAN(stateout), 
+               BL_TO_FORTRAN(Bx), 
+               BL_TO_FORTRAN(By), 
+               BL_TO_FORTRAN(Bz), 
+               BL_TO_FORTRAN(Bxout), 
+               BL_TO_FORTRAN(Byout), 
+               BL_TO_FORTRAN(Bzout), 
+               BL_TO_FORTRAN(ext_src_old[mfi]), 
+               BL_TO_FORTRAN(hydro_src[mfi]), 
+               BL_TO_FORTRAN(divu_cc[mfi]), 
+               BL_TO_FORTRAN(electric[0][mfi]), 
+               BL_TO_FORTRAN(electric[1][mfi]), 
+               BL_TO_FORTRAN(electric[2][mfi]),
+               &dt, dx, &a_old, &a_new,
+               &print_fortran_warnings); 
+       }
+    }
+#ifdef _OPENMP
+#pragma omp critical (courno)
 #endif
        {
         courno = std::max(courno, cflLoc);
@@ -307,12 +385,12 @@ Nyx::just_the_mhd (Real time,
     }
 #endif
 
-    if (add_ext_src && !strang_split)
+/*    if (add_ext_src && !strang_split)
     {
         get_old_source(prev_time, dt, ext_src_old);
         // Must compute new temperature in case it is needed in the source term
         // evaluation
-        compute_new_temp();
+        compute_new_temp(S_new, D_new);
 
         // Compute source at new time (no ghost cells needed)
         MultiFab ext_src_new(grids, dmap, NUM_STATE, 0);
@@ -322,7 +400,7 @@ Nyx::just_the_mhd (Real time,
 
         time_center_source_terms(S_new, ext_src_old, ext_src_new, dt);
 
-        compute_new_temp();
+        compute_new_temp(S_new, D_new);
     } // end if (add_ext_src && !strang_split)
 
 #ifndef NDEBUG
@@ -338,5 +416,6 @@ Nyx::just_the_mhd (Real time,
     if (S_new.contains_nan(Density, S_new.nComp(), 0))
         amrex::Abort("S_new has NaNs after the second strang call");
 #endif
+*/
 }
 #endif
