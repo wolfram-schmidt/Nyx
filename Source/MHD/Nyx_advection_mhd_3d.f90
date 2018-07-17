@@ -1,7 +1,10 @@
-
 ! :::
 ! ::: ----------------------------------------------------------------
 ! :::
+
+!fort_make_mhd_sources generates the magnetohydrodynamical fluxes and combines them with Source 
+!terms (TODO) 
+!Currently Computes Fluxes combines them into "hydro_src" and computes Electric Fields 
   subroutine fort_make_mhd_sources(time, lo, hi &
            uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
            bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
@@ -95,7 +98,7 @@
       real(rt), pointer :: cy(:,:,:)
       real(rt), pointer :: cz(:,:,:)
       real(rt), pointer :: csml(:,:,:)
-  	  real(rt), pointer :: flatn(:,:,:)
+      real(rt), pointer :: flatn(:,:,:)
       real(rt), pointer :: srcQ(:,:,:,:)
 
       real(rt), allocatable :: flxx(:,:,:,:)
@@ -113,7 +116,7 @@
       integer ngq,ngf
       integer q_l1, q_l2, q_l3, q_h1, q_h2, q_h3
       integer srcq_l1, srcq_l2, srcq_l3, srcq_h1, srcq_h2, srcq_h3
-      integer 	:: i,j,k
+      integer :: i,j,k
     
       ngq = NHYP
       ngf = 1
@@ -134,7 +137,6 @@
       uout(lo(1)-1:hi(1)+1,lo(2)-1:hi(2)+1,lo(3)-1:hi(3)+1,:) = uin(lo(1)-1:hi(1)+1,lo(2)-1:hi(2)+1,lo(3)-1:hi(3)+1,:)
 
       call bl_allocate(     q, lo-NHYP, hi+NHYP, QVAR)
-      call bl_allocate(   bcc, lo-NHYP, hi+NHYP, 3   )
       call bl_allocate( flatn, lo-NHYP, hi+NHYP      )
       call bl_allocate(    cx, lo-NHYP, hi+NHYP      )
       call bl_allocate(    cy, lo-NHYP, hi+NHYP      )
@@ -226,7 +228,7 @@
       flxz = 0.d0
 
 !Step Three, Corner Couple and find the correct fluxes + electric fields
-      call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &	
+      call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &
                  flxx,flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
                  flxy,flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
                  flxz,flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
@@ -258,15 +260,14 @@
 
 ! We are done with these here so can go ahead and free up the space
      call bl_deallocate(q)
-     call bl_deallocate(bcc)
      call bl_deallocate(flatn)
      call bl_deallocate(cx)
      call bl_deallocate(cy)
      call bl_deallocate(cz)
      call bl_deallocate(csml)
-!      call bl_deallocate(div)
+!    call bl_deallocate(div)
      call bl_deallocate(srcQ)
-!     call bl_deallocate(pdivu)
+!    call bl_deallocate(pdivu)
 
      deallocate(qm)
      deallocate(qp)
@@ -292,6 +293,7 @@
                   Ez        , ez_l1   , ez_l2   , ez_l3   , ez_h1   , ez_h2   , ez_h3   , &
                   a_old     , a_new   , print_fortran_warnings) &
                   bind(c, name='fort_update_mhd_state')
+
 !--------------------- Dependencies ------------------------------------------------
       use amrex_fort_module, only : rt => amrex_real
       use mempool_module, only : bl_allocate, bl_deallocate
@@ -300,7 +302,6 @@
       use meth_params_module!, only : QVAR, NTHERM, NHYP, normalize_species, NVAR, URHO, UEDEN
       use enforce_module, only : enforce_nonnegative_species
       use bl_constants_module
-
       implicit none
 
 !-------------------- Variables -----------------------------------------------------
@@ -1246,3 +1247,27 @@ end subroutine fort_advance_mhd
     enddo
   enddo
   end subroutine enercorr
+
+  subroutine  flux_combo(uin, uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
+                      hydro_src, hsrc_l1, hsrc_l2, hsrc_l3, hsrc_h1, hsrc_h2, hsrc_h3, &
+                      flux1, flux1_l1, flux1_l2, flux1_l3, flux1_h1, flux1_h2, flux1_h3, &
+                      flux2, flux1_l1, flux1_l2, flux1_l3, flux1_h1, flux1_h2, flux1_h3, &
+                      flux3, flux1_l1, flux1_l2, flux1_l3, flux1_h1, flux1_h2, flux1_h3, &
+                      divu_nd, divu_cc, lo, hi, dx, dy, dz, dt, a_old, a_new)                  
+
+       use amrex_fort_module, only : rt => amrex_real 
+       use meth_params_module 
+
+  implicit none 
+  integer, intent(in   ) :: uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3
+  integer, intent(in   ) :: flux1_l1, flux1_l2, flux1_l3, flux1_h1, flux1_h2, flux1_h3
+  integer, intent(in   ) :: flux2_l1, flux2_l2, flux2_l3, flux2_h1, flux2_h2, flux2_h3
+  integer, intent(in   ) :: flux3_l1, flux3_l2, flux3_l3, flux3_h1, flux3_h2, flux3_h3 
+  integer, intent(in   ) :: lo(3), hi(3) 
+
+  real(rt), intent(in  ) :: uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3, NVAR)
+  real(rt), intent(in  ) :: flux
+  end subroutine flux_combo
+
+
+
