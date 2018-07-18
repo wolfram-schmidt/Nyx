@@ -234,7 +234,7 @@ Nyx::just_the_mhd (Real time,
                 BL_TO_FORTRAN(E[0]), 
                 BL_TO_FORTRAN(E[1]), 
                 BL_TO_FORTRAN(E[2]), 
-                &a_old, &a_new, &print_fortran_warnings);
+                &cflLoc, &a_old, &a_new, &print_fortran_warnings);
 
                                
                 
@@ -272,28 +272,18 @@ Nyx::just_the_mhd (Real time,
 #ifdef SHEAR_IMPROVED
         FArrayBox& am_tmp = AveMom_tmp[mfi];
 #endif
-
-        Real se  = 0;
-        Real ske = 0;
-
             fort_update_mhd_state
               (bx.loVect(), bx.hiVect(), 
                BL_TO_FORTRAN(state), 
                BL_TO_FORTRAN(stateout), 
-               BL_TO_FORTRAN(Bx), 
-               BL_TO_FORTRAN(By), 
-               BL_TO_FORTRAN(Bz), 
                BL_TO_FORTRAN(Bxout), 
                BL_TO_FORTRAN(Byout), 
                BL_TO_FORTRAN(Bzout), 
                BL_TO_FORTRAN(ext_src_old[mfi]), 
                BL_TO_FORTRAN(hydro_src[mfi]), 
                BL_TO_FORTRAN(divu_cc[mfi]), 
-               BL_TO_FORTRAN(electric[0][mfi]), 
-               BL_TO_FORTRAN(electric[1][mfi]), 
-               BL_TO_FORTRAN(electric[2][mfi]),
                &dt, dx, &a_old, &a_new,
-               &print_fortran_warnings); 
+               &print_fortran_warnings);
        }
     }
 #ifdef _OPENMP
@@ -385,7 +375,7 @@ Nyx::just_the_mhd (Real time,
     }
 #endif
 
-/*    if (add_ext_src && !strang_split)
+    if (add_ext_src && !strang_split)
     {
         get_old_source(prev_time, dt, ext_src_old);
         // Must compute new temperature in case it is needed in the source term
@@ -416,6 +406,6 @@ Nyx::just_the_mhd (Real time,
     if (S_new.contains_nan(Density, S_new.nComp(), 0))
         amrex::Abort("S_new has NaNs after the second strang call");
 #endif
-*/
+
 }
 #endif

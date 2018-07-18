@@ -27,7 +27,7 @@
            Ex,ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3, &
            Ey,ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3, &
            Ez,ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3, &
-           a_old,a_new,print_fortran_warnings) &
+           courno, a_old,a_new,print_fortran_warnings) &
            bind(C, name="fort_make_mhd_sources")
         
  !--------------------- Dependencies ------------------------------------------------
@@ -88,9 +88,8 @@
       real(rt), intent(inout) ::  Ey(ey_l1:ey_h1,ey_l2:ey_h2,ey_l3:ey_h3)
       real(rt), intent(inout) ::  Ez(ez_l1:ez_h1,ez_l2:ez_h2,ez_l3:ez_h3)
 
-      real(rt)  delta(3),dt,time
+      real(rt)  delta(3),dt,time, courno
       real(rt)  a_old, a_new
-      real(rt)  e_added,ke_added
 
       integer flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3
       integer flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3
@@ -125,7 +124,10 @@
       integer q_l1, q_l2, q_l3, q_h1, q_h2, q_h3
       integer srcq_l1, srcq_l2, srcq_l3, srcq_h1, srcq_h2, srcq_h3
       integer :: i,j,k
-    
+      real(rt), pointer :: bcc(:,:,:,:)
+
+      call amrex_allocate(bcc, lo-NHYP, hi+NHYP, 3)
+   
       ngq = NHYP
       ngf = 1
       q_l1 = lo(1)-NHYP
@@ -209,7 +211,7 @@
       dy = delta(2)
       dz = delta(3)
 
-!Step One, Calculate Primitives based on conservatives
+!Calculate Primitives based on conservatives
       call ctoprim(lo,hi,uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3,&
                 bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
                 byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
@@ -218,21 +220,33 @@
                 src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                 srcQ, srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
                 grav,gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
-                dx,dy,dz,dt,ngq,ngf,a_old,a_new)
+                courno, dx,dy,dz,dt,ngq,ngf,a_old,a_new)
 
-!Step Two, Interpolate Cell centered values to faces
+!Generate Cell Centered Magnetic Fields for Energy Correction 
+!gen_bcc creates the cell centered Magnetic Fields at the current time step, to be updated in flux_ener_corr 
+      call gen_bcc(lo, hi, bcc, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, &
+                   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
+                   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
+                   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3)
+
+!Interpolate Cell centered values to faces
       call plm(lo, hi, q, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3,&
                bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
                byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
                bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3, &
                qp, qm, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, dx, dy, dz, dt, a_old)
-
+!      qm(:,:,:,:,1) = q
+!      qp(:,:,:,:,1) = q
+!      qm(:,:,:,:,2) = q
+!      qp(:,:,:,:,2) = q
+!      qm(:,:,:,:,3) = q
+!      qp(:,:,:,:,3) = q
 
       flxx = 0.d0
       flxy = 0.d0
       flxz = 0.d0
 
-!Step Three, Corner Couple and find the correct fluxes + electric fields
+!Corner Couple and find the correct fluxes + electric fields
       call corner_transport( q, qm, qp, q_l1 , q_l2 , q_l3 , q_h1 , q_h2 , q_h3, &
                  flxx,flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
                  flxy,flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
@@ -277,6 +291,17 @@
                       divu_cc, d_l1, d_l2, d_l3, d_h1, d_h2, d_h3, lo, hi, & 
                       dx, dy, dz, dt, a_old, a_new)                  
 
+! Removes the non-solenoidal contribution to the total energy flux
+    call flux_ener_corr(hydro_src, hsrc_l1, hsrc_l2, hsrc_l3, hsrc_h1, hsrc_h2, hsrc_h3, & 
+                        bcc, q_l1, q_l2, q_l3, q_h1, q_h2, q_h3, & 
+                        flxx,flxx_l1,flxx_l2,flxx_l3,flxx_h1,flxx_h2,flxx_h3, &
+                        flxy,flxy_l1,flxy_l2,flxy_l3,flxy_h1,flxy_h2,flxy_h3, &
+                        flxz,flxz_l1,flxz_l2,flxz_l3,flxz_h1,flxz_h2,flxz_h3, &
+                        bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
+                        byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
+                        bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
+                        lo, hi, dx, dy, dz, dt, a_old, a_new)
+         
 ! We are done with these here so can go ahead and free up the space
      call amrex_deallocate(q)
      call amrex_deallocate(flatn)
@@ -284,6 +309,7 @@
      call amrex_deallocate(cy)
      call amrex_deallocate(cz)
      call amrex_deallocate(csml)
+     call amrex_deallocate(bcc)
 !    call bl_deallocate(div)
      call amrex_deallocate(srcQ)
 !    call bl_deallocate(pdivu)
@@ -296,28 +322,21 @@
 
   end subroutine fort_make_mhd_sources
 
+!Updates Hydrodynamical Variables with corrected "hydro_sources" notably fluxes
   subroutine fort_update_mhd_state (lo, hi, uin, uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
                   uout      , uout_l1 , uout_l2 , uout_l3 , uout_h1 , uout_h2 , uout_h3 , &
-                  bxin      , bxin_l1 , bxin_l2 , bxin_l3 , bxin_h1 , bxin_h2 , bxin_h3 , & 
-                  byin      , byin_l1 , byin_l2 , byin_l3 , byin_h1 , byin_h2 , byin_h3 , & 
-                  bzin      , bzin_l1 , bzin_l2 , bzin_l3 , bzin_h1 , bzin_h2 , bzin_h3 , & 
                   bxout     , bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
                   byout     , byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
                   bzout     , bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
                   src       , src_l1  , src_l2  , src_l3  , src_h1  , src_h2  , src_h3  , &
                   hydro_src , hsrc_l1 , hsrc_l2 , hsrc_l3 , hsrc_h1 , hsrc_h2 , hsrc_h3 , & 
                   divu_cc   , d_l1    , d_l2    , d_l3    , d_h1    , d_h2    , d_h3    , &
-                  Ex        , ex_l1   , ex_l2   , ex_l3   , ex_h1   , ex_h2   , ex_h3   , &
-                  Ey        , ey_l1   , ey_l2   , ey_l3   , ey_h1   , ey_h2   , ey_h3   , &
-                  Ez        , ez_l1   , ez_l2   , ez_l3   , ez_h1   , ez_h2   , ez_h3   , &
                   dt        , dx      , dy      , dz      ,a_old    , a_new   , print_fortran_warnings) &
                   bind(c, name='fort_update_mhd_state')
 
 !--------------------- Dependencies ------------------------------------------------
       use amrex_fort_module, only : rt => amrex_real
       use amrex_mempool_module, only : amrex_allocate, amrex_deallocate
-      use ct_upwind, only : corner_transport, checkisnan
-      use mhd_plm_module, only : plm
       use meth_params_module!, only : QVAR, NTHERM, NHYP, normalize_species, NVAR, URHO, UEDEN
       use enforce_module, only : enforce_nonnegative_species
       use bl_constants_module
@@ -328,84 +347,43 @@
       integer lo(3),hi(3),print_fortran_warnings
       integer uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3
       integer uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3
-      integer bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3
-      integer byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3
-      integer bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3
-      integer bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
-      integer byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
-      integer bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
-      integer ex_l1,ex_l2,ex_l3,ex_h1,ex_h2,ex_h3
-      integer ey_l1,ey_l2,ey_l3,ey_h1,ey_h2,ey_h3
-      integer ez_l1,ez_l2,ez_l3,ez_h1,ez_h2,ez_h3
       integer src_l1,src_l2,src_l3,src_h1,src_h2,src_h3
       integer hsrc_l1, hsrc_l2, hsrc_l3, hsrc_h1, hsrc_h2, hsrc_h3
       integer d_l1, d_l2, d_l3, d_h1, d_h2, d_h3
+      integer bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
+      integer byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
+      integer bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
+
 
       real(rt)  uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3,  NVAR)
       real(rt)  uout(uout_l1:uout_h1, uout_l2:uout_h2, uout_l3:uout_h3, NVAR)
-      real(rt)  bxin(bxin_l1:bxin_h1, bxin_l2:bxin_h2, bxin_l3:bxin_h3)
-      real(rt)  bxout(bxout_l1:bxout_h1, bxout_l2:bxout_h2, bxout_l3:bxout_h3)
-      real(rt)  byin(byin_l1:byin_h1, byin_l2:byin_h2, byin_l3:byin_h3)
-      real(rt)  byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
-      real(rt)  bzin(bzin_l1:bzin_h1, bzin_l2:bzin_h2, bzin_l3:bzin_h3)
-      real(rt)  bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
       real(rt)  src(src_l1:src_h1, src_l2:src_h2, src_l3:src_h3, NTHERM)
-
-      real(rt)  Ex(ex_l1:ex_h1,ex_l2:ex_h2,ex_l3:ex_h3)
-      real(rt)  Ey(ey_l1:ey_h1,ey_l2:ey_h2,ey_l3:ey_h3)
-      real(rt)  Ez(ez_l1:ez_h1,ez_l2:ez_h2,ez_l3:ez_h3)
+      real(rt)  bxout(bxout_l1:bxout_h1, bxout_l2:bxout_h2, bxout_l3:bxout_h3)
+      real(rt)  byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
+      real(rt)  bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
 
       real(rt)  hydro_src(hsrc_l1:hsrc_h1, hsrc_l2:hsrc_h2, hsrc_l3:hsrc_h3, NVAR)
       real(rt)  divu_cc(d_l1:d_h1, d_l2:d_h2, d_l3:d_h3)
  
-      real(rt)  dt, a_old, a_new, dx, dy, dz 
-
-      real(rt), pointer :: bcc(:,:,:,:)
-      integer           :: bcc_l1, bcc_l2, bcc_l3, bcc_h1, bcc_h2, bcc_h3 
-
-      call amrex_allocate(bcc, lo-NHYP, hi+NHYP, 3)
-      bcc_l1 = lo(1)-NHYP
-      bcc_l2 = lo(2)-NHYP
-      bcc_l3 = lo(3)-NHYP
-      bcc_h1 = hi(1)+NHYP
-      bcc_h2 = hi(2)+NHYP 
-      bcc_h3 = hi(3)+NHYP 
-
-!Generate Cell Centered Magnetic Fields for Energy Correction 
-!gen_bcc creates the cell centered Magnetic Fields at the current time step, to be updated in consup
-      call gen_bcc(lo, hi, bcc, bcc_l1, bcc_l2, bcc_l3, bcc_h1, bcc_h2, bcc_h3, &
-                   bxin, bxin_l1, bxin_l2, bxin_l3, bxin_h1, bxin_h2, bxin_h3, &
-                   byin, byin_l1, byin_l2, byin_l3, byin_h1, byin_h2, byin_h3, &
-                   bzin, bzin_l1, bzin_l2, bzin_l3, bzin_h1, bzin_h2, bzin_h3)
-
+      real(rt)  dt, a_old, a_new, dx, dy, dz, i, j, k 
+    
 !Conservative update
       call consup(uin,  uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
                   uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-                  bcc, bcc_l1,  bcc_l2, bcc_l3,  bcc_h1,  bcc_h2, bcc_h3, &
-                  hydro_src, hsrc_l1, hsrc_l2, hsrc_l3, hsrc_h1, hsrc_h2, hsrc_h3, & 
+                  bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
+                  byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
+                  bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
+                  hydro_src, hsrc_l1, hsrc_l2, hsrc_l3, hsrc_h1, hsrc_h2, hsrc_h3, &
                   lo ,hi , dt ,a_old ,a_new)
-
-
-!Engergy Correction, used the cc mag fields to subrtact the non-solendoidal contribution to the total energy 
-!Whilst adding the solendoidal magnetic energy to the total energy
-     call enercorr(bcc, bcc_l1, bcc_l2, bcc_l3, bcc_h1, bcc_h2, bcc_h3, & 
-                   bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
-                   byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
-                   bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
-                   uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-                   lo, hi)
-
-
-     call amrex_deallocate(bcc)
-
-
+      
+              
 ! Enforce the density >= small_dens.  Make sure we do this immediately after updates.
     call enforce_minimum_density(uin, uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
-                                        uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-                                        bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
-                                        byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
-                                        bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
-                                        lo,hi,print_fortran_warnings)
+                                 uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
+                                 bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
+                                 byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
+                                 bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
+                                 lo,hi,print_fortran_warnings)
 !      if (do_grav .gt. 0)  then
 !          call add_grav_source(uin,uin_l1,uin_l2,uin_l3,uin_h1,uin_h2,uin_h3, &
 !                               uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
@@ -432,7 +410,7 @@
                          src,  src_l1, src_l2, src_l3, src_h1, src_h2, src_h3, &
                          srcQ,srcq_l1,srcq_l2,srcq_l3,srcq_h1,srcq_h2,srcq_h3, &
                          grav,gv_l1, gv_l2, gv_l3, gv_h1, gv_h2, gv_h3, &
-                         dx,dy,dz,dt,ngp,ngf,a_old,a_new)
+                         courno, dx,dy,dz,dt,ngp,ngf,a_old,a_new)
       !
       !     Will give primitive variables on lo-ngp:hi+ngp, and flatn on lo-ngf:hi+ngf
       !     if use_flattening=1.  Declared dimensions of q,c,csml,flatn are given
@@ -476,7 +454,7 @@
       real(rt) :: src( src_l1: src_h1, src_l2: src_h2, src_l3: src_h3,NTHERM)
       real(rt) :: srcQ(srcq_l1:srcq_h1,srcq_l2:srcq_h2,srcq_l3:srcq_h3,QVAR)
       real(rt) :: grav( gv_l1: gv_h1, gv_l2: gv_h2, gv_l3: gv_h3,3)
-      real(rt) :: dx, dy, dz, dt, a_old, a_new
+      real(rt) :: dx, dy, dz, dt, courno, a_old, a_new
       real(rt) :: dpdr, dpde
 
       integer          :: i, j, k
@@ -672,6 +650,33 @@
    !         enddo
    !      enddo
    !   enddo
+
+      ! Compute running max of Courant number over grids
+      courmx = courno
+      courmy = courno
+      courmz = courno
+
+      dtdxaold = dt / dx / a_old
+      dtdyaold = dt / dy / a_old
+      dtdzaold = dt / dz / a_old
+
+      do k = lo(3),hi(3)
+         do j = lo(2),hi(2)
+            do i = lo(1),hi(1)
+
+               courx = ( cx(i,j,k)+abs(q(i,j,k,QU)) ) * dtdxaold
+               coury = ( cy(i,j,k)+abs(q(i,j,k,QV)) ) * dtdyaold
+               courz = ( cz(i,j,k)+abs(q(i,j,k,QW)) ) * dtdzaold
+
+               courmx = max( courmx, courx )
+               courmy = max( courmy, coury )
+               courmz = max( courmz, courz )
+
+            enddo
+         enddo
+      enddo
+      courno = max( courmx, courmy, courmz )
+
       end subroutine ctoprim
 ! :::
 ! ::: ========================== Conservative Update ===============================================================
@@ -679,44 +684,60 @@
 
       subroutine consup(uin, uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
                         uout,uout_l1,uout_l2,uout_l3,uout_h1,uout_h2,uout_h3, &
-                        bcc, bcc_l1, bcc_l2, bcc_l3, bcc_h1, bcc_h2, bcc_h3, &
+                        bx, bx_l1, bx_l2, bx_l3, bx_h1, bx_h2, bx_h3, &
+                        by, by_l1, by_l2, by_l3, by_h1, by_h2, by_h3, &
+                        bz, bz_l1, bz_l2, bz_l3, bz_h1, bz_h2, bz_h3, &
                         hydro_src ,  hsrc_l1, hsrc_l2, hsrc_l3, hsrc_h1, hsrc_h2, hsrc_h3, &
                         lo,hi,dt,a_old,a_new)
 
        use amrex_fort_module, only : rt => amrex_real
-       use meth_params_module!, only : QVAR, UMX,UMY,UMZ, NVAR, URHO, UEDEN, UEINT
+       use meth_params_module, only : NVAR, URHO, UMX, UMY, UMZ, UEINT, UEDEN
 
       implicit none
 
       integer,  intent(in)    :: uin_l1,  uin_l2,  uin_l3,  uin_h1,  uin_h2,  uin_h3
-      integer,  intent(in)    :: bcc_l1,  bcc_l2,  bcc_l3,  bcc_h1,  bcc_h2,  bcc_h3
+      integer,  intent(in)    :: bx_l1,  bx_l2,  bx_l3,  bx_h1,  bx_h2,  bx_h3
+      integer,  intent(in)    :: by_l1,  by_l2,  by_l3,  by_h1,  by_h2,  by_h3 
+      integer,  intent(in)    :: bz_l1,  bz_l2,  bz_l3,  bz_h1,  bz_h2,  bz_h3
       integer,  intent(in)    :: uout_l1, uout_l2, uout_l3, uout_h1, uout_h2, uout_h3
       integer,  intent(in)    :: hsrc_l1, hsrc_l2, hsrc_l3, hsrc_h1, hsrc_h2, hsrc_h3
       integer,  intent(in)    :: lo(3), hi(3)
 
-  	  real(rt), intent(in)    :: uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3, NVAR)
-      real(rt), intent(inout) :: bcc(bcc_l1:bcc_h1, bcc_l2:bcc_h2, bcc_l3:bcc_h3, 3)
-  	  real(rt), intent(in)    :: hydro_src(hsrc_l1:hsrc_h1,hsrc_l2:hsrc_h2,hsrc_l3:hsrc_h3, NVAR)
-  	  real(rt), intent(in)    :: dt,a_old, a_new 
-  	  real(rt), intent(out)   :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
+      real(rt), intent(in)    :: uin(uin_l1:uin_h1, uin_l2:uin_h2, uin_l3:uin_h3, NVAR)
+      real(rt), intent(in)    :: hydro_src(hsrc_l1:hsrc_h1,hsrc_l2:hsrc_h2,hsrc_l3:hsrc_h3, NVAR)
+      real(rt), intent(in)    :: bx(bx_l1:bx_h1,bx_l2:bx_h2,bx_l3:bx_h3)
+      real(rt), intent(in)    :: by(by_l1:by_h1,by_l2:by_h2,by_l3:by_h3)
+      real(rt), intent(in)    :: bz(bz_l1:bz_h1,bz_l2:bz_h2,bz_l3:bz_h3)
+      real(rt), intent(in)    :: dt,a_old, a_new 
+      real(rt), intent(out)   :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
+     
 
       integer                 :: i, j, k, n
+      real(rt)                :: u, v, w, rhoinv, bcx, bcy, bcz
       do n = 1, NVAR
         do k = lo(3), hi(3)
           do j = lo(2), hi(2)
             do i = lo(1), hi(1)
- !Godunov Updated Cell-Centered Magnetic Field. Used for energy correction. --NOT SOLENOIDAL!-- 
-              if(n.eq.UMAGX) then 
-                 bcc(i,j,k,1) = bcc(i,j,k,1) - dt*(hydro_src(i,j,k,n))
-              elseif(n.eq.UMAGY) then 
-                 bcc(i,j,k,2) = bcc(i,j,k,2) - dt*(hydro_src(i,j,k,n))
-              elseif(n.eq.UMAGZ) then 
-                 bcc(i,j,k,3) = bcc(i,j,k,3) - dt*(hydro_src(i,j,k,n))
-              endif
-              uout(i,j,k,n) = uin(i,j,k,n) - dt*(hydro_src(i,j,k,n))
+              uout(i,j,k,n) = uin(i,j,k,n) + dt*(hydro_src(i,j,k,n))
             enddo
           enddo
         enddo
+      enddo
+      
+!Generate UEINT from UEDEN, other sources TODO 
+      do k = lo(3), hi(3)
+         do j = lo(2), hi(2)
+            do i = lo(1), hi(1)
+              rhoinv = 1.d0/uout(i,j,k,URHO)
+              u = uout(i,j,k,UMX)*rhoinv
+              v = uout(i,j,k,UMY)*rhoinv
+              w = uout(i,j,k,UMZ)*rhoInv 
+              bcx = 0.5d0*(bx(i,j,k) + bx(i+1,j,k))
+              bcy = 0.5d0*(by(i,j,k) + by(i,j+1,k))
+              bcz = 0.5d0*(bz(i,j,k) + bz(i,j,k+1)) 
+              uout(i,j,k,UEINT) = uout(i,j,k,UEDEN) - 0.5d0*(u*u + v*v + w*w)*uout(i,j,k,URHO) - 0.5d0*(bcx*bcx + bcy*bcy + bcz*bcz)
+            enddo
+         enddo
       enddo
       end subroutine consup
 
@@ -806,57 +827,74 @@
 ! ::: ========================== Energy Correction ===========================================================
 ! ::: 
 
-  subroutine enercorr(bcc , bcc_l1, bcc_l2, bcc_l3, bcc_h1, bcc_h2, bcc_h3, &
+  subroutine flux_ener_corr(hydro_src, hsrc_l1, hsrc_l2, hsrc_l3, hsrc_h1, hsrc_h2, hsrc_h3, & 
+                      bcc , bcc_l1, bcc_l2, bcc_l3, bcc_h1, bcc_h2, bcc_h3, &
+                      flxx, flxx_l1, flxx_l2, flxx_l3, flxx_h1, flxx_h2, flxx_h3, &
+                      flxy, flxy_l1, flxy_l2, flxy_l3, flxy_h1, flxy_h2, flxy_h3, &
+                      flxz, flxz_l1, flxz_l2, flxz_l3, flxz_h1, flxz_h2, flxz_h3, &
                       bxout, bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3, &
                       byout, byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3, &
                       bzout, bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3, &
-                      uout, uout_l1, uout_l2, uout_l3, uout_h1, uout_h2, uout_h3, &
-                      lo, hi)
+                      lo, hi, dx, dy, dz, dt, a_old, a_new)
 
      use amrex_fort_module, only : rt => amrex_real
      use meth_params_module
 
   implicit none
   
+  integer,  intent(in   )   :: hsrc_l1 , hsrc_l2 , hsrc_l3 , hsrc_h1 , hsrc_h2 , hsrc_h3 
+  integer,  intent(in   )   :: flxx_l1 , flxx_l2 , flxx_l3 , flxx_h1 , flxx_h2 , flxx_h3
+  integer,  intent(in   )   :: flxy_l1 , flxy_l2 , flxy_l3 , flxy_h1 , flxy_h2 , flxy_h3
+  integer,  intent(in   )   :: flxz_l1 , flxz_l2 , flxz_l3 , flxz_h1 , flxz_h2 , flxz_h3
   integer,  intent(in   )   :: bxout_l1, bxout_l2, bxout_l3, bxout_h1, bxout_h2, bxout_h3
   integer,  intent(in   )   :: byout_l1, byout_l2, byout_l3, byout_h1, byout_h2, byout_h3
   integer,  intent(in   )   :: bzout_l1, bzout_l2, bzout_l3, bzout_h1, bzout_h2, bzout_h3
   integer,  intent(in   )   :: bcc_l1, bcc_l2, bcc_l3, bcc_h1, bcc_h2, bcc_h3
-  integer,  intent(in   )   :: uout_l1, uout_l2, uout_l3, uout_h1, uout_h2, uout_h3
   integer,  intent(in   )   :: lo(3), hi(3)
 
-	real(rt), intent(inout) :: uout(uout_l1:uout_h1,uout_l2:uout_h2, uout_l3:uout_h3,NVAR)
+  real(rt), intent(inout) :: hydro_src(hsrc_l1:hsrc_h1,hsrc_l2:hsrc_h2, hsrc_l3:hsrc_h3, NVAR)
+  real(rt), intent(in   ) :: flxx(flxx_l1:flxx_h1, flxx_l2:flxx_h2, flxx_l3:flxx_h3, QVAR)
+  real(rt), intent(in   ) :: flxy(flxy_l1:flxy_h1, flxy_l2:flxy_h2, flxy_l3:flxy_h3, QVAR)
+  real(rt), intent(in   ) :: flxz(flxz_l1:flxz_h1, flxz_l2:flxz_h2, flxz_l3:flxz_h3, QVAR)
 	real(rt), intent(in   ) :: bxout(bxout_l1:bxout_h1, bxout_l2:bxout_h2, bxout_l3:bxout_h3)
 	real(rt), intent(in   ) :: byout(byout_l1:byout_h1, byout_l2:byout_h2, byout_l3:byout_h3)
 	real(rt), intent(in   ) :: bzout(bzout_l1:bzout_h1, bzout_l2:bzout_h2, bzout_l3:bzout_h3)
-  real(rt), intent(in   ) :: bcc(bcc_l1:bcc_h1,bcc_l2:bcc_h2, bcc_l3:bcc_h3,3)
+  real(rt), intent(inout) :: bcc(bcc_l1:bcc_h1,bcc_l2:bcc_h2, bcc_l3:bcc_h3,3)
+  real(rt), intent(in   ) :: dx, dy, dz, dt, a_old, a_new
 
-	real(rt)                :: bx, by ,bz, u, v, w, e
+	real(rt)                :: bx, by ,bz, dtdxinv, dtdyinv, dtdzinv, dtinv
   integer                 :: i, j, k
 
-  !------------------------------- Fixing E --------------------------------------------------
+  !------------------------------- Fixing Flux for UEDEN  --------------------------------------------------
+  dtdxinv = dt/dx
+  dtdyinv = dt/dy
+  dtdzinv = dt/dz
+  dtinv   = 1.d0/dt
+  ! a stuff TODO
   do k = lo(3), hi(3)
     do j = lo(2), hi(2)
       do i = lo(1), hi(1)
+!Evolve cell centered non-solenoidal B
+        bcc(i,j,k,1:3) = bcc(i,j,k,1:3) + dtdxinv*(flxx(i,j,k,UMAGX:UMAGZ) - flxx(i+1,j,k,UMAGX:UMAGZ)) &
+                       +  dtdyinv*(flxy(i,j,k,UMAGX:UMAGZ) - flxy(i,j+1,k,UMAGX:UMAGZ)) & 
+                       +  dtdzinv*(flxz(i,j,k,UMAGX:UMAGZ) - flxz(i,j,k+1,UMAGX:UMAGZ))
         bx = 0.5d0*(bxout(i,j,k) + bxout(i+1,j,k)) 
         by = 0.5d0*(byout(i,j,k) + byout(i,j+1,k)) 
         bz = 0.5d0*(bzout(i,j,k) + bzout(i,j,k+1)) 
-        u = uout(i,j,k,UMX)/uout(i,j,k,URHO)
-        v = uout(i,j,k,UMY)/uout(i,j,k,URHO)
-        w = uout(i,j,k,UMZ)/uout(i,j,k,URHO)
-        print*, uout(i,j,k,UEDEN), uout(i,j,k,UEINT)
-        uout(i,j,k,UEDEN) = uout(i,j,k,UEDEN) + 0.5d0*(bx**2 +by**2 + bz**2 &
+        hydro_src(i,j,k,UEDEN) = hydro_src(i,j,k,UEDEN) + 0.5d0*dtinv*(bx*bx +by*by + bz*bz &
                           - dot_product(bcc(i,j,k,1:3),bcc(i,j,k,1:3)))
-        print*, uout(i,j,k,UEDEN), bcc(i,j,k,1)
-        e = uout(i,j,k,UEDEN) - 0.5d0*(u**2 + v**2 + w**2)
-        uout(i,j,k,UEINT) = e - 0.5d0*(bx**2 + by**2 + bz**2)
-        print*, uout(i,j,k,:), e, bx, by, bz
-        pause
+        if(byout(i,j,k).ne.byout(i+1,j,k)) then 
+          print*, hydro_src(i,j,k,UEDEN), bx*bx+by*by+bz*bz, dot_product(bcc(i,j,k,1:3),bcc(i,j,k,1:3))
+          print*, dt*hydro_src(i,j,k,UEDEN)
+          pause
+        endif
+       !Corrected Magnetic Energy for solenoidal mag fields
       enddo
     enddo
   enddo
-  end subroutine enercorr
+  end subroutine flux_ener_corr
 
+!Combine Fluxes into "hydro_src" made for more general incase we wish to do heating and cooling. 
   subroutine  flux_combo(uin, uin_l1, uin_l2, uin_l3, uin_h1, uin_h2, uin_h3, &
                       hydro_src, hsrc_l1, hsrc_l2, hsrc_l3, hsrc_h1, hsrc_h2, hsrc_h3, &
                       flux1, flux1_l1, flux1_l2, flux1_l3, flux1_h1, flux1_h2, flux1_h3, &
@@ -891,13 +929,18 @@
   dyinv = 1.d0/dy 
   dzinv = 1.d0/dz
 
-  do n = 1, NVAR
+  do n = 1, NVAR 
      do k = lo(3), hi(3)
         do j = lo(2), hi(2)
            do i = lo(1), hi(1) 
+            if(n.le.UEDEN) then 
             hydro_src(i,j,k,n) = (flux1(i,j,k,n) - flux1(i+1,j,k,n))*dxinv &
                                + (flux2(i,j,k,n) - flux2(i,j+1,k,n))*dyinv & 
-                               + (flux3(i,j,k,n) - flux3(i,j,k+1,n))*dzinv 
+                               + (flux3(i,j,k,n) - flux3(i,j,k+1,n))*dzinv
+            else
+            hydro_src(i,j,k,n) = 0.0d0 
+!           Species TODO
+            endif
 !           Source Terms and evolving a TODO 
            enddo
         enddo
@@ -934,8 +977,6 @@
           bcc(i,j,k,1) = 0.5d0*(bxin(i,j,k) + bxin(i+1,j,k))
           bcc(i,j,k,2) = 0.5d0*(byin(i,j,k) + byin(i,j+1,k))
           bcc(i,j,k,3) = 0.5d0*(bzin(i,j,k) + bzin(i,j,k+1))
-          print*, bcc(i,j,k,1)
-          pause
         enddo
      enddo
   enddo

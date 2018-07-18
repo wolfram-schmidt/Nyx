@@ -229,25 +229,19 @@ extern "C"
      D_DECL(const BL_FORT_FAB_ARG(Ex),
             const BL_FORT_FAB_ARG(Ey),
             const BL_FORT_FAB_ARG(Ez)),
-     const amrex::Real* a_old, const amrex::Real* a_new, 
+     amrex::Real* cflLoc,const amrex::Real* a_old, const amrex::Real* a_new, 
      const int* print_fortran_warnings);
            
    void fort_update_mhd_state
      ( const int lo[], const int hi[], 
        const BL_FORT_FAB_ARG(u_in), 
              BL_FORT_FAB_ARG(u_out),
-       const BL_FORT_FAB_ARG(Bx_in), 
-       const BL_FORT_FAB_ARG(By_in), 
-       const BL_FORT_FAB_ARG(Bz_in), 
        const BL_FORT_FAB_ARG(Bx_out), 
        const BL_FORT_FAB_ARG(By_out), 
        const BL_FORT_FAB_ARG(Bz_out), 
        const BL_FORT_FAB_ARG(src), 
        const BL_FORT_FAB_ARG(hydro_src), 
        const BL_FORT_FAB_ARG(divu_cc), 
-       D_DECL(const BL_FORT_FAB_ARG(Ex), 
-              const BL_FORT_FAB_ARG(Ey),
-              const BL_FORT_FAB_ARG(Ez)),
        const amrex::Real* dt, const amrex::Real dx[], 
        const amrex::Real* a_old, const amrex::Real* a_new, 
        const int* print_fortran_warnings);        

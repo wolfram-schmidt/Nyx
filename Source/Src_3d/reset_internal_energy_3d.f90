@@ -139,10 +139,24 @@
              mag_e  = 0.5d0 * (bcx**2 + bcy**2 + bcz**2)
 
              rho_eint = u(i,j,k,UEDEN) - ke - mag_e
-           ! Reset (e from e) if it's greater than 0.01% of big E.
-             u(i,j,k,UEINT) = rho_eint
+             ! Reset (e from e) if it's greater than 0.01% of big E.
+             if (rho_eint .gt. 0.d0 .and. rho_eint / u(i,j,k,UEDEN) .gt. 1.d-6) then
+                 u(i,j,k,UEINT) = rho_eint
+    
+           ! If (e from E) < 0 or (e from E) < .0001*E but (e from e) > 0.
+             else if (u(i,j,k,UEINT) .gt. 0.d0) then
 
-             u(i,j,k,UEDEN) = u(i,j,k,UEINT) + ke + mag_e
+              u(i,j,k,UEDEN) = u(i,j,k,UEINT) + ke + mag_e
+              ! If not resetting and little e is negative ...
+             else if (u(i,j,k,UEINT) .le. 0.d0) then
+
+               call nyx_eos_given_RT(eint_new, dummy_pres, u(i,j,k,URHO), small_temp, &
+                                    d(i,j,k,NE_COMP),comoving_a)
+              
+              u(i,j,k,UEINT) = u(i,j,k,URHO)*eint_new
+
+              u(i,j,k,UEDEN) = u(i,j,k,UEINT) + ke + mag_e
+             endif
           enddo
         enddo
       enddo

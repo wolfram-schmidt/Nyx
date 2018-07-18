@@ -63,7 +63,7 @@
      real(rt) :: u, v, w, rhoInv, bcx, bcy, bcz
 
      ! 
-     ! Make sure to enforce (rho E) = (rho e) + 1/2 rho (u^2 +_ v^2 + w^2) + 1/2 (|B|^2)
+     ! Make sure to enforce (rho E) = (rho e) + 1/2 rho (u^2 + v^2 + w^2) + 1/2 (|B|^2)
      !
      do k = lo(3), hi(3)
         do j = lo(2), hi(2)
