@@ -883,11 +883,6 @@
         bz = 0.5d0*(bzout(i,j,k) + bzout(i,j,k+1)) 
         hydro_src(i,j,k,UEDEN) = hydro_src(i,j,k,UEDEN) + 0.5d0*dtinv*(bx*bx +by*by + bz*bz &
                           - dot_product(bcc(i,j,k,1:3),bcc(i,j,k,1:3)))
-        if(byout(i,j,k).ne.byout(i+1,j,k)) then 
-          print*, hydro_src(i,j,k,UEDEN), bx*bx+by*by+bz*bz, dot_product(bcc(i,j,k,1:3),bcc(i,j,k,1:3))
-          print*, dt*hydro_src(i,j,k,UEDEN)
-          pause
-        endif
        !Corrected Magnetic Energy for solenoidal mag fields
       enddo
     enddo
