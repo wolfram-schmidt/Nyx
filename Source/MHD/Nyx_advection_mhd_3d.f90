@@ -33,7 +33,7 @@
  !--------------------- Dependencies ------------------------------------------------
       use amrex_fort_module, only : rt => amrex_real
       use amrex_mempool_module, only : amrex_allocate, amrex_deallocate
-      use ct_upwind, only : corner_transport, checkisnan
+      use ct_upwind, only : corner_transport
       use mhd_plm_module, only : plm
       use meth_params_module!, only : QVAR, NTHERM, NHYP, normalize_species, NVAR, URHO, UEDEN
       use enforce_module, only : enforce_nonnegative_species

@@ -353,12 +353,12 @@ contains
 			call lvecx(leig,s(i,j,k,:))    !!left eigenvectors
 			call rvecx(reig,s(i,j,k,:))    !!right eigenvectors
 	!MHD Source Terms 
-			smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
-			smhd(3) = temp(i,j,k,iby)/temp(i,j,k,1)
-			smhd(4) = temp(i,j,k,ibz)/temp(i,j,k,1)
-			smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
-			smhd(6) = temp(i,j,k,3)
-			smhd(7) = temp(i,j,k,4)
+			smhd(2) = temp(i+1,j,k,ibx)/temp(i+1,j,k,1)
+			smhd(3) = temp(i+1,j,k,iby)/temp(i+1,j,k,1)
+			smhd(4) = temp(i+1,j,k,ibz)/temp(i+1,j,k,1)
+			smhd(5) = temp(i+1,j,k,ibx)*temp(i+1,j,k,2) + temp(i+1,j,k,iby)*temp(i+1,j,k,3) + temp(i+1,j,k,ibz)*temp(i+1,j,k,4)
+			smhd(6) = temp(i+1,j,k,3)
+			smhd(7) = temp(i+1,j,k,4)
 			smhd 	= smhd*(tbx(i+1,j,k) - tbx(i,j,k))/dx !normal magnetic field direction
 	!Interpolate
 		!Plus
@@ -373,6 +373,15 @@ contains
 			Ip(i,j,k,QMAGX,1) 		 = temp(i+1,j,k,ibx) !! Bx stuff
 			Ip(i,j,k,QMAGY:QMAGZ,1)  = temp(i,j,k,iby:ibz) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 		!Minus
+	!MHD Source Terms 
+			smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
+			smhd(3) = temp(i,j,k,iby)/temp(i,j,k,1)
+			smhd(4) = temp(i,j,k,ibz)/temp(i,j,k,1)
+			smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
+			smhd(6) = temp(i,j,k,3)
+			smhd(7) = temp(i,j,k,4)
+			smhd 	= smhd*(tbx(i,j,k) - tbx(i,j,k))/dx !normal magnetic field direction
+
 			summ = 0.d0
 			do ii = 1,7
 			        dL = dot_product(leig(ii,:),dQL)
@@ -412,6 +421,20 @@ contains
 					summ(:) = summ(:) + (1 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
 	!MHD Source Terms 
+			smhd(2) = temp(i,j+1,k,ibx)/temp(i,j+1,k,1)
+			smhd(3) = temp(i,j+1,k,iby)/temp(i,j+1,k,1)
+			smhd(4) = temp(i,j+1,k,ibz)/temp(i,j+1,k,1)
+			smhd(5) = temp(i,j+1,k,ibx)*temp(i,j+1,k,2) + temp(i,j+1,k,iby)*temp(i,j+1,k,3) + temp(i,j+1,k,ibz)*temp(i,j+1,k,4)
+			smhd(6) = temp(i,j+1,k,2)
+			smhd(7) = temp(i,j+1,k,4)
+			smhd 	= smhd*(tby(i,j+1,k) - tby(i,j,k))/dy !cross-talk of normal magnetic field direction
+	!Interpolate
+			Ip(i,j,k,QRHO:QPRES,2) 	= temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
+			Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
+			Ip(i,j,k,QMAGY,2) 		= temp(i,j+1,k,iby) !! By stuff
+			Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
+
+	!MHD Source Terms 
 			smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
 			smhd(3) = temp(i,j,k,iby)/temp(i,j,k,1)
 			smhd(4) = temp(i,j,k,ibz)/temp(i,j,k,1)
@@ -419,11 +442,6 @@ contains
 			smhd(6) = temp(i,j,k,2)
 			smhd(7) = temp(i,j,k,4)
 			smhd 	= smhd*(tby(i,j+1,k) - tby(i,j,k))/dy !cross-talk of normal magnetic field direction
-	!Interpolate
-			Ip(i,j,k,QRHO:QPRES,2) 	= temp(i,j,k,1:ibx-1) +0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
-			Ip(i,j,k,QMAGX,2) 		= temp(i,j,k,ibx) + 0.5d0*summ(6) + 0.5d0*dt_over_a*smhd(6)
-			Ip(i,j,k,QMAGY,2) 		= temp(i,j+1,k,iby) !! By stuff
-			Ip(i,j,k,QMAGZ,2)  		= temp(i,j,k,ibz) + 0.5d0*summ(7) + 0.5d0*dt_over_a*smhd(7)
 
 			summ = 0.d0
 			do ii = 1,7
@@ -460,16 +478,16 @@ contains
 			        call vanleer(dW,dL,dR)			
 				summ(:) = summ(:) + (1 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
-	!MHD Source Terms 
-			smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
-			smhd(3) = temp(i,j,k,iby)/temp(i,j,k,1)
-			smhd(4) = temp(i,j,k,ibz)/temp(i,j,k,1)
-			smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
-			smhd(6) = temp(i,j,k,2)
-			smhd(7) = temp(i,j,k,3)
+!MHD Source Terms 
+			smhd(2) = temp(i,j,k+1,ibx)/temp(i,j,k+1,1)
+			smhd(3) = temp(i,j,k+1,iby)/temp(i,j,k+1,1)
+			smhd(4) = temp(i,j,k+1,ibz)/temp(i,j,k+1,1)
+			smhd(5) = temp(i,j,k+1,ibx)*temp(i,j,k+1,2) + temp(i,j,k+1,iby)*temp(i,j,k+1,3) + temp(i,j,k+1,ibz)*temp(i,j,k+1,4)
+			smhd(6) = temp(i,j,k+1,2)
+			smhd(7) = temp(i,j,k+1,3)
 			smhd 	= smhd*(tbz(i,j,k+1) - tbz(i,j,k))/dz !cross-talk of normal magnetic field direction
 
-	!Interpolate
+!Interpolate
 			Ip(i,j,k,QRHO:QPRES,3) 	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 			Ip(i,j,k,QMAGX:QMAGY,3)	= temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Ip(i,j,k,QMAGZ,3) 		= temp(i,j,k+1,ibz) !! Bz stuff
@@ -480,6 +498,16 @@ contains
 			        call vanleer(dW,dL,dR)			
 				summ(:) = summ(:) + (- 1 - dt_over_a/dx*lam(ii))*dW*reig(:,ii)
 			enddo
+
+!MHD Source Terms 
+			smhd(2) = temp(i,j,k,ibx)/temp(i,j,k,1)
+			smhd(3) = temp(i,j,k,iby)/temp(i,j,k,1)
+			smhd(4) = temp(i,j,k,ibz)/temp(i,j,k,1)
+			smhd(5) = temp(i,j,k,ibx)*temp(i,j,k,2) + temp(i,j,k,iby)*temp(i,j,k,3) + temp(i,j,k,ibz)*temp(i,j,k,4)
+			smhd(6) = temp(i,j,k,2)
+			smhd(7) = temp(i,j,k,3)
+			smhd 	= smhd*(tbz(i,j,k+1) - tbz(i,j,k))/dz !cross-talk of normal magnetic field direction
+
 			Im(i,j,k,QRHO:QPRES,3)	= temp(i,j,k,1:ibx-1) + 0.5d0*summ(1:5) + 0.5d0*dt_over_a*smhd(1:5) !!GAS
 			Im(i,j,k,QMAGX:QMAGY,3) = temp(i,j,k,ibx:iby) + 0.5d0*summ(6:7) + 0.5d0*dt_over_a*smhd(6:7)
 			Im(i,j,k,QMAGZ,3)		= temp(i,j,k-1,ibz) !! Bz stuff
