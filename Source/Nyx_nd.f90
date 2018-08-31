@@ -123,12 +123,13 @@
       subroutine fort_set_xhydrogen(xhydrogen_in) &
         bind(C, name="fort_set_xhydrogen")
 
+        use amrex_error_module
         use amrex_fort_module, only : rt => amrex_real
         use atomic_rates_module
 
         real(rt), intent(in) :: xhydrogen_in
         if (xhydrogen_in .lt. 0.d0 .or. xhydrogen_in .gt. 1.d0) &
-            call bl_error("Bad value of xhydrogen_in")
+            call amrex_error("Bad value of xhydrogen_in")
 
         XHYDROGEN = xhydrogen_in
         YHELIUM   = (1.0d0-XHYDROGEN)/(4.0d0*XHYDROGEN)
@@ -196,6 +197,7 @@
 
         ! Passing data from C++ into f90
 
+        use amrex_error_module
         use amrex_fort_module, only : rt => amrex_real
         use meth_params_module
         use  eos_params_module
@@ -234,6 +236,9 @@
         difmag = 0.1d0
 
         grav_source_type = 1
+        ! We may want to default to 3 when using SDC because then the gravity updates
+        ! do not change the internal energy (rho e) -- but this needs further investigation
+        ! grav_source_type = 3
 
         comoving_type = 1
 
@@ -276,7 +281,7 @@
 
            if (use_const_species .eq. 1) then
               if (nspec .ne. 2 .or. naux .ne. 0) then
-                  call bl_error("Bad nspec or naux in set_method_params")
+                  call amrex_error("Bad nspec or naux in set_method_params")
               end if
               NVAR = NTHERM + numadv
            else
@@ -394,6 +399,27 @@
 ! ::: ----------------------------------------------------------------
 ! :::
 
+      subroutine fort_set_eos_params(h_species_in, he_species_in) &
+        bind(C, name="fort_set_eos_params")
+
+        ! Passing data from C++ into f90
+
+        use amrex_fort_module, only : rt => amrex_real
+        use  eos_params_module
+
+        implicit none
+
+        real(rt), intent(in) :: h_species_in, he_species_in
+
+         h_species =  h_species_in
+        he_species = he_species_in
+
+      end subroutine fort_set_eos_params
+
+! :::
+! ::: ----------------------------------------------------------------
+! :::
+
       subroutine fort_set_mhd_method_params( &
                  dm, numadv, ndiag_in, do_hydro, ppm_type_in, ppm_ref_in, &
                  ppm_flatten_before_integrals_in, &
@@ -491,11 +517,11 @@
            UEDEN = 5
            UEINT = 6
            UNEXT = 7
-	  
+    
            ! Not in the state var, but used to index flux for energy correction. 
-	   UMAGX  = 7   ! Bx centered
-	   UMAGY  = 8   ! By centered 
-	   UMAGZ  = 9   ! Bz centered
+           UMAGX  = 7   ! Bx centered
+           UMAGY  = 8   ! By centered 
+           UMAGZ  = 9   ! Bz centered
 
 
            UFA   = -1
@@ -521,27 +547,27 @@
    
            ! QTHERM: number of primitive variables, which includes pressure (+1) 
            !         but not big E (-1) 
-		   ! NMAG  : number of magnetic vars
+           ! NMAG  : number of magnetic vars
            ! QVAR  : number of total variables in primitive form
-	    QTHERM = NTHERM
+           QTHERM = NTHERM
 
            if (use_const_species .eq. 1) then
               QVAR = QTHERM + numadv
            else
               QVAR = QTHERM + nspec + naux + numadv
            end if
-		QVAR = QVAR + NMAG	
-		
+           QVAR = QVAR + NMAG  
+    
            ! We use these to index into the state "Q"
            QRHO   = 1   ! rho
            QU     = 2   ! u
            QV     = 3   ! v
            QW     = 4   ! w
-	   QPRES  = 5   ! p + 0.5 BB^T
+           QPRES  = 5   ! p + 0.5 BB^T
            QREINT = 6   ! (rho e)
-	   QMAGX  = 7   ! Bx centered
-	   QMAGY  = 8   ! By centered 
-	   QMAGZ  = 9   ! Bz centered
+           QMAGX  = 7   ! Bx centered
+           QMAGY  = 8   ! By centered 
+           QMAGZ  = 9   ! Bz centered
            QNEXT  = QMAGZ+1   
            QFS = -1
            if (numadv .ge. 1) then
@@ -577,45 +603,23 @@
         ! Easy indexing for the passively advected quantities.  
         ! This lets us loop over all four groups (advected, species, aux)
         ! in a single loop.
-        allocate(qpass_map(QVAR))
-        allocate(upass_map(NVAR))
-        npassive = 0
-        do iadv = 1, nadv
-           upass_map(npassive + iadv) = UFA + iadv - 1
-           qpass_map(npassive + iadv) = QFA + iadv - 1
-        enddo
-        npassive = npassive + nadv
-        if(QFS > -1) then
-           do ispec = 1, nspec+naux
-              upass_map(npassive + ispec) = UFS + ispec - 1
-              qpass_map(npassive + ispec) = QFS + ispec - 1
+           allocate(qpass_map(QVAR))
+           allocate(upass_map(NVAR))
+           npassive = 0
+           do iadv = 1, nadv
+             upass_map(npassive + iadv) = UFA + iadv - 1
+             qpass_map(npassive + iadv) = QFA + iadv - 1
            enddo
-           npassive = npassive + nspec + naux
-        endif
+           npassive = npassive + nadv
+           if(QFS > -1) then
+             do ispec = 1, nspec+naux
+                upass_map(npassive + ispec) = UFS + ispec - 1
+                qpass_map(npassive + ispec) = QFS + ispec - 1
+             enddo
+             npassive = npassive + nspec + naux
+          endif
 
       end subroutine fort_set_mhd_method_params
-
-
-! :::
-! ::: ----------------------------------------------------------------
-! :::
-
-      subroutine fort_set_eos_params(h_species_in, he_species_in) &
-        bind(C, name="fort_set_eos_params")
-
-        ! Passing data from C++ into f90
-
-        use amrex_fort_module, only : rt => amrex_real
-        use  eos_params_module
-
-        implicit none
-
-        real(rt), intent(in) :: h_species_in, he_species_in
-
-         h_species =  h_species_in
-        he_species = he_species_in
-
-      end subroutine fort_set_eos_params
 
 ! :::
 ! ::: ----------------------------------------------------------------
@@ -732,3 +736,4 @@
         integer(c_int) :: get_comp_e_int
         get_comp_e_int = UEINT
       end function get_comp_e_int
+

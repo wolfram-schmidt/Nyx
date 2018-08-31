@@ -18,6 +18,11 @@
 
 #include <iostream>
 
+#ifdef BL_HDF5
+#include <hdf5.h>
+#endif
+
+
 using std::istream;
 using std::ostream;
 
@@ -40,9 +45,12 @@ enum StateType {
     Gravity_Type,
 #endif
 #ifdef MHD
-     Mag_Type_x, 
-     Mag_Type_y, 
-     Mag_Type_z,
+    Mag_Type_x, 
+    Mag_Type_y, 
+    Mag_Type_z,
+#endif
+#ifdef SDC
+    SDC_IR_Type,
 #endif
     NUM_STATE_TYPE
 };
@@ -85,6 +93,8 @@ public:
     //
     virtual void checkPoint(const std::string& dir, std::ostream& os,
                             amrex::VisMF::How how, bool dump_old);
+    virtual void checkPointPre(const std::string& dir, std::ostream& os);
+    virtual void checkPointPost(const std::string& dir, std::ostream& os);
 
     // A string written as the first item in `write_plot_file()` at level zero.
     // It is so we can distinguish between different types of plot files. For
@@ -97,6 +107,11 @@ public:
     //Write a plotfile to specified directory.
     //
     virtual void writePlotFile(const std::string& dir, ostream& os, amrex::VisMF::How how);
+#ifdef BL_HDF5
+    virtual void writePlotFileHDF5(const std::string& dir, ostream& os, amrex::VisMF::How how);
+#endif
+    virtual void writePlotFilePre(const std::string& dir, ostream& os);
+    virtual void writePlotFilePost(const std::string& dir, ostream& os);
 
     //
     //Write amrex::MultiFab as plot file
@@ -117,7 +132,6 @@ public:
     //Define data descriptors.
     //
     static void variable_setup();
-    static void variable_setup_for_new_comp_procs();
     static void hydro_setup();
     static void no_hydro_setup();
 
@@ -378,14 +392,38 @@ public:
     virtual amrex::Real advance(amrex::Real time, amrex::Real dt, int iteration, int ncycle);
 
     amrex::Real advance_hydro(amrex::Real time, amrex::Real dt, int iteration, int ncycle);
-    amrex::Real advance_mhd(amrex::Real time, amrex::Real dt, int iteration, int ncycle);
+    amrex::Real advance_mhd(amrex::Real time, amrex::Real dt, int iteration, int ncycle); 
     amrex::Real advance_no_hydro(amrex::Real time, amrex::Real dt, int iteration, int ncycle);
     amrex::Real advance_hydro_plus_particles(amrex::Real time, amrex::Real dt, int iteration,
                                       int ncycle);
-    void just_the_hydro(amrex::Real time, amrex::Real dt, amrex::Real a_old, amrex::Real a_new);
+#ifdef MHD
     void just_the_mhd(amrex::Real time, amrex::Real dt, amrex::Real a_old, amrex::Real a_new);
+#endif
+    void strang_hydro(amrex::Real time, amrex::Real dt, amrex::Real a_old, amrex::Real a_new);
+#ifdef SDC
+    void    sdc_hydro(amrex::Real time, amrex::Real dt, amrex::Real a_old, amrex::Real a_new);
+#endif
+
+    void compute_hydro_sources(amrex::Real time, amrex::Real dt, amrex::Real a_old, amrex::Real a_new,
+                               amrex::MultiFab& S_border, amrex::MultiFab& D_border, 
+                               amrex::MultiFab& ext_src_old, amrex::MultiFab& hydro_src, 
+                               amrex::MultiFab& grav, amrex::MultiFab& divu_cc,
+                               bool init_flux_register, bool add_to_flux_register);
+
+    void update_state_with_sources( amrex::MultiFab& S_old      , amrex::MultiFab& S_new, 
+                                    amrex::MultiFab& ext_src_old, amrex::MultiFab& hydro_src,
+                                    amrex::MultiFab& grav       , amrex::MultiFab& divu_cc,
+                                    amrex::Real dt, amrex::Real a_old, amrex::Real a_new);
+
     void strang_first_step  (amrex::Real time, amrex::Real dt,  amrex::MultiFab& state, amrex::MultiFab&  dstate);
     void strang_second_step (amrex::Real time, amrex::Real dt,  amrex::MultiFab& state, amrex::MultiFab&  dstate);
+
+#ifdef SDC
+    void sdc_reactions ( amrex::MultiFab& state_old, amrex::MultiFab& state_new, amrex::MultiFab&  dstate,
+                         amrex::MultiFab& hydro_src, amrex::MultiFab& IR, 
+                         amrex::Real dt, amrex::Real a_old, amrex::Real a_new, 
+                         int sdc_iter);
+#endif
 
     amrex::Real advance_particles_only (amrex::Real time, amrex::Real dt, int iteration, int ncycle);
 
@@ -484,13 +522,14 @@ public:
     static int num_grow();
 
     // Synchronize (rho e) and (rho E) so they are consistent with each other
-	void reset_internal_energy(amrex::MultiFab& State, amrex::MultiFab& DiagEOS
+    void reset_internal_energy(amrex::MultiFab& State, amrex::MultiFab& DiagEOS,
 #ifdef MHD
-, amrex::MultiFab& Bx, amrex::MultiFab& By, amrex::MultiFab& Bz
+    amrex::MultiFab& Bx, amrex::MultiFab& By, amrex::MultiFab& Bz, 
 #endif
-);
+         amrex::MultiFab& reset_e_src);
 
-    void compute_new_temp();
+    // Note: this no longer includes the call to reset_internal_energy
+    void compute_new_temp(amrex::MultiFab& S_new, amrex::MultiFab& D_new);
 
     void compute_rho_temp(amrex::Real& rho_T_avg, amrex::Real& T_avg, amrex::Real& Tinv_avg, amrex::Real& T_meanrho);
     void compute_gas_fractions(amrex::Real T_cut, amrex::Real rho_cut,
@@ -559,21 +598,21 @@ public:
     amrex::MultiFab* fine_mask;
     amrex::MultiFab* build_fine_mask();
 
-    static int forceParticleRedist;  // ---- for dynamic sidecars
-    static int nSidecarProcs;
-
-    virtual void AddProcsToComp(amrex::Amr *aptr, int nSidecarProcs, int prevSidecarProcs,
-                                int ioProcNumSCS, int ioProcNumAll, int scsMyId,
-				MPI_Comm scsComm);
-    virtual void NyxParticlesAddProcsToComp(amrex::Amr *aptr, int nSidecarProcs, int prevSidecarProcs,
-                                            int ioProcNumSCS, int ioProcNumAll, int scsMyId,
-				            MPI_Comm scsComm);
     static void InitErrorList();
     static void InitDeriveList();
 
     static void set_simd_width(const int simd_width);
     static void alloc_simd_vec();
     static void dealloc_simd_vec();
+
+    //! Get the level directory names
+    void LevelDirectoryNames (const std::string &dir,
+                              const std::string &secondDir,  // ---- probably DM or AGN
+                              std::string &LevelDir,
+                              std::string &FullPath);
+    //! Create the Level_ and other directories in checkpoint and plot files
+    virtual void CreateLevelDirectory (const std::string &dir);
+
 
 protected:
 
@@ -586,6 +625,11 @@ protected:
 
     Nyx& get_level(int lev);
 
+    std::string retrieveDM();
+#ifdef AGN
+    std::string retrieveAGN();
+#endif
+
 #ifndef NO_HYDRO
     amrex::FluxRegister& get_flux_reg();
     amrex::FluxRegister& get_flux_reg(int lev);
@@ -597,6 +641,10 @@ protected:
 	void enforce_mhd_consistent_e(amrex::MultiFab& S, amrex::MultiFab& Bx, amrex::MultiFab& By, amrex::MultiFab& Bz);
 #else
     void enforce_consistent_e(amrex::MultiFab& S);
+#ifdef MHD
+    void enforce_mhd_consistent_e(amrex::MultiFab& S,  amrex::MultiFab& Bx, 
+                              amrex::MultiFab& By, amrex::MultiFab& Bz);
+#endif
 #endif
 #endif
 
@@ -713,8 +761,12 @@ protected:
     static int do_forcing;
 
     // if true , incorporate the source term through Strang-splitting
-    // if false, incorporate the source term through predictor-corrector methodology
     static int strang_split;
+
+#ifdef SDC
+    // if true , use SDC to couple hydro and reactions
+    static int sdc_split;
+#endif
 
 #ifdef GRAVITY
     // There can be only one Gravity object, it covers all levels:
@@ -778,9 +830,9 @@ Nyx::num_grow()
 
 inline
 Nyx&
-Nyx::get_level(int lev)
+Nyx::get_level(int my_level)
 {
-    return *(Nyx *) &parent->getLevel(lev);
+    return *(Nyx *) &parent->getLevel(my_level);
 }
 
 #ifndef NO_HYDRO
@@ -796,9 +848,9 @@ Nyx::get_flux_reg()
 #endif 
 inline
 amrex::FluxRegister&
-Nyx::get_flux_reg(int lev)
+Nyx::get_flux_reg(int my_level)
 {
-    return get_level(lev).get_flux_reg();
+    return get_level(my_level).get_flux_reg();
 }
 #endif // NO_HYDRO
 

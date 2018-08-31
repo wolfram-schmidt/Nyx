@@ -1,12 +1,19 @@
-CEXE_sources += advance_particles.cpp
+#ifneq ($(USE_HENSON), TRUE)
+CEXE_sources += main.cpp
+#endif
 
+CEXE_sources += nyx_main.cpp
+
+ifeq ($(USE_MHD), TRUE) 
+CEXE_sources += Nyx_MHD.cpp
+endif
+
+CEXE_sources += advance_particles.cpp
 CEXE_sources += Nyx.cpp
 CEXE_sources += Nyx_advance.cpp
 CEXE_sources += Nyx_halos.cpp
 CEXE_sources += Nyx_output.cpp
-CEXE_sources += Nyx_slice.cpp
 CEXE_sources += NyxBld.cpp
-CEXE_sources += main.cpp
 CEXE_sources += NyxParticles.cpp
 CEXE_sources += ParticleDerive.cpp
 CEXE_sources += NeutrinoParticleContainer.cpp
@@ -23,19 +30,23 @@ f90EXE_sources += meth_params.f90
 endif
 
 ifneq ($(NO_HYDRO), TRUE)
-ifeq ($(USE_MHD), TRUE)
-CEXE_sources += Nyx_MHD.cpp
-else
-CEXE_sources += Nyx_hydro.cpp
+ifneq ($(USE_MHD), TRUE)
+CEXE_sources += compute_hydro_sources.cpp
+CEXE_sources += update_state_with_sources.cpp
+CEXE_sources += strang_hydro.cpp
 endif
+CEXE_sources += strang_reactions.cpp
 CEXE_sources += sum_integrated_quantities.cpp
 CEXE_sources += sum_utils.cpp
-CEXE_sources += strang_splitting.cpp
-endif 
+endif
+
+ifeq ($(USE_SDC), TRUE)
+CEXE_sources += sdc_hydro.cpp
+CEXE_sources += sdc_reactions.cpp
+endif
 
 
 CEXE_headers += Nyx.H
-CEXE_headers += Nyx_slice.H
 CEXE_headers += Nyx_output.H
 CEXE_headers += NyxParticleContainer.H
 CEXE_headers += DarkMatterParticleContainer.H
@@ -46,7 +57,14 @@ f90EXE_sources += particle_mod.f90
 f90EXE_headers += dm_F.H
 
 f90EXE_sources += Nyx_nd.f90
-f90EXE_sources +=  eos_params.f90
+f90EXE_sources += eos_params.f90
+
+ifeq ($(USE_MHD), TRUE)
+f90EXE_sources += meth_mhd_params.f90
+else
+f90EXE_sources += meth_params.f90
+endif
+
 f90EXE_sources += misc_params.f90
 f90EXE_sources += prob_params.f90
 f90EXE_sources += comoving_params.f90

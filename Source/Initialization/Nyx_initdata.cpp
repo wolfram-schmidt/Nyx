@@ -143,13 +143,13 @@ Nyx::init_zhi ()
     MultiFab& D_new = get_new_data(DiagEOS_Type);
     int nd = D_new.nComp();
 
-    const BoxArray& ba = D_new.boxArray();
-    const DistributionMapping& dmap = D_new.DistributionMap();
+    const BoxArray& my_ba = D_new.boxArray();
+    const DistributionMapping& my_dmap = D_new.DistributionMap();
 
-    BL_ASSERT(ba.coarsenable(ratio));
-    BoxArray coarse_ba = ba;
+    BL_ASSERT(my_ba.coarsenable(ratio));
+    BoxArray coarse_ba = my_ba;
     coarse_ba.coarsen(ratio);
-    MultiFab zhi(coarse_ba, dmap, 1, 0);
+    MultiFab zhi(coarse_ba, my_dmap, 1, 0);
 
     MultiFab zhi_from_file;
     VisMF::Read(zhi_from_file, inhomo_zhi_file);
@@ -172,7 +172,6 @@ void
 Nyx::initData ()
 {
     BL_PROFILE("Nyx::initData()");
-
     // Here we initialize the grid data and the particles from a plotfile.
     if (!parent->theRestartPlotFile().empty())
     {
@@ -180,22 +179,23 @@ Nyx::initData ()
         return;
     }
 
+    MultiFab&   S_new    = get_new_data(State_Type);
+
 #ifndef NO_HYDRO
     // We need this because otherwise we might operate on uninitialized data.
-    MultiFab&   S_new    = get_new_data(State_Type);
     S_new.setVal(0.0);
 #endif
 
 #ifdef MHD
-   // Same comment as Hydro
-   MultiFab& Bx_new	= get_new_data(Mag_Type_x);
-   Bx_new.setVal(0.0);
-
-   MultiFab& By_new	= get_new_data(Mag_Type_y);
-   By_new.setVal(0.0);
-
-   MultiFab& Bz_new	= get_new_data(Mag_Type_z);
-   Bz_new.setVal(0.0);
+    // Same comment as Hydro 
+    MultiFab& Bx_new = get_new_data(Mag_Type_x); 
+    Bx_new.setVal(0.0); 
+   
+    MultiFab& By_new = get_new_data(Mag_Type_y); 
+    By_new.setVal(0.0); 
+     
+    MultiFab& Bz_new = get_new_data(Mag_Type_z); 
+    Bz_new.setVal(0.0);
 #endif
 
     // If you run a pure N-body simulation and Nyx segfaults here, then
@@ -213,9 +213,9 @@ Nyx::initData ()
 #ifndef NO_HYDRO
     int         ns       = S_new.nComp();
 #ifdef MHD
-    int 	nbx 	 = Bx_new.nComp();
-    int 	nby 	 = By_new.nComp();
-    int 	nbz 	 = Bz_new.nComp();
+    int         nbx      = Bx_new.nComp();
+    int         nby      = By_new.nComp();
+    int         nbz      = Bz_new.nComp(); 
 #endif
     Real  cur_time = state[State_Type].curTime();
 
@@ -232,29 +232,37 @@ Nyx::initData ()
             {
                 const Box& bx = mfi.tilebox();
                 RealBox gridloc = RealBox(bx, geom.CellSize(), geom.ProbLo());
-
                 fort_initdata
                     (level, cur_time, bx.loVect(), bx.hiVect(), 
                      ns, BL_TO_FORTRAN(S_new[mfi]), 
                      nd, BL_TO_FORTRAN(D_new[mfi]), 
 #ifdef MHD
-		     nbx, BL_TO_FORTRAN(Bx_new[mfi]),
-		     nby, BL_TO_FORTRAN(By_new[mfi]),
-		     nbz, BL_TO_FORTRAN(Bz_new[mfi]),
+                     nbx, BL_TO_FORTRAN(Bx_new[mfi]), 
+                     nby, BL_TO_FORTRAN(By_new[mfi]), 
+                     nbz, BL_TO_FORTRAN(Bz_new[mfi]),
 #endif
-		     dx, gridloc.lo(), gridloc.hi());
+                     dx, gridloc.lo(), gridloc.hi());
             }
 
             if (inhomo_reion) init_zhi();
 
-            compute_new_temp();
+            // First reset internal energy before call to compute_temp
+	    MultiFab reset_e_src(S_new.boxArray(), S_new.DistributionMap(), 1, NUM_GROW);
+	    reset_e_src.setVal(0.0);
 
+            reset_internal_energy(S_new,D_new,
 #ifdef MHD
+                                  Bx_new,
+                                  By_new, 
+                                  Bz_new, 
+#endif
+                                  reset_e_src);
+            compute_new_temp     (S_new,D_new);
+#ifdef MHD 
             enforce_mhd_consistent_e(S_new, Bx_new, By_new, Bz_new);
 #else
             enforce_consistent_e(S_new);
 #endif
-
         }
         else
         {
@@ -266,11 +274,11 @@ Nyx::initData ()
                 fort_initdata
                     (level, cur_time, bx.loVect(), bx.hiVect(), 
                      ns, BL_TO_FORTRAN(S_new[mfi]), 
-                     ns, BL_TO_FORTRAN(S_new[mfi]),
+                     ns, BL_TO_FORTRAN(S_new[mfi]), 
 #ifdef MHD
-		     nbx, BL_TO_FORTRAN(Bx_new[mfi]),
-		     nby, BL_TO_FORTRAN(By_new[mfi]),
-		     nbz, BL_TO_FORTRAN(Bz_new[mfi]),
+                     nbx, BL_TO_FORTRAN(Bx_new[mfi]),
+                     nby, BL_TO_FORTRAN(By_new[mfi]),
+                     nbz, BL_TO_FORTRAN(Bz_new[mfi]),
 #endif
                      dx, gridloc.lo(), gridloc.hi());
             }
@@ -278,8 +286,6 @@ Nyx::initData ()
     }
 
 #endif // end NO_HYDRO
-
-
 
 #ifdef GRAVITY
 
@@ -302,6 +308,14 @@ Nyx::initData ()
 
 #endif
 
+#ifdef SDC
+    //
+    // Initialize this to zero before we use it in advance
+    //
+    MultiFab& IR_new = get_new_data(SDC_IR_Type);
+    IR_new.setVal(0.0);
+#endif
+
 #ifndef NO_HYDRO
     //
     // Read in initial conditions from a file.
@@ -317,10 +331,10 @@ Nyx::initData ()
 
 	VisMF::Read(mf, mfDirName.c_str());
 
-        MultiFab& S_new = get_level(0).get_new_data(State_Type);
+        MultiFab& S_new_crse = get_level(0).get_new_data(State_Type);
 	
-	S_new.copy(mf, 0, 0, 6);
-	S_new.copy(mf, 0, FirstSpec, 1);
+	S_new_crse.copy(mf, 0, 0, 6);
+	S_new_crse.copy(mf, 0, FirstSpec, 1);
 
         if (do_hydro == 1) 
         {
@@ -375,10 +389,7 @@ Nyx::initData ()
     // Need to compute this in case we want to use overdensity for regridding.
     //
     if (level == 0) 
-    {
         compute_average_density();
-//      compute_level_averages();
-    }
 #endif
 
     if (verbose && ParallelDescriptor::IOProcessor())
@@ -426,13 +437,10 @@ Nyx::init_from_plotfile ()
         MultiFab& S_new = nyx_lev.get_new_data(State_Type);
         MultiFab& D_new = nyx_lev.get_new_data(DiagEOS_Type);
 #ifdef MHD
-	   MultiFab& Bx_new	= nyx_lev.get_new_data(Mag_Type_x);
-
-	   MultiFab& By_new	= nyx_lev.get_new_data(Mag_Type_y);
-
-	   MultiFab& Bz_new	= nyx_lev.get_new_data(Mag_Type_z);
+        MultiFab& Bx_new = nyx_lev.get_new_data(Mag_Type_x);
+        MultiFab& By_new = nyx_lev.get_new_data(Mag_Type_y); 
+        MultiFab& Bz_new = nyx_lev.get_new_data(Mag_Type_z); 
 #endif
-
         int ns = S_new.nComp();
         int nd = D_new.nComp();
 
@@ -447,9 +455,11 @@ Nyx::init_from_plotfile ()
             {
 #ifdef MHD
                 fort_init_e_from_rhoe_mhd
-                    (BL_TO_FORTRAN(S_new[mfi]), &ns,
-		     BL_TO_FORTRAN(Bx_new[mfi]), BL_TO_FORTRAN(By_new[mfi]),BL_TO_FORTRAN(Bz_new[mfi]),
-		     bx.loVect(), bx.hiVect(), &old_a);
+                    (BL_TO_FORTRAN(S_new[mfi]), &ns, 
+                     BL_TO_FORTRAN(Bx_new[mfi]),
+                     BL_TO_FORTRAN(By_new[mfi]), 
+                     BL_TO_FORTRAN(Bz_new[mfi]), 
+                     bx.loVect(), bx.hiVect(), &old_a); 
 #else
                 fort_init_e_from_rhoe
                     (BL_TO_FORTRAN(S_new[mfi]), &ns, bx.loVect(), bx.hiVect(), &old_a);
@@ -465,7 +475,7 @@ Nyx::init_from_plotfile ()
 
         // Define (rho E) given (rho e) and the momenta
 #ifdef MHD
-        nyx_lev.enforce_mhd_consistent_e(S_new, Bx_new, By_new, Bz_new);
+        nyx_lev.enforce_mhd_consistent_e(S_new ,Bx_new ,By_new ,Bz_new);
 #else
         nyx_lev.enforce_consistent_e(S_new);
 #endif
@@ -483,4 +493,6 @@ Nyx::init_from_plotfile ()
         std::cout << "Done initializing the particles from the plotfile " << std::endl;
         std::cout << " " << std::endl; 
     }
+
 }
+

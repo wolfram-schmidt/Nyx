@@ -244,7 +244,7 @@
                   print *,'    '
                   call bl_error("Error:: Derive_3d.f90 :: derpres")
                else
-                  p(i,j,k,1) = gamma_minus_1 * u(i,j,k,UEINT) 
+                  p(i,j,k,1) = gamma_minus_1 * u(i,j,k,UEINT)
                end if
 
             enddo
@@ -707,8 +707,8 @@
 !-----------------------------------------------------------------------
 
       subroutine dermomt(vel,vel_l1,vel_l2,vel_l3,vel_h1,vel_h2,vel_h3,nv, &
-                         dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc,lo,hi,domlo, &
-                         domhi,delta,xlo,time,dt,bc,level,grid_no)
+                           dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc,lo,hi,domlo, &
+                           domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
       ! This routine computes Mom + Mom*Sdens/Density
       !
@@ -743,7 +743,7 @@
 
 !------------------------------------------------------------------------------
 
-   subroutine dermagcenx(mag_cen_x,mag_x_l1,mag_x_l2,mag_x_l3,mag_x_h1,mag_x_h2,mag_x_h3, nbx, &
+     subroutine dermagcenx(mag_cen_x,mag_x_l1,mag_x_l2,mag_x_l3,mag_x_h1,mag_x_h2,mag_x_h3, nbx, &
                          dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
                          lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
@@ -770,7 +770,7 @@
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-  		mag_cen_x(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i+1,j,k,1))
+      mag_cen_x(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i+1,j,k,1))
             end do
          end do
       end do
@@ -779,7 +779,8 @@
 
 !------------------------------------------------------------------------------
 
-   subroutine dermagceny(mag_cen_y,mag_y_l1,mag_y_l2,mag_y_l3,mag_y_h1,mag_y_h2,mag_y_h3, nby, &
+
+     subroutine dermagceny(mag_cen_y,mag_y_l1,mag_y_l2,mag_y_l3,mag_y_h1,mag_y_h2,mag_y_h3, nby, &
                          dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
                          lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
@@ -806,7 +807,7 @@
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-    		mag_cen_y(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i,j+1,k,1))
+        mag_cen_y(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i,j+1,k,1))
             end do
          end do
       end do
@@ -815,7 +816,7 @@
 
 !------------------------------------------------------------------------------
 
-   subroutine dermagcenz(mag_cen_z,mag_z_l1,mag_z_l2,mag_z_l3,mag_z_h1,mag_z_h2,mag_z_h3, nbz, &
+     subroutine dermagcenz(mag_cen_z,mag_z_l1,mag_z_l2,mag_z_l3,mag_z_h1,mag_z_h2,mag_z_h3, nbz, &
                          dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
                          lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
@@ -842,7 +843,7 @@
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-    		mag_cen_z(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i,j,k+1,1))
+        mag_cen_z(i,j,k,1) = 0.5*(dat(i,j,k,1) + dat(i,j,k+1,1))
             end do
          end do
       end do
@@ -851,7 +852,7 @@
 
 !--------------------------------------------------------------------------------------
 
-   subroutine derex(E_x,E_x_l1,E_x_l2,E_x_l3,E_x_h1,E_x_h2,E_x_h3, Ebx, &
+     subroutine derex(E_x,E_x_l1,E_x_l2,E_x_l3,E_x_h1,E_x_h2,E_x_h3, Ebx, &
                               dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
                               lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
@@ -879,9 +880,9 @@
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-		vy = dat(i,j,k,4)/dat(i,j,k,3)
-		vz = dat(i,j,k,5)/dat(i,j,k,3)
-    		E_x(i,j,k,1) = -vy*dat(i,j,k,2) + vz*dat(i,j,k,1)
+      vy = dat(i,j,k,4)/dat(i,j,k,3)
+      vz = dat(i,j,k,5)/dat(i,j,k,3)
+        E_x(i,j,k,1) = -vy*dat(i,j,k,2) + vz*dat(i,j,k,1)
             end do
          end do
       end do
@@ -890,7 +891,7 @@
 
 !--------------------------------------------------------------------------------------
 
-   subroutine derey(E_y,E_y_l1,E_y_l2,E_y_l3,E_y_h1,E_y_h2,E_y_h3, Eby, &
+      subroutine derey(E_y,E_y_l1,E_y_l2,E_y_l3,E_y_h1,E_y_h2,E_y_h3, Eby, &
                               dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
                               lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
@@ -918,9 +919,9 @@
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-		vx = dat(i,j,k,4)/dat(i,j,k,3)
-		vz = dat(i,j,k,5)/dat(i,j,k,3)
-    		E_y(i,j,k,1) = -vz*dat(i,j,k,1) + vx*dat(i,j,k,2)
+      vx = dat(i,j,k,4)/dat(i,j,k,3)
+      vz = dat(i,j,k,5)/dat(i,j,k,3)
+        E_y(i,j,k,1) = -vz*dat(i,j,k,1) + vx*dat(i,j,k,2)
             end do
          end do
       end do
@@ -929,7 +930,7 @@
 
 !--------------------------------------------------------------------------------------
 
-   subroutine derez(E_z,E_z_l1,E_z_l2,E_z_l3,E_z_h1,E_z_h2,E_z_h3, Ebz, &
+     subroutine derez(E_z,E_z_l1,E_z_l2,E_z_l3,E_z_h1,E_z_h2,E_z_h3, Ebz, &
                               dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
                               lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
@@ -957,9 +958,9 @@
       do k = lo(3), hi(3)
          do j = lo(2), hi(2)
             do i = lo(1), hi(1)
-			vx = dat(i,j,k,4)/dat(i,j,k,3)
-			vy = dat(i,j,k,5)/dat(i,j,k,3)
-    		E_z(i,j,k,1) = -vx*dat(i,j,k,2) + vy*dat(i,j,k,1)
+      vx = dat(i,j,k,4)/dat(i,j,k,3)
+      vy = dat(i,j,k,5)/dat(i,j,k,3)
+        E_z(i,j,k,1) = -vx*dat(i,j,k,2) + vy*dat(i,j,k,1)
             end do
          end do
       end do
@@ -969,7 +970,8 @@
 
 !--------------------------------------------------------------------------------------
 
-   subroutine derdivb(divb,divb_l1,divb_l2,divb_l3,divb_h1,divb_h2,divb_h3, Ebz, &
+
+     subroutine derdivb(divb,divb_l1,divb_l2,divb_l3,divb_h1,divb_h2,divb_h3, Ebz, &
                               dat,dat_l1,dat_l2,dat_l3,dat_h1,dat_h2,dat_h3,nc, &
                               lo,hi,domlo,domhi,delta,xlo,time,dt,bc,level,grid_no)
       !
@@ -993,18 +995,20 @@
       ! 
       ! Here dat contains (mag_x,mag_y,mag_z)
       ! 
-		 write(*,*) 'Computing Divergence!'
-	divb = 0.0
+     write(*,*) 'Computing Divergence!'
+     divb = 0.0
       do k = lo(3) + 1, hi(3)
          do j = lo(2) + 1, hi(2)
             do i = lo(1) + 1, hi(1)
-			dx = dat(i,j,k,1) - dat(i-1,j,k,1)
-			dy = dat(i,j,k,2) - dat(i,j-1,k,2)
-			dz = dat(i,j,k,3) - dat(i,j,k-1,3)
-    			divb(i,j,k,1) = dx/delta(1) + dy/delta(2) + dz/delta(3)
+      dx = dat(i,j,k,1) - dat(i-1,j,k,1)
+      dy = dat(i,j,k,2) - dat(i,j-1,k,2)
+      dz = dat(i,j,k,3) - dat(i,j,k-1,3)
+          divb(i,j,k,1) = dx/delta(1) + dy/delta(2) + dz/delta(3)
             end do
          end do
       end do
 
       end subroutine derdivb
+
+
 

@@ -1,4 +1,4 @@
-EBASE     = Nyx
+EBASE     ?= Nyx
 
 USE_PARTICLES = TRUE
 
@@ -23,6 +23,25 @@ ifeq ($(USE_SINGLE_PRECISION_PARTICLES), TRUE)
   DEFINES += -DBL_SINGLE_PRECISION_PARTICLES
 endif
 
+ifeq ($(USE_MHD), TRUE) 
+  DEFINES += -DMHD
+endif
+
+HENSON_INCLUDE_DIR ?= $(HOME)/Research/Sensei/henson-chai/include
+HENSON_LIBRARY_DIR ?= $(HOME)/Build/Sensei/henson-chai
+HENSON_LIBRARY ?= -L$(HENSON_LIBRARY_DIR) -lhenson
+HENSON_LIBPMPI ?= -L$(HENSON_LIBRARY_DIR) -lhenson-pmpi -Wl,-rpath $(HENSON_LIBRARY_DIR)
+ifeq ($(USE_HENSON), TRUE)
+  DEFINES += -DHENSON
+  FFLAGS += -fPIC
+  F90FLAGS += -fPIC
+  CXXFLAGS += -fPIC
+  CFLAGS += -fPIC
+  LDFLAGS += -shared -Wl,--export-dynamic -Wl,-u,henson_set_contexts,-u,henson_set_namemap
+  INCLUDE_LOCATIONS += $(HENSON_INCLUDE_DIR)
+  LIBRARIES += $(HENSON_LIBRARY) $(HENSON_LIBPMPI)
+endif
+
 ifeq ($(USE_GRAV), TRUE)
   DEFINES += -DGRAVITY
 endif
@@ -45,6 +64,10 @@ endif
 
 ifeq ($(USE_HEATCOOL), TRUE)
   DEFINES += -DHEATCOOL
+endif
+
+ifeq ($(USE_SDC), TRUE)
+  DEFINES += -DSDC
 endif
 
 ifeq ($(USE_FORCING), TRUE)
@@ -98,6 +121,13 @@ endif
 #These are the directories in Nyx 
 
 Bdirs 	:= Source Source/Src_3d Source/Tagging Source/Initialization
+
+ifeq ($(USE_MHD), TRUE)
+  Bdirs += Source/MHD
+else
+  Bdirs += Source/HydroFortran
+endif
+
 Bdirs 	+= Source/EOS Source/Network Source/HeatCool
 Bdirs 	+= Source/SourceTerms Source/DerivedQuantities
 ifeq ($(USE_MPI), TRUE)
@@ -126,9 +156,6 @@ include $(Bpack)
 INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
 
-#INCLUDE_LOCATIONS += $(TOP)/Source/MG
-#VPATH_LOCATIONS   += $(TOP)/Source/MG
-
 #These are the directories in AMReX
 
 Pdirs   := Base AmrCore Amr Boundary Particle Extern/amrdata 
@@ -149,24 +176,13 @@ ifeq ($(USE_GRAV), TRUE)
 endif
 
 ifeq ($(USE_MG), TRUE)
-  include $(AMREX_HOME)/Src/LinearSolvers/C_to_F_MG/Make.package
-  INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/C_to_F_MG
-  VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/C_to_F_MG
-
   include $(AMREX_HOME)/Src/LinearSolvers/C_CellMG/Make.package
   INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/C_CellMG
   VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/C_CellMG
 
-  include $(AMREX_HOME)/Src/LinearSolvers/F_MG/FParallelMG.mak
-  INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/F_MG
-  VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/F_MG
-
-  ifeq ($(DIM),3)
-    include $(AMREX_HOME)/Src/LinearSolvers/MLMG/Make.package
-    INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/MLMG
-    VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/MLMG
-    DEFINES += -DNYX_MLMG
-  endif
+  include $(AMREX_HOME)/Src/LinearSolvers/MLMG/Make.package
+  INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/MLMG
+  VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/MLMG
 endif
 
 include $(AMREX_HOME)/Src/F_BaseLib/FParallelMG.mak

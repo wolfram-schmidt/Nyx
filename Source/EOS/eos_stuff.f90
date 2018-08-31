@@ -26,8 +26,6 @@
 
 module eos_module
 
-  use bl_types
-  use bl_space
   use bl_constants_module, only: M_PI, ONE
   use network, only: nspec, aion, zion
   use atomic_rates_module, only: XHYDROGEN
@@ -45,14 +43,14 @@ module eos_module
 
   public eos_init_small_pres, nyx_eos_T_given_Re, nyx_eos_T_given_Re_vec, nyx_eos_S_given_Re, &
          nyx_eos_soundspeed, nyx_eos_given_RT, nyx_eos_given_RT_vec, eos
-
-  interface eos !this way we can use the same interface name for hydro and mhd
-	module procedure eos_hydro, eos_mhd 
+  interface eos
+    module procedure eos_hydro, eos_mhd
   end interface
 
   interface nyx_eos_soundspeed
     module procedure nyx_eos_soundspeed_hydro, nyx_eos_soundspeed_mhd
   end interface
+
 contains
 
   !---------------------------------------------------------------------------
@@ -107,7 +105,6 @@ contains
 
   end subroutine eos_init_small_pres
 
-!======= Sound speed calc for gas dynamics ==========
   subroutine nyx_eos_soundspeed_hydro(c, R, e)
 
      use amrex_fort_module, only : rt => amrex_real
@@ -463,7 +460,7 @@ contains
 
     real(rt) :: dens, temp
     real(rt) :: xmass(nspec)
-	real(rt) :: bx, by, bz
+    real(rt) :: bx, by, bz
     real(rt) :: pres, eint
     real(rt) :: c_v
     real(rt) :: dPdT, dPdR, dedT
@@ -546,9 +543,9 @@ contains
     dedT = eint/temp
 
     c_v = dedT
-	
-	!Compute total pressure = thermal pressure + magnetic pressure 
-	!pres = pres + 0.5d0*(bx*bx + by*by + bz*bz)
+  
+    !Compute total pressure = thermal pressure + magnetic pressure 
+    !pres = pres + 0.5d0*(bx*bx + by*by + bz*bz)
 
   end subroutine eos_mhd
 

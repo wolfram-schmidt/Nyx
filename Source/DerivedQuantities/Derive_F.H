@@ -199,69 +199,69 @@ BL_FORT_PROC_DECL(DERFORCEZ,derforcez)
      const amrex::Real* delta, const amrex::Real* xlo,
      const amrex::Real* time, const amrex::Real* dt, const int* bcrec, 
      const int* level, const int* grid_no);
-
 #ifdef MHD
 BL_FORT_PROC_DECL(DERMAGCENX, dermagcenx)
-	(BL_FORT_FAB_ARG(der), const int* nvar, 
+    (BL_FORT_FAB_ARG(der), const int* nvar,
      const BL_FORT_FAB_ARG(data),const int* ncomp,
      const int* lo, const int* hi,
      const int* domain_lo, const int* domain_hi,
      const amrex::Real* delta, const amrex::Real* xlo,
-     const amrex::Real* time, const amrex::Real* dt, const int* bcrec, 
+     const amrex::Real* time, const amrex::Real* dt, const int* bcrec,
      const int* level, const int* grid_no);
 
 BL_FORT_PROC_DECL(DERMAGCENY, dermagceny)
-	(BL_FORT_FAB_ARG(der), const int* nvar, 
+    (BL_FORT_FAB_ARG(der), const int* nvar,
      const BL_FORT_FAB_ARG(data),const int* ncomp,
      const int* lo, const int* hi,
      const int* domain_lo, const int* domain_hi,
      const amrex::Real* delta, const amrex::Real* xlo,
-     const amrex::Real* time, const amrex::Real* dt, const int* bcrec, 
+     const amrex::Real* time, const amrex::Real* dt, const int* bcrec,
      const int* level, const int* grid_no);
 
 BL_FORT_PROC_DECL(DERMAGCENZ, dermagcenz)
-	(BL_FORT_FAB_ARG(der), const int* nvar, 
+    (BL_FORT_FAB_ARG(der), const int* nvar,
      const BL_FORT_FAB_ARG(data),const int* ncomp,
      const int* lo, const int* hi,
      const int* domain_lo, const int* domain_hi,
      const amrex::Real* delta, const amrex::Real* xlo,
-     const amrex::Real* time, const amrex::Real* dt, const int* bcrec, 
+     const amrex::Real* time, const amrex::Real* dt, const int* bcrec,
      const int* level, const int* grid_no);
 
 BL_FORT_PROC_DECL(DEREX, derex)
-	(BL_FORT_FAB_ARG(der), const int* nvar, 
+    (BL_FORT_FAB_ARG(der), const int* nvar,
      const BL_FORT_FAB_ARG(data),const int* ncomp,
      const int* lo, const int* hi,
      const int* domain_lo, const int* domain_hi,
      const amrex::Real* delta, const amrex::Real* xlo,
-     const amrex::Real* time, const amrex::Real* dt, const int* bcrec, 
+     const amrex::Real* time, const amrex::Real* dt, const int* bcrec,
      const int* level, const int* grid_no);
 
 BL_FORT_PROC_DECL(DEREY, derey)
-	(BL_FORT_FAB_ARG(der), const int* nvar, 
+    (BL_FORT_FAB_ARG(der), const int* nvar,
      const BL_FORT_FAB_ARG(data),const int* ncomp,
      const int* lo, const int* hi,
      const int* domain_lo, const int* domain_hi,
      const amrex::Real* delta, const amrex::Real* xlo,
-     const amrex::Real* time, const amrex::Real* dt, const int* bcrec, 
+     const amrex::Real* time, const amrex::Real* dt, const int* bcrec,
      const int* level, const int* grid_no);
 
 BL_FORT_PROC_DECL(DEREZ, derez)
-	(BL_FORT_FAB_ARG(der), const int* nvar, 
+    (BL_FORT_FAB_ARG(der), const int* nvar,
      const BL_FORT_FAB_ARG(data),const int* ncomp,
      const int* lo, const int* hi,
      const int* domain_lo, const int* domain_hi,
      const amrex::Real* delta, const amrex::Real* xlo,
-     const amrex::Real* time, const amrex::Real* dt, const int* bcrec, 
+     const amrex::Real* time, const amrex::Real* dt, const int* bcrec,
      const int* level, const int* grid_no);
 
 BL_FORT_PROC_DECL(DERDIVB, derdivb)
-	(BL_FORT_FAB_ARG(der), const int* nvar, 
+    (BL_FORT_FAB_ARG(der), const int* nvar,
      const BL_FORT_FAB_ARG(data),const int* ncomp,
      const int* lo, const int* hi,
      const int* domain_lo, const int* domain_hi,
      const amrex::Real* delta, const amrex::Real* xlo,
-     const amrex::Real* time, const amrex::Real* dt, const int* bcrec, 
+     const amrex::Real* time, const amrex::Real* dt, const int* bcrec,
      const int* level, const int* grid_no);
-#endif 
 #endif
+#endif
+
