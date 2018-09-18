@@ -416,8 +416,6 @@ Nyx::read_params ()
     }
 
 #ifdef HEATCOOL
-    if (heat_cool_type > 0 && add_ext_src == 0)
-       amrex::Error("Nyx::must set add_ext_src to 1 if heat_cool_type > 0");
     if (heat_cool_type != 3 && heat_cool_type != 5 && heat_cool_type != 7)
        amrex::Error("Nyx:: nonzero heat_cool_type must equal 3 or 5 or 7");
     if (heat_cool_type == 0)
@@ -1803,7 +1801,7 @@ Nyx::post_regrid (int lbase,
         if (gravity->get_gravity_type() == "PoissonGrav")
 #endif
         {
-            int ngrow_for_solve = 1;
+            int ngrow_for_solve = parent->levelCount(level) + 1;
             int use_previous_phi_as_guess = 1;
             gravity->multilevel_solve_for_new_phi(level, new_finest, ngrow_for_solve, use_previous_phi_as_guess);
         }
