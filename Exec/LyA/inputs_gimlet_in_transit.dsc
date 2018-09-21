@@ -7,7 +7,7 @@ nyx.ppm_reference    = 1
 nyx.use_colglaz      = 0
 nyx.corner_coupling  = 1
 
-nyx.add_ext_src      = 1
+nyx.add_ext_src      = 0
 nyx.heat_cool_type   = 3
 nyx.strang_split     = 1
 
@@ -127,7 +127,6 @@ amr.plot_file       = plt
 amr.plot_int        = 20
 amr.plot_nfiles     = 86
 #nyx.plot_z_values   = 4.0 3.5 3.0 2.5 2.25 2.0
-#particles.write_in_plotfile = 1
 
 amr.plot_vars        = density
 #amr.derive_plot_vars = particle_mass_density
