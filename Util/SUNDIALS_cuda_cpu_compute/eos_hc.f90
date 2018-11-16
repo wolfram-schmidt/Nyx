@@ -9,7 +9,7 @@
 
 module eos_module
 
-  use amrex_fort_module, only : rt => amrex_real
+  use constants_module, only : rt => type_real, M_PI
   use iso_c_binding, only: c_double
 
   implicit none
@@ -26,7 +26,7 @@ module eos_module
 
       subroutine fort_setup_eos_params (xacc_in, vode_rtol_in, vode_atol_scaled_in) &
                                        bind(C, name='fort_setup_eos_params')
-        use amrex_fort_module, only : rt => amrex_real
+        use constants_module, only : rt => type_real, M_PI
         implicit none
         real(rt), intent(in) :: xacc_in, vode_rtol_in, vode_atol_scaled_in
 
@@ -40,7 +40,7 @@ module eos_module
 
       subroutine eos_init_small_pres(R, T, Ne, P, a)
 
-        use amrex_fort_module, only : rt => amrex_real
+        use constants_module, only : rt => type_real, M_PI
         use atomic_rates_module, ONLY: YHELIUM
         use fundamental_constants_module, only: mp_over_kb
 
@@ -77,7 +77,7 @@ module eos_module
 
       subroutine nyx_eos_S_given_Re(S, R, T, Ne, a)
 
-        use bl_constants_module, only: M_PI
+        use constants_module, only : M_PI
         use atomic_rates_module, ONLY: YHELIUM
         use fundamental_constants_module, only: mp_over_kb
         use fundamental_constants_module, only: k_B, hbar, m_proton
@@ -189,7 +189,7 @@ module eos_module
 
       subroutine nyx_eos_T_given_Re_vec(T, Ne, R_in, e_in, a, veclen)
 
-      use amrex_fort_module, only : rt => amrex_real
+      use constants_module, only : rt => type_real, M_PI
       use atomic_rates_module, ONLY: XHYDROGEN, MPROTON
       use fundamental_constants_module, only: density_to_cgs, e_to_cgs
 
@@ -243,7 +243,6 @@ module eos_module
 
       use atomic_rates_module, ONLY: this_z, YHELIUM, BOLTZMANN, MPROTON, TCOOLMAX_R
       use meth_params_module, only: gamma_minus_1
-      use amrex_error_module, only: amrex_abort
 
       integer :: i
 
@@ -268,7 +267,7 @@ module eos_module
       ! Check if we have interpolated to this z
       if (abs(z-this_z) .gt. xacc*z) then
           write(errmsg, *) "iterate_ne_vec(): Wrong redshift! z = ", z, " but this_z = ", this_z
-          call amrex_abort(errmsg)
+!          call amrex_abort(errmsg)
       end if
 
       ii = 0
@@ -422,7 +421,7 @@ module eos_module
 
       subroutine ion_n_vec(JH, JHe, U, nh, ne, nhp, nhep, nhepp, t, vec_count)
 
-      use amrex_fort_module, only : rt => amrex_real
+      use constants_module, only : rt => type_real, M_PI
       use meth_params_module, only: gamma_minus_1
       use atomic_rates_module, ONLY: YHELIUM, MPROTON, BOLTZMANN, &
                                      TCOOLMIN, TCOOLMAX, NCOOLTAB, deltaT, &
@@ -434,7 +433,8 @@ module eos_module
       integer, dimension(vec_count), intent(in) :: JH, JHe
       real(rt), intent(in   ) :: U(vec_count), nh(vec_count), ne(vec_count)
       real(rt), intent(  out) :: nhp(vec_count), nhep(vec_count), nhepp(vec_count), t(vec_count)
-      real(rt) :: ahp(vec_count), ahep(vec_count), ahepp(vec_count), ad(vec_count), geh0(vec_count), gehe0(vec_count), gehep(vec_count)
+      real(rt) :: ahp(vec_count), ahep(vec_count), ahepp(vec_count), ad(vec_count), &
+           geh0(vec_count), gehe0(vec_count), gehep(vec_count)
       real(rt) :: ggh0ne(vec_count), gghe0ne(vec_count), gghepne(vec_count)
       real(rt) :: mu(vec_count), tmp(vec_count), logT(vec_count), flo(vec_count), fhi(vec_count)
       real(rt), parameter :: smallest_val=tiny(1.0d0)
@@ -512,8 +512,8 @@ module eos_module
 
       subroutine iterate_ne(JH, JHe, z, U, t, nh, ne, nh0, nhp, nhe0, nhep, nhepp)
 
-      use amrex_error_module, only: amrex_abort
       use atomic_rates_module, only: this_z, YHELIUM
+      use vode_aux_module, only: i_vode,j_vode,k_vode, NR_vode
 
       integer :: i
 
@@ -526,11 +526,13 @@ module eos_module
       real(rt) :: nhp_plus, nhep_plus, nhepp_plus
       real(rt) :: dnhp_dne, dnhep_dne, dnhepp_dne, dne
       character(len=128) :: errmsg
+      integer :: print_radius
+      CHARACTER(LEN=80) :: FMT
 
       ! Check if we have interpolated to this z
       if (abs(z-this_z) .gt. xacc*z) then
           write(errmsg, *) "iterate_ne(): Wrong redshift! z = ", z, " but this_z = ", this_z
-          call amrex_abort(errmsg)
+!          call amrex_abort(errmsg)
       end if
 
       i = 0
@@ -549,6 +551,8 @@ module eos_module
          endif
          call ion_n(JH, JHe, U, nh, (ne+eps), nhp_plus, nhep_plus, nhepp_plus, t)
 
+         NR_vode  = NR_vode + 2
+
          dnhp_dne   = (nhp_plus   - nhp)   / eps
          dnhep_dne  = (nhep_plus  - nhep)  / eps
          dnhepp_dne = (nhepp_plus - nhepp) / eps
@@ -557,21 +561,28 @@ module eos_module
          df  = 1.0d0 - dnhp_dne - dnhep_dne - 2.0d0*dnhepp_dne
          dne = f/df
 
+!      FMT = "(A6, I4, ES15.5, ES15.5E3, ES15.5, ES15.5)"
+!      print(FMT), 'ine:',i,U,ne,dne,eps
+!      print(FMT), 'fdine:',i,f,nhp,nhep,nhepp
+!      print(FMT), 'dfine:',i,df,dnhp_dne,dnhep_dne,dnhepp_dne
+
          ne = max((ne-dne), 0.0d0)
 
          if (abs(dne) < xacc) exit
 
-         !$OMP CRITICAL
-         if (i .gt. 12) then
+         if (i .gt. 10) then
+            !$OMP CRITICAL
             print*, "ITERATION: ", i, " NUMBERS: ", z, t, ne, nhp, nhep, nhepp, df
-            STOP 'iterate_ne(): No convergence in Newton-Raphson!'
+            if (i .gt. 12) &
+               STOP 'iterate_ne(): No convergence in Newton-Raphson!'
+            !$OMP END CRITICAL
          endif
-         !$OMP END CRITICAL
 
       enddo
 
       ! Get rates for the final ne
       call ion_n(JH, JHe, U, nh, ne, nhp, nhep, nhepp, t)
+      NR_vode  = NR_vode + 1
 
       ! Neutral fractions:
       nh0   = 1.0d0 - nhp
@@ -588,6 +599,7 @@ module eos_module
                                      AlphaHp, AlphaHep, AlphaHepp, Alphad, &
                                      GammaeH0, GammaeHe0, GammaeHep, &
                                      ggh0, gghe0, gghep
+      use vode_aux_module, only: i_vode,j_vode,k_vode, NR_vode
 
       integer, intent(in) :: JH, JHe
       real(rt), intent(in   ) :: U, nh, ne
@@ -597,16 +609,21 @@ module eos_module
       real(rt) :: mu, tmp, logT, flo, fhi
       real(rt), parameter :: smallest_val=tiny(1.0d0)
       integer :: j
-
+      integer :: print_radius
+      CHARACTER(LEN=80) :: FMT
 
       mu = (1.0d0+4.0d0*YHELIUM) / (1.0d0+YHELIUM+ne)
       t  = gamma_minus_1*MPROTON/BOLTZMANN * U * mu
-
+!      print*, "MPROTON/BOLTZMANN = ", MPROTON/BOLTZMANN
+!      print*, "YHELIUM = ", YHELIUM
+!      print*, "gamma_minus_1 = ", gamma_minus_1
+     
       logT = dlog10(t)
       if (logT .ge. TCOOLMAX) then ! Fully ionized plasma
          nhp   = 1.0d0
          nhep  = 0.0d0
          nhepp = YHELIUM
+         print*,'logT = ',logT
          return
       endif
 
@@ -620,6 +637,10 @@ module eos_module
       flo = 1.0d0 - fhi
       j = j + 1 ! F90 arrays start with 1
 
+!      FMT = "(A6, I4, ES15.5, ES15.5E3, ES15.5, ES15.5)"
+!      if(g_debug.eq.0) then
+!      print(FMT), 'ion:',j,U,ne,logT,AlphaHep(j)
+ 
       ahp   = flo*AlphaHp  (j) + fhi*AlphaHp  (j+1)
       ahep  = flo*AlphaHep (j) + fhi*AlphaHep (j+1)
       ahepp = flo*AlphaHepp(j) + fhi*AlphaHepp(j+1)
@@ -628,6 +649,9 @@ module eos_module
       gehe0 = flo*GammaeHe0(j) + fhi*GammaeHe0(j+1)
       gehep = flo*GammaeHep(j) + fhi*GammaeHep(j+1)
 
+!      print(FMT), 'a ion:',j,ahp,ahep,ahepp,ad
+!      print(FMT), 'b ion:',j,geh0,gehe0,gehep,ad
+!      print*, "ne = ", ne
       if (ne .gt. 0.0d0) then
          ggh0ne   = JH  * ggh0  / (ne*nh)
          gghe0ne  = JH  * gghe0 / (ne*nh)
@@ -637,6 +661,8 @@ module eos_module
          gghe0ne  = 0.0d0
          gghepne  = 0.0d0
       endif
+
+!      print(FMT), 'c ion:',j,ggh0ne,gghe0ne,gghepne,ad
 
       ! H+
       nhp = 1.0d0 - ahp/(ahp + geh0 + ggh0ne)

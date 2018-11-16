@@ -6,9 +6,11 @@
 #include <AMReX_MultiFab.H>
 #include <AMReX_Print.H>
 #include <AMReX_PlotFileUtil.H>
+//#if !defined(BL_NO_FORT)
+//#include <AMReX_BaseFab_f.H>
+//#endif
 
 #include <AMReX_BLFort.H>
-#include <AMReX_Gpu.H>
 
 #include <cvode/cvode.h>               /* prototypes for CVODE fcts., consts. */
 #include <sunlinsol/sunlinsol_spgmr.h> /* access to SPGMR SUNLinearSolver     */
@@ -48,19 +50,21 @@ int main (int argc, char* argv[])
 
     std::cout << std::setprecision(15);
 
+    bool test_ic;
     int n_cell, max_grid_size;
     int cvode_meth, cvode_itmeth, write_plotfile;
     bool do_tiling;
 
   realtype reltol, abstol, t, tout, umax;
   N_Vector u;
-  //  SUNLinearSolver LS;
+  SUNLinearSolver LS;
   void *cvode_mem;
   int iout, flag;
   long int nst;
 
+  test_ic=false;
   u = NULL;
-  //  LS = NULL;
+  LS = NULL;
   cvode_mem = NULL;
 
   reltol = 1e-6;  /* Set the tolerances */
@@ -159,8 +163,25 @@ int main (int argc, char* argv[])
     // Create MultiFab with no ghost cells.
     MultiFab mf(ba, dm, Ncomp, 0);
 
+    // Create MultiFab with no ghost cells.
+    MultiFab S_old(ba, dm, 7, 0);
+
+    // Create MultiFab with no ghost cells.
+    MultiFab D_old(ba, dm, 2, 0);
+
     
     mf.setVal(0.0);
+    mf.setVal(6.226414794921875E+02);
+    /*
+	  rparh[4*i+0]= 3.255559960937500E+04;   //rpar(1)=T_vode
+	  rparh[4*i+1]= 1.076699972152710E+00;//    rpar(2)=ne_vode
+	  rparh[4*i+2]=  2.119999946752000E+12; //    rpar(3)=rho_vode
+	  rparh[4*i+3]=1/(1.635780036449432E-01)-1;    //    rpar(4)=z_vode
+    */
+    S_old.setVal(2.119999946752000E+12,0); //    rpar(3)=rho_vode
+    D_old.setVal(3.255559960937500E+04 ,0,1); //    rpar(1)=T_vode
+    D_old.setVal(1.076699972152710E+00 ,1,1); //    rpar(2)=ne_vode
+
 
     //    MultiFab vode_aux_vars(ba, dm, 4*Ncomp, 0);
       /*      vode_aux_vars.setVal(3.255559960937500E+04,0);
@@ -189,6 +210,7 @@ int main (int argc, char* argv[])
       amrex::IntVect tile_size = tbx.size();
       const int* hi = tbx.hiVect();
       const int* lo = tbx.loVect();
+      int long neq1=(hi[0]-lo[0]+1)*(hi[1]-lo[1]+1)*(hi[2]-lo[2]+1);
       int long neq=(tile_size[0])*(tile_size[1])*(tile_size[2]);
 
       if(neq>1)
@@ -198,16 +220,13 @@ int main (int argc, char* argv[])
       u = N_VNew_Cuda(neq);  /* Allocate u vector */
       if(check_retval((void*)u, "N_VNew_Cuda", 0)) return(1);
 
-      FSetInternalEnergy_mfab(mf[mfi].dataPtr(),
+      /*      FSetInternalEnergy_mfab(mf[mfi].dataPtr(),
         tbx.loVect(),
 	    tbx.hiVect());  /* Initialize u vector */
 
       dptr=N_VGetHostArrayPointer_Cuda(u);
-      amrex::Cuda::Device::synchronize();
-      CudaErrorCheck();
       mf[mfi].copyToMem(tbx,0,1,dptr);
       N_VCopyToDevice_Cuda(u);
-
 
       /* Call CVodeCreate to create the solver memory and specify the 
        * Backward Differentiation Formula and the use of a Newton iteration */
@@ -218,8 +237,6 @@ int main (int argc, char* argv[])
       #endif
       if(check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
-      amrex::Cuda::Device::synchronize();
-      CudaErrorCheck();
       /* Call CVodeInit to initialize the integrator memory and specify the
        * user's right hand side function in u'=f(t,u), the initial time T0, and
        * the initial dependent variable vector u. */
@@ -228,11 +245,8 @@ int main (int argc, char* argv[])
 
       /* Call CVodeSStolerances to specify the scalar relative tolerance
        * and scalar absolute tolerance */
-      N_Vector abstol_vec = N_VNew_Cuda(neq);
-      N_VConst(abstol,abstol_vec);
-      flag = CVodeSVtolerances(cvode_mem, reltol, abstol_vec);
-      //flag = CVodeSStolerances(cvode_mem, reltol, abstol);
-      if (check_retval(&flag, "CVodeSVtolerances", 1)) return(1);
+      flag = CVodeSStolerances(cvode_mem, reltol, abstol);
+      if (check_retval(&flag, "CVodeSStolerances", 1)) return(1);
 
       /* Create SPGMR solver structure without preconditioning
        * and the maximum Krylov dimension maxl */
@@ -248,66 +262,60 @@ int main (int argc, char* argv[])
       /*Use N_Vector to create userdata, in order to allocate data on device*/
       N_Vector Data = N_VNew_Cuda(4*neq);  // Allocate u vector 
       N_VConst(0.0,Data);
-      amrex::Cuda::Device::synchronize();
-      CudaErrorCheck();
       double* rparh=N_VGetHostArrayPointer_Cuda(Data);
+      N_Vector rho_tmp = N_VNew_Serial(neq);  // Allocate u vector 
+      N_VConst(0.0,rho_tmp);
+      double* rho_tmp_ptr=N_VGetArrayPointer_Serial(rho_tmp);
+      S_old[mfi].copyToMem(tbx,0,1,rho_tmp_ptr);
+      N_Vector T_tmp = N_VNew_Serial(2*neq);  // Allocate u vector 
+      N_VConst(0.0,T_tmp);
+      double* Tne_tmp_ptr=N_VGetArrayPointer_Serial(T_tmp);
+      D_old[mfi].copyToMem(tbx,0,2,Tne_tmp_ptr);
       for(int i=0;i<neq;i++)
 	{
-	  rparh[4*i+0]= 3.255559960937500E+04;   //rpar(1)=T_vode
-	  rparh[4*i+1]= 1.076699972152710E+00;//    rpar(2)=ne_vode
-	  rparh[4*i+2]=  2.119999946752000E+12; //    rpar(3)=rho_vode
+	  rparh[4*i+0]= Tne_tmp_ptr[i];   //rpar(1)=T_vode
+	  rparh[4*i+1]= Tne_tmp_ptr[neq+i];//    rpar(2)=ne_vode
+	  rparh[4*i+2]= rho_tmp_ptr[i]; //    rpar(3)=rho_vode
 	  rparh[4*i+3]=1/(1.635780036449432E-01)-1;    //    rpar(4)=z_vode
 
 	}
       N_VCopyToDevice_Cuda(Data);
-      //      amrex::Device::synchronize();
-      //      CudaErrorCheck();
-      /////      CVodeSetUserData(cvode_mem, N_VGetHostArrayPointer_Cuda(Data));
-      CVodeSetUserData(cvode_mem, &Data);
-      //      CVodeSetUserData(cvode_mem, N_VGetDeviceArrayPointer_Cuda(Data));
-      /*      double* dptr_data=new double[4];
-      for(int i=0;i<4;i++)
-      dptr_data[i]=0.0;
-      CVodeSetUserData(cvode_mem, dptr_data);*/
 
+      CVodeSetUserData(cvode_mem, &Data);
+
+      /*     N_Vector udot=N_VClone(u);
+      f(t,u,udot,&Data);
+      amrex::Print()<<"Max found: "<<N_VMaxNorm(udot)<<std::endl;
+      break;*/
       /* Call CVode */
-      /*      flag = CVode(cvode_mem, tout, u, &t, CV_NORMAL);
-	      if(check_flag(&flag, "CVode", 1)) break;*/
       for(iout=1, tout=8.839029760565609E-06  ; iout <= 1; iout++, tout += 8.839029760565609E-06) {
       flag = CVode(cvode_mem, tout, u, &t, CV_NORMAL);
+      if(check_retval(&flag, "CVode", 1)) break;
       umax = N_VMaxNorm(u);
-      N_VCopyFromDevice_Cuda(Data);
-      /*
-      double min_ne=10;
-      double max_ne=-1;
-      for(int i=0;i<neq;i++)
-	{
-	min_ne=min(min_ne,rparh[4*i+1]);
-	max_ne=max(max_ne,rparh[4*i+1]);
-      }
-      amrex::Print() << "min is" << min_ne<< "\tmax is "<< max_ne << std::endl;*/
       flag = CVodeGetNumSteps(cvode_mem, &nst);
       check_retval(&flag, "CVodeGetNumSteps", 1);
-      PrintOutput(tout, umax, nst);
+      PrintOutput(t, umax, nst);
       }
 
-      amrex::Cuda::Device::synchronize();
-      CudaErrorCheck();
-
       N_VCopyFromDevice_Cuda(u);
-      /*      N_VCopyFromDevice_Cuda(Data);
-	      fprintf(stdout,"\nFinal rparh[0]=%g \n\n",rparh[0]);*/
-      /////
+      //      N_VCopyFromDevice_Cuda(Data);
+
+      for(int i=0;i<neq;i++)
+	{
+	  Tne_tmp_ptr[i]=rparh[4*i+0];   //rpar(1)=T_vode
+	  Tne_tmp_ptr[neq+i]=rparh[4*i+1];//    rpar(2)=ne_vode
+	  /*	  amrex::Print()<<"Temp"<<rparh[4*i]<<std::endl;
+	  amrex::Print()<<"ne"<<rparh[4*i+1]<<std::endl;
+	  amrex::Print()<<"rho"<<rparh[4*i+2]<<std::endl;
+	  amrex::Print()<<"z"<<rparh[4*i+3]<<std::endl;*/
+	  // rho should not change  rho_tmp_ptr[i]=rparh[4*i+2]; //    rpar(3)=rho_vode
+	}
+      D_old[mfi].copyFromMem(tbx,0,2,Tne_tmp_ptr);
+
       mf[mfi].copyFromMem(tbx,0,1,dptr);
-      /////      CVodeSetUserData(cvode_mem, NULL);
       PrintFinalStats(cvode_mem);
 
-      amrex::Cuda::Device::synchronize();
-      CudaErrorCheck();
-
       N_VDestroy(u);          /* Free the u vector */
-      /*      delete(dptr_data);
-      dptr_data=NULL;*/
       N_VDestroy(Data);          /* Free the userdata vector */
       CVodeFree(&cvode_mem);  /* Free the integrator memory */
     
@@ -329,6 +337,12 @@ int main (int argc, char* argv[])
                                       geom,
                                       time,
                                       0);
+      amrex::WriteSingleLevelPlotfile("PLT_DIAG_OUTPUT",
+                                      D_old,
+                                      {"Temp","Ne"},
+                                      geom,
+                                      time,
+                                      0);
     }
 
     // Call the timer again and compute the maximum difference between the start time and stop time
@@ -344,82 +358,23 @@ int main (int argc, char* argv[])
     return 0;
 }
 
-__global__ void f_rhs_test(Real t,double* u_ptr,Real* udot_ptr, Real* rpar, int neq)
-{
-  /*
-1.635780036449432E-01 a
-8.839029760565609E-06 dt
-2.119999946752000E+12 rho
-3.255559960937500E+04 T
-1.076699972152710E+00 ne
-6.226414794921875E+02 e */
-  /*  double rpar2[4];
-    rpar2[0]= 3.255559960937500E+04;   //rpar(1)=T_vode
-  rpar2[1]= 1.076699972152710E+00;//    rpar(2)=ne_vode
-  rpar2[2]=  2.119999946752000E+12; //    rpar(3)=rho_vode
-  rpar2[3]=1/(1+1.635780036449432E-01);    //    rpar(4)=z_vode*/
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
-  //  if(tid==0)
-    if(tid<neq)
-      RhsFn(t,u_ptr+tid,udot_ptr+tid,rpar+4*tid,1);
-    //    udot_ptr[tid]=(neq-tid)*t
-  
-    //*********************************
-    /*    if(tid<neq)
-	  RhsFn(t,u_ptr+tid,udot_ptr+tid,rpar+4*tid,1);*/
-    //rpar[4*tid+1]=tid;
-    /**********************************
-    if(tid<neq)
-      udot_ptr[tid]=2.0*t;*/
 
-  /* Either way to setup IC seems to work
-    RhsFn(t,u_ptr+i,udot_ptr+i,rpar2,1);*/
-}
-
-static int f(realtype t, N_Vector u, N_Vector udot, void *user_data)
+static int f(realtype t, N_Vector u, N_Vector udot, void* user_data)
 {
-  Real* udot_ptr=N_VGetDeviceArrayPointer_Cuda(udot);
-  Real* u_ptr=N_VGetDeviceArrayPointer_Cuda(u);
+  N_VCopyFromDevice_Cuda(u);
+  //  N_VCopyFromDevice_Cuda(*(static_cast<N_Vector*>(user_data)));
+  Real* udot_ptr=N_VGetHostArrayPointer_Cuda(udot);
+  Real* u_ptr=N_VGetHostArrayPointer_Cuda(u);
   int neq=N_VGetLength_Cuda(udot);
-  double*  rpar=N_VGetDeviceArrayPointer_Cuda(*(static_cast<N_Vector*>(user_data)));
-  
-  /*  N_VCopyFromDevice_Cuda(*(static_cast<N_Vector*>(user_data)));  
-  double*  rparh=N_VGetHostArrayPointer_Cuda(*(static_cast<N_Vector*>(user_data)));
-   
-   fprintf(stdout,"\nt=%g \n\n",t);
-   fprintf(stdout,"\nrparh[0]=%g \n\n",rparh[0]);
-  fprintf(stdout,"\nrparh[1]=%g \n\n",rparh[1]);
-  fprintf(stdout,"\nrparh[2]=%g \n\n",rparh[2]);
-  fprintf(stdout,"\nrparh[3]=%g \n\n",rparh[3]);*/
-  int numThreads = std::min(32, neq);
-  int numBlocks = static_cast<int>(ceil(((double) neq)/((double) numThreads)));
-  /*
- ////////////////////////////  fprintf(stdout,"\n castro <<<%d,%d>>> \n\n",numBlocks, numThreads);
-
-    unsigned block = 256;
-    unsigned grid = (int) ceil((float)neq / block);
- ////////////////////////////fprintf(stdout,"\n cvode <<<%d,%d>>> \n\n",grid, block);
-
- int blockSize, gridSize;
- 
- // Number of threads in each thread block
- blockSize = 1024;
- 
- // Number of thread blocks in grid
- gridSize = (int)ceil((float)neq/blockSize);
- ////////////////////////////fprintf(stdout,"\n olcf <<<%d,%d>>> \n\n",gridSize, blockSize);
- */
- f_rhs_test<<<numBlocks,numThreads>>>(t,u_ptr,udot_ptr, rpar, neq);
-
- amrex::Cuda::Device::synchronize();
- CudaErrorCheck();
-
-/*      N_VCopyFromDevice_Cuda(*(static_cast<N_Vector*>(user_data)));
-      fprintf(stdout,"\nafter rparh[0]=%g \n\n",rparh[0]);
-  fprintf(stdout,"\nafter rparh[1]=%g \n\n",rparh[1]);
-  fprintf(stdout,"\nafter rparh[2]=%g \n\n",rparh[2]);
-  fprintf(stdout,"\nafter rparh[3]=%g \n\n",rparh[3]);
-  fprintf(stdout,"\nafter last rparh[4*(neq-1)+1]=%g \n\n",rparh[4*(neq-1)+1]);*/
+  double*  rpar=N_VGetHostArrayPointer_Cuda(*(static_cast<N_Vector*>(user_data)));
+  for(int tid=0;tid<neq;tid++)
+    {
+      //    fprintf(stdout,"\nrpar[4*tid+0]=%g\n",rpar[4*tid]);
+    RhsFnReal(t,&(u_ptr[tid]),&(udot_ptr[tid]),&(rpar[4*tid]),1);
+    //    fprintf(stdout,"\nafter rpar[4*tid+0]=%g\n",rpar[4*tid]);
+    }
+  N_VCopyToDevice_Cuda(udot);
+  //  N_VCopyToDevice_Cuda(*(static_cast<N_Vector*>(user_data)));
   return 0;
 }
 
