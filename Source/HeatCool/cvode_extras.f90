@@ -10,7 +10,7 @@ module cvode_extras
     use meth_params_module, only : NVAR, URHO, UEDEN, UEINT, &
                                    NDIAG, TEMP_COMP, NE_COMP, ZHI_COMP, &
                                    gamma_minus_1
-    use bl_constants_module, only: M_PI
+    use amrex_constants_module, only: M_PI
     use eos_params_module
     use network
     use eos_module, only: nyx_eos_T_given_Re, nyx_eos_given_RT
@@ -67,7 +67,7 @@ module cvode_extras
     use meth_params_module, only : NVAR, URHO, UEDEN, UEINT, &
                                    NDIAG, TEMP_COMP, NE_COMP, ZHI_COMP, &
                                    gamma_minus_1
-    use bl_constants_module, only: M_PI
+    use amrex_constants_module, only: M_PI
     use eos_params_module
     use network
     use eos_module, only: nyx_eos_T_given_Re, nyx_eos_given_RT
@@ -103,7 +103,7 @@ module cvode_extras
          ne_vode = 0.0
          mu     = (1.0d0+4.0d0*YHELIUM) / (1.0d0+YHELIUM+ne_vode)
          e_out  = T_vode / (gamma_minus_1 * mp_over_kB * mu)
-         !                    call bl_abort('bad e out of strang')
+         !                    call amrex_abort('bad e out of strang')
       end if
       
       ! Update T and ne (do not use stuff computed in f_rhs, per vode manual)
