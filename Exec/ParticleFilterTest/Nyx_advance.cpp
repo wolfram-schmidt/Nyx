@@ -3,10 +3,13 @@
 #include <Gravity.H>
 #include <constants_cosmo.H>
 #include <Forcing.H>
+#include <LightConeParticle.H>
 
 using namespace amrex;
 
 using std::string;
+
+std::vector<LightConeParticle> shell_particles;
 
 Real
 Nyx::advance (Real time,
@@ -240,6 +243,13 @@ Nyx::advance_hydro_plus_particles (Real time,
 
         MultiFab::RegionTag amrMoveKickDrift_tag("MoveKickDrift_" + std::to_string(level));
 
+		shell_particles.clear();
+		shell_particles.shrink_to_fit();
+
+		std::string filename=Concatenate("lightcone_", int(100*(1/a_old-1)), 7);
+		std::string filename_vtk=filename+".vtk";
+		std::string filename_bin=filename+".bin";
+
         for (int lev = level; lev <= finest_level_to_advance; lev++)
         {
             // We need grav_n_grow grow cells to track boundary particles
@@ -260,6 +270,9 @@ Nyx::advance_hydro_plus_particles (Real time,
                 }
                 Nyx::theActiveParticles()[i]->moveKickDrift(grav_vec_old, lev, time, dt, a_old, a_half, where_width, radius_inner, radius_outer);
             }
+			writeBinaryVTK(filename_vtk, shell_particles);
+			writeBinarySimple(filename_bin, shell_particles);
+			
 
             // Only need the coarsest virtual particles here.
                 if (lev == level && level < finest_level)
