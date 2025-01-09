@@ -36,48 +36,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=$(which clang++)
         cmake --build build --parallel 2
 
-  nyx-cuda9:
-    name: CUDA@10.2 GNU@6.5.0 C++14 Release
-    runs-on: ubuntu-20.04
-    env: {CXXFLAGS: "-fno-operator-names"}
-    steps:
-    - uses: actions/checkout@v2
-    - name: Dependencies
-      run: .github/workflows/dependencies/dependencies_nvcc10.sh 10.2
-    - name: Build & Install
-      run: |
-        export PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
-        export LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib:${LD_LIBRARY_PATH}
-        ls /usr/local/cuda/*
-        cmake  -S . -B build_adiabatic                       \
-            -DNyx_HEATCOOL=no                                \
-            -DNyx_HYDRO=yes                                  \
-            -DNyx_OMP=no                                     \
-            -DNyx_GPU_BACKEND=CUDA                           \
-            -DCMAKE_C_COMPILER=$(which gcc-6)                \
-            -DCMAKE_CXX_COMPILER=$(which g++-6)              \
-            -DCMAKE_CUDA_HOST_COMPILER=$(which g++-6)        \
-            -DCMAKE_CUDA_ARCHITECTURES=60                    \
-            -DAMReX_CUDA_ARCH=6.0
-        cmake --build build_adiabatic --parallel 2
 
-        cmake  -S . -B build                                 \
-            -DNyx_HEATCOOL=yes                               \
-            -DNyx_HYDRO=yes                                  \
-            -DNyx_OMP=no                                     \
-            -DNyx_GPU_BACKEND=CUDA                           \
-            -DCMAKE_VERBOSE_MAKEFILE=ON                      \
-            -DCMAKE_C_COMPILER=$(which gcc-6)                \
-            -DCMAKE_CXX_COMPILER=$(which g++-6)              \
-            -DCMAKE_CUDA_HOST_COMPILER=$(which g++-6)        \
-            -DCMAKE_CUDA_ARCHITECTURES=60                    \
-            -DAMReX_CUDA_ARCH=6.0
-        cmake --build build --parallel 2
-
-# Ref.:
-#   https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/ubuntu18.04/10.1/base/Dockerfile
-#   https://github.com/ComputationalRadiationPhysics/picongpu/blob/0.5.0/share/picongpu/dockerfiles/ubuntu-1604/Dockerfile
-#   https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/
   nyx-cuda11:
     name: NVCC 11.2 SP [Linux]
     runs-on: ubuntu-20.04
@@ -184,7 +143,7 @@ jobs:
             -DNyx_OMP=no                                   \
             -DNyx_GPU_BACKEND=HIP                          \
             -DAMReX_AMD_ARCH=gfx908                        \
-            -DCMAKE_C_COMPILER=$(which clang)              \
+            -DCMAKE_C_COMPILER=$(which hipcc)              \
             -DCMAKE_CXX_COMPILER=$(which hipcc)            \
             -DCMAKE_CXX_COMPILER_ID="Clang"                \
             -DCMAKE_CXX_COMPILER_VERSION=12.0              \
@@ -198,7 +157,7 @@ jobs:
             -DNyx_OMP=no                                   \
             -DNyx_GPU_BACKEND=HIP                          \
             -DAMReX_AMD_ARCH=gfx908                        \
-            -DCMAKE_C_COMPILER=$(which clang)              \
+            -DCMAKE_C_COMPILER=$(which hipcc)              \
             -DCMAKE_CXX_COMPILER=$(which hipcc)            \
             -DCMAKE_CXX_COMPILER_ID="Clang"                \
             -DCMAKE_CXX_COMPILER_VERSION=12.0              \
