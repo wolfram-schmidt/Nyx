@@ -23,6 +23,12 @@ UsersGuide/*.pdf
 \#*
 \.#*
 
+# JSON compilation database
+compile_commands.json
+
+# tag file
+tags
+
 # Mac:
 .DS_Store
 
@@ -49,6 +55,9 @@ ic_sb_32.ascii
 fixed_grids
 *est*-*
 *est.??????
+
+# logs
+runlog
 
 # build directories
 o/
