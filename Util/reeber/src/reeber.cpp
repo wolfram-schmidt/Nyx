@@ -430,7 +430,7 @@ std::vector<Halo> compute_halos(diy::mpi::communicator& world,
                         new Block(b->fab, b->extra_names_, b->extra_fabs_, local_ref, local_lev, diy_domain,
                                 l->bounds(),
                                 l->core(), cp.gid(),
-                                new_link, absolute_rho, negate, /*absolute = */ true, cell_volume),
+                                new_link, absolute_rho, negate, /* wrap = */ true, /*absolute = */ true, cell_volume),
                         new_link);
 
                 //if (debug) fmt::print(std::cerr, "Added block gid = {}\n", cp.gid());

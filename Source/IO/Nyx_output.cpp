@@ -1086,7 +1086,7 @@ Nyx::updateInSitu ()
 #endif
 
 #ifdef REEBER
-    amrex::Vector<Halo>& reeber_halos);
+    amrex::Vector<Halo> reeber_halos;
     halo_find(parent->dtLevel(level), reeber_halos);
     halo_print(reeber_halos);
 #endif
