@@ -159,7 +159,7 @@ void prepare_master_reader(
         int finest_level,
         const Vector<IntVect>& level_refinements,
         const amrex::Geometry geom_in,
-        std::vector<std::unique_ptr<Real[]>>& pointers_to_copied_data)
+        std::vector<Real*>& pointers_to_copied_data)
 {
     std::vector<std::string> new_state_vars { "density", "xmom", "ymom", "zmom" };
     const size_t density_var_idx = 0;
@@ -227,7 +227,10 @@ void prepare_master_reader(
             gid_to_fab_size[gid] = core_fab_size;
 
             pointers_to_copied_data.emplace_back(new Real[core_fab_size]);
-            Real* core_fab_ptr = pointers_to_copied_data.back().get();
+            // Real* core_fab_ptr = pointers_to_copied_data.back().get();
+
+            // HACK: use raw pointer to avoid double free
+            Real* core_fab_ptr = pointers_to_copied_data.back();
 
             GridRef core_grid_ref(core_fab_ptr, core_shape, false);
 
@@ -266,7 +269,10 @@ void prepare_master_reader(
 
             // reserve memory for dm_density
             pointers_to_copied_data.emplace_back(new Real[core_fab_size]);
-            Real* extra_ptr_copy = pointers_to_copied_data.back().get();
+            // Real* extra_ptr_copy = pointers_to_copied_data.back().get();
+
+            // HACK: use raw pointer to avoid double free
+            Real* extra_ptr_copy = pointers_to_copied_data.back();
             extra_pointers.push_back(extra_ptr_copy);
 
             // reserve memory for variables in new_state
@@ -571,7 +577,8 @@ void Nyx::runReeberAnalysis(Vector<MultiFab*>& new_state,
 
     // store pointers to all dynamically allocated arrays, so that
     // data will be freed automatically after exiting compute_halos
-    std::vector<std::unique_ptr<Real[]>> pointers_to_copied_data;
+    // std::vector<std::unique_ptr<Real[]>> pointers_to_copied_data;
+    std::vector<Real*> pointers_to_copied_data; // HACK: avoid double free
 
     diy::mpi::communicator world = ParallelDescriptor::Communicator();
 
