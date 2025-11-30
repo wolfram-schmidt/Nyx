@@ -996,6 +996,9 @@ protected:
   // Seed mass of SMBH
   //
   static amrex::Real mass_seed;
+  static int min_halo_n_cells;
+  static amrex::Real halo_component_threshold;
+  static amrex::Real halo_extrema_threshold;   
 #endif
 
   // Previous maximum number of steps for sundials
