@@ -1207,14 +1207,13 @@ Nyx::computeNewDt (int                      finest_level,
         if (checkpoint_z_values.size() > 0)
            checkpoint_z_est_time_step(dt_0,dt_changed_checkpoint);
 
-
         if (analysis_z_values.size() > 0)
            analysis_z_est_time_step(dt_0,dt_changed_analysis);
 
         // Update the value of a if we didn't change dt in the call to plot_z_est_time_step or analysis_z_est_time_step.
         // If we didn't change dt there, then we have already done the integration.
         // If we did    change dt there, then we need to re-integrate here.
-        if (dt_changed_plot || dt_changed_analysis)
+        if (dt_changed_plot || dt_changed_checkpoint || dt_changed_analysis)
             integrate_comoving_a(cur_time,dt_0);
     }
     else
