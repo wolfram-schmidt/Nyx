@@ -842,9 +842,9 @@ Nyx::checkpoint_z_est_time_step (Real& dt_0, bool& dt_changed)
     a_old = get_comoving_a(cur_time);
     z_old = (1. / a_old) - 1.;
 
-    // *****************************************************
-    // First test whether we are within dt of a plot_z value
-    // *****************************************************
+    // ************************************************************
+    // First test whether we are within dt of a checkpoint_z value
+    // ************************************************************
 
     // This is where we would be if we use the current dt_0
     Real new_time = cur_time + dt_0;
@@ -886,9 +886,9 @@ Nyx::checkpoint_z_est_time_step (Real& dt_0, bool& dt_changed)
     else 
     { 
 
-    // *****************************************************
-    // If not within one dt, now test whether we are within 2*dt of a plot_z value
-    // *****************************************************
+    // **********************************************************************************
+    // If not within one dt, now test whether we are within 2*dt of a checkpoint_z value
+    // **********************************************************************************
 
     // This is where we would be if we advance by twice the current dt_0
     Real two_dt = 2.0*dt_0;
