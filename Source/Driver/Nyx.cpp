@@ -65,6 +65,7 @@ Real Nyx::old_a_time = -1.0;
 Real Nyx::new_a_time = -1.0;
 
 Vector<Real> Nyx::plot_z_values;
+Vector<Real> Nyx::checkpoint_z_values;
 Vector<Real> Nyx::analysis_z_values;
 int Nyx::insitu_start = 0;
 int Nyx::insitu_int = 0;
@@ -400,6 +401,13 @@ Nyx::read_params ()
       int num_z_values = pp_nyx.countval("plot_z_values");
       plot_z_values.resize(num_z_values);
       pp_nyx.queryarr("plot_z_values",plot_z_values,0,num_z_values);
+    }
+
+    if (pp_nyx.contains("checkpoint_z_values"))
+    {
+      int num_z_values = pp_nyx.countval("checkpoint_z_values");
+      checkpoint_z_values.resize(num_z_values);
+      pp_nyx.queryarr("checkpoint_z_values",checkpoint_z_values,0,num_z_values);
     }
 
     if (pp_nyx.contains("analysis_z_values"))
@@ -909,6 +917,9 @@ Nyx::initial_time_step ()
     if (level == 0 && plot_z_values.size() > 0)
         plot_z_est_time_step(init_dt,dt_changed);
 
+    if (level == 0 && checkpoint_z_values.size() > 0)
+        checkpoint_z_est_time_step(init_dt,dt_changed);
+
     if (level == 0 && analysis_z_values.size() > 0)
         analysis_z_est_time_step(init_dt,dt_changed);
 
@@ -1184,13 +1195,18 @@ Nyx::computeNewDt (int                      finest_level,
     }
 
     // Shrink the time step if necessary in order to hit the next plot_z_value
-    if (level == 0 && ( plot_z_values.size() > 0 || analysis_z_values.size() > 0 ) )
+    if (level == 0 && ( plot_z_values.size() > 0 || checkpoint_z_values.size() > 0 || analysis_z_values.size() > 0 ) )
     {
         bool dt_changed_plot     = false;
+        bool dt_changed_checkpoint = false;
         bool dt_changed_analysis = false;
 
         if (plot_z_values.size() > 0)
            plot_z_est_time_step(dt_0,dt_changed_plot);
+
+        if (checkpoint_z_values.size() > 0)
+           checkpoint_z_est_time_step(dt_0,dt_changed_checkpoint);
+
 
         if (analysis_z_values.size() > 0)
            analysis_z_est_time_step(dt_0,dt_changed_analysis);
@@ -1332,6 +1348,45 @@ Nyx::writePlotNow ()
         for (int i = 0; i < plot_z_values.size(); i++)
         {
             if (std::abs(z_new - plot_z_values[i]) < (0.01 * (z_old - z_new)) )
+                found_one = true;
+        }
+    }
+
+    if (found_one) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool
+Nyx::checkPointNow ()
+{
+    BL_PROFILE("Nyx::checkPointNow()");
+    if (level > 0)
+        amrex::Error("Should only call checkPointNow at level 0!");
+
+    bool found_one = false;
+
+    if (checkpoint_z_values.size() > 0)
+    {
+#ifndef NO_HYDRO
+        Real prev_time = state[State_Type].prevTime();
+        Real  cur_time = state[State_Type].curTime();
+#else
+        Real prev_time = state[PhiGrav_Type].prevTime();
+        Real  cur_time = state[PhiGrav_Type].curTime();
+#endif
+
+        Real a_old = get_comoving_a(prev_time);
+        Real z_old = (1. / a_old) - 1.;
+
+        Real a_new = get_comoving_a( cur_time);
+        Real z_new = (1. / a_new) - 1.;
+
+        for (int i = 0; i < checkpoint_z_values.size(); i++)
+        {
+            if (std::abs(z_new - checkpoint_z_values[i]) < (0.01 * (z_old - z_new)) )
                 found_one = true;
         }
     }
