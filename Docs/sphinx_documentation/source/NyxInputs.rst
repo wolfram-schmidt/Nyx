@@ -626,6 +626,17 @@ List of Parameters
 |                                 | after          |                |                |
 |                                 | restarting     |                |                |
 +---------------------------------+----------------+----------------+----------------+
+| **nyx.checkpoint_z_values**     | The redshift   | list of        | NONE           |
+|                                 | values at which| redshift values|                |
+|                                 | checkpoint file|                |                |
+|                                 | should be      |                |                |
+|                                 | written in     |                |                |
+|                                 | addition to    |                |                |
+|                                 | what is specifi|                |                |
+|                                 | specified      |                |                |
+|                                 | using          |                |                |
+|                                 | **check_int**  |                |                |
++---------------------------------+----------------+----------------+----------------+
 
 .. _notes-4:
 
@@ -683,8 +694,8 @@ To restart from *chk_run00061*,for example, then set
 
 .. _sec:PlotFiles:
 
-Controlling PlotFile Generation
-===============================
+Controlling PlotFile and Generation
+================================================
 
 The main output from  is in the form of plotfiles (which are really
 directories). The following options in the inputs file control the
@@ -742,6 +753,15 @@ List of Parameters
 |                             | the plotfile in  |                  |         |
 |                             | double or single |                  |         |
 |                             | precision        |                  |         |
++-----------------------------+------------------+------------------+---------+
+| **nyx.plot_z_values**       | The redshift     | list of redshift | NONE    |
+|                             | values at which  | values           |         |
+|                             | plot files should|                  |         |
+|                             | be written in    |                  |         |
+|                             | addition to what |                  |         |
+|                             | is specifie      |                  |         |
+|                             | using            |                  |         |
+|                             | **nyx.plot_int** |                  |         |
 +-----------------------------+------------------+------------------+---------+
 
 All the options for **amr.derive_plot_vars** are kept in ``derive_lst``
@@ -1136,8 +1156,6 @@ List of Parameters
 | **reionization_T_zHeII**         | He reionization  |  real           | 1.5e4       |
 |                                  | heat input       |                 |             |
 +----------------------------------+------------------+-----------------+-------------+
-
-
 
 Multigrid Inputs
 ================
