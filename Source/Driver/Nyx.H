@@ -272,6 +272,12 @@ public:
     void plot_z_est_time_step(amrex::Real& est_dt, bool& dt_changed);
 
     //
+    // Time step control based on "z" not passing one of the specified checkpoint_z_values
+    //
+    void checkpoint_z_est_time_step(amrex::Real& est_dt, bool& dt_changed);
+
+
+    //
     // Time step control based on "z" not passing one of the specified analysis_z_values
     //
     void analysis_z_est_time_step(amrex::Real& est_dt, bool& dt_changed);
@@ -455,6 +461,11 @@ public:
     // Tell amrex::Amr to write a plotfile now
     //
     bool writePlotNow() override;
+
+    //
+    // Tell amrex::Amr to write a checkpoint file now
+    //
+    bool checkPointNow() override;
 
     //
     // Tell Nyx to do analysis now
@@ -904,8 +915,9 @@ protected:
     // This controls the LaunchSafeGuard for particle initialization
     static int particle_launch_ics;
 
-    static amrex::Vector<amrex::Real> plot_z_values;      // These are the value of "z" at which to dump plotfiles.
-    static amrex::Vector<amrex::Real> analysis_z_values;  // These are the value of "z" at which to perform analysis
+    static amrex::Vector<amrex::Real> plot_z_values;       // These are the value of "z" at which to dump plotfiles.
+    static amrex::Vector<amrex::Real> checkpoint_z_values; // These are the value of "z" at which to dump checkpoint files.
+    static amrex::Vector<amrex::Real> analysis_z_values;   // These are the value of "z" at which to perform analysis
     static int insitu_int;
     static int insitu_start;
 
