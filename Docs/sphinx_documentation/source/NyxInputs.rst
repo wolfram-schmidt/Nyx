@@ -632,7 +632,7 @@ List of Parameters
 |                                 | should be      |                |                |
 |                                 | written in     |                |                |
 |                                 | addition to    |                |                |
-|                                 | what is specifi|                |                |
+|                                 | what is        |                |                |
 |                                 | specified      |                |                |
 |                                 | using          |                |                |
 |                                 | **check_int**  |                |                |
@@ -759,7 +759,7 @@ List of Parameters
 |                             | plot files should|                  |         |
 |                             | be written in    |                  |         |
 |                             | addition to what |                  |         |
-|                             | is specifie      |                  |         |
+|                             | is specified     |                  |         |
 |                             | using            |                  |         |
 |                             | **nyx.plot_int** |                  |         |
 +-----------------------------+------------------+------------------+---------+
