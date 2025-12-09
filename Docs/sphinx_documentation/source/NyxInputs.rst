@@ -1157,6 +1157,28 @@ List of Parameters
 |                                  | heat input       |                 |             |
 +----------------------------------+------------------+-----------------+-------------+
 
+Dark matter halo output using Reeber
+====================================
+
+.. _list-of-parameters-halos:
+
+List of Parameters
+------------------
+
++-------------------------------------+----------------------------------------------+-----------------+-------------+
+| Parameter                           | Definition                                   | Acceptable      | Default     |
+|                                     |                                              | Values          |             |
++=====================================+==============================================+=================+=============+
+| **reeber.min_halo_n_cells**         | Minimum number of cells required for a halo  | integer         | 10          |
+|                                     | to be considered a valid structure           |                 |             |
++-------------------------------------+----------------------------------------------+-----------------+-------------+
+| **reeber.halo_component_threshold** | Threshold for identifying connected          | real            | 81.66       |
+|                                     | components within a halo                     |                 |             |
++-------------------------------------+----------------------------------------------+-----------------+-------------+
+| **reeber.halo_extrema_threshold**   | Threshold for detecting local maxima or      | real            | 160.0       |
+|                                     | extrema in the density field                 |                 |             |
++-------------------------------------+----------------------------------------------+-----------------+-------------+
+
 Multigrid Inputs
 ================
 
