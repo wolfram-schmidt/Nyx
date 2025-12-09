@@ -71,6 +71,8 @@ extensions = ['sphinx.ext.autodoc',
     'breathe']
 todo_include_todos=True
 
+bibtex_bibfiles = ['refs.bib']
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
