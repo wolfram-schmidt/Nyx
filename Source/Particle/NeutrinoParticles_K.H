@@ -83,14 +83,18 @@ void neutrino_deposit_particle_dx_relativistic_cic (
     int hi_y = static_cast<int>(amrex::Math::floor(hy));
     int hi_z = static_cast<int>(amrex::Math::floor(hz));
 
+    lo_x = amrex::max(lo_x, rho.begin[0]);
+    lo_y = amrex::max(lo_y, rho.begin[1]);
+    lo_z = amrex::max(lo_z, rho.begin[2]);
+    hi_x = amrex::min(hi_x, rho.end[0]-1);
+    hi_y = amrex::min(hi_y, rho.end[1]-1);
+    hi_z = amrex::min(hi_z, rho.end[2]-1);
+
     for (int k = lo_z; k <= hi_z; ++k) {
-        if (k < rho.begin.z || k >= rho.end.z) continue;
         amrex::Real wz = amrex::min(hz - k, amrex::Real(1.0)) - amrex::max(lz - k, amrex::Real(0.0));
         for (int j = lo_y; j <= hi_y; ++j) {
-            if (j < rho.begin.y || j >= rho.end.y) continue;
             amrex::Real wy = amrex::min(hy - j, amrex::Real(1.0)) - amrex::max(ly - j, amrex::Real(0.0));
             for (int i = lo_x; i <= hi_x; ++i) {
-                if (i < rho.begin.x || i >= rho.end.x) continue;
                 amrex::Real wx = amrex::min(hx - i, amrex::Real(1.0)) - amrex::max(lx - i, amrex::Real(0.0));
 
                 amrex::Real weight = wx*wy*wz*factor;
@@ -102,13 +106,10 @@ void neutrino_deposit_particle_dx_relativistic_cic (
 
     for (int comp = 1; comp < AMREX_SPACEDIM; ++comp) {
         for (int k = lo_z; k <= hi_z; ++k) {
-            if (k < rho.begin.z || k >= rho.end.z) continue;
             amrex::Real wz = amrex::min(hz - k, amrex::Real(1.0)) - amrex::max(lz - k, amrex::Real(0.0));
             for (int j = lo_y; j <= hi_y; ++j) {
-                if (j < rho.begin.y || j >= rho.end.y) continue;
                 amrex::Real wy = amrex::min(hy - j, amrex::Real(1.0)) - amrex::max(ly - j, amrex::Real(0.0));
                 for (int i = lo_x; i <= hi_x; ++i) {
-                    if (i < rho.begin.x || i >= rho.end.x) continue;
                     amrex::Real wx = amrex::min(hx - i, amrex::Real(1.0)) - amrex::max(lx - i, amrex::Real(0.0));
                     amrex::Real weight = wx*wy*wz*factor;
                     rho(i, j, k, comp) += weight*p.rdata(0)*p.rdata(comp);
