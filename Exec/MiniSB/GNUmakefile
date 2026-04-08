@@ -1,11 +1,11 @@
-# AMREX_HOME defines the directory in which we will find all the BoxLib code
-AMREX_HOME ?= ../../../amrex
+# AMREX_HOME defines the directory in which we will find all the AMReX code
+AMREX_HOME ?= ../../subprojects/amrex
 
 # TOP defines the directory in which we will find Source, Exec, etc
 TOP = ../..
 
 # compilation options
-COMP    = intel  # gnu
+COMP    =  gnu
 
 USE_MPI = TRUE
 USE_OMP = FALSE
@@ -18,7 +18,7 @@ DEBUG     = FALSE
 
 # physics
 DIM      = 3
-USE_GRAV = TRUE
+USE_CONST_SPECIES = TRUE
 
 Bpack := ./Make.package
 Blocs := .

@@ -12,11 +12,8 @@ amr.data_log = runlog
 #max_step = 100
 #particles.particle_output_file = particle_output
 
-gravity.gravity_type = PoissonGrav
 gravity.no_sync      = 1
 gravity.no_composite = 1
-
-mg.bottom_solver = 4
 
 # PROBLEM SIZE & GEOMETRY
 geometry.is_periodic = 1 1 1
@@ -55,13 +52,6 @@ nyx.do_dm_particles = 1
 nyx.particle_init_type = AsciiFile
 nyx.ascii_particle_file = ../ics/zeldovich_particles.ascii
 
-
-# >>>>>>>>>>>>>  PARTICLE MOVE OPTIONS <<<<<<<<<<<<<<<<
-#  "Gravitational"    "Random"
-# >>>>>>>>>>>>>  PARTICLE MOVE OPTIONS <<<<<<<<<<<<<<<<
-nyx.particle_move_type = Gravitational
-
-
 # TIME STEP CONTROL
 nyx.cfl         = 0.9     # cfl number for hyperbolic system
 nyx.init_shrink = 1.0     # scale back initial timestep
@@ -95,5 +85,5 @@ amr.derive_plot_vars = particle_count
 amr.plot_vars = NONE
 
 # probin filename
-amr.probin_file = probin
+amr.probin_file = ""
 

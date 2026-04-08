@@ -1,5 +1,5 @@
 # AMREX_HOME defines the directory in which we will find all the AMReX code
-AMREX_HOME ?= ../../../../amrex
+AMREX_HOME ?= ../../../subprojects/amrex
 
 CVODE_LIB_DIR ?= $(CVODE_LIB)
 
@@ -10,6 +10,7 @@ TOP = ../../..
 COMP    = intel  # gnu
 USE_MPI = TRUE
 USE_OMP = TRUE
+USE_CUDA = FALSE
 
 USE_HENSON = TRUE
 

@@ -39,7 +39,6 @@ import subprocess
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.append(os.path.dirname(breathe.__file__))
 
-
 def get_version():
     prog = shlex.split("git describe --tags --abbrev=0")
     p0 = subprocess.Popen(prog, stdout=subprocess.PIPE,
@@ -72,6 +71,8 @@ extensions = ['sphinx.ext.autodoc',
     'breathe']
 todo_include_todos=True
 
+bibtex_bibfiles = ['refs.bib']
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -86,7 +87,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Nyx'
-copyright = '2018, Nyx development team'
+copyright = '2021, Nyx development team'
 author = 'Nyx development team'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -118,16 +119,16 @@ todo_include_todos = True
 
 # -- Options for MathJax
 #mathjax_path = 'MathJax/MathJax.js'
-mathjax_config = {'TeX': {'Macros': {}}}
+mathjax3_config = {'tex': {'macros': {}}}
 
 with open('mathsymbols.tex', 'r') as f:
     for line in f:
         macros = re.findall(r'\\newcommand{\\(.*?)}(\[(\d)\])?{(.+)}', line)
         for macro in macros:
             if len(macro[1]) == 0:
-                mathjax_config['TeX']['Macros'][macro[0]] = "{"+macro[3]+"}"
+                mathjax3_config['tex']['macros'][macro[0]] = "{"+macro[3]+"}"
             else:
-                mathjax_config['TeX']['Macros'][macro[0]] = ["{"+macro[3]+"}", int(macro[2])]
+                mathjax3_config['tex']['macros'][macro[0]] = ["{"+macro[3]+"}", int(macro[2])]
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -146,12 +147,12 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-html_context = {
-    'css_files': [
-        '_static/theme_overrides.css',  # override wide tables in RTD theme
-        ],
-    }
+#html_static_path = ['_static']
+#html_context = {
+#    'css_files': [
+#        '_static/theme_overrides.css',  # override wide tables in RTD theme
+#        ],
+#    }
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -165,6 +166,20 @@ html_sidebars = {
     ]
 }
 
+# -- Options for breathe -------------------------------------------------
+
+#breathe_projects = {
+#        "Nyx": "../doxy_files/xml",
+#    }
+
+#breathe_default_project = "Nyx"
+
+#breathe_default_members = ('members', 'undoc-members', 'protected-members',
+#                                                      'private-members')
+
+#breathe_doxygen_config_options = {'EXTRACT_ALL': 'YES',
+#                                  'SHOW_USED_FILES': 'YES', 'RECURSIVE': 'YES'
+#                                                                    }
 
 # -- Options for HTMLHelp output ------------------------------------------
 
@@ -248,3 +263,6 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+# Enable numref
+numfig = True

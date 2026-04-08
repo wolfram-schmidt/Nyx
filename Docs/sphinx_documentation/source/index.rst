@@ -11,25 +11,26 @@ Welcome to Nyx's documentation!
    :caption: Nyx basics
 
    NyxPreface
-   NyxIntroduction
+   NyxCitation
    NyxGettingStarted
+   NyxUnits
+   NyxInputs
+   ICs
+   Refinement
+   ManagingGridHierarchy_Chapter
    NyxGravity
    NyxEquations
-   Particles
+   NyxSplitting
    NyxHeatCool
+   NyxForcing
+   Particles
+   InSitu
+   PostProcessing
+   NightlyTests
+   Debugging
+   Development
 
-.. toctree::
-   :maxdepth: 1
-   :caption: API
 
-   filelist
-   classlist
-   namespacelist
-
-.. toctree::
-
-   references
-   
 .. toctree::      
    :maxdepth: 2
    :caption: Contents:

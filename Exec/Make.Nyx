@@ -1,6 +1,10 @@
 EBASE     ?= Nyx
 
 USE_PARTICLES = TRUE
+USE_GRAV = TRUE
+BL_NO_FORT = TRUE
+AMREX_NO_PROBINIT = TRUE
+USE_RPATH = TRUE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
@@ -28,12 +32,30 @@ ifeq ($(USE_HENSON), TRUE)
   LIBRARIES += $(HENSON_LIBRARY) $(HENSON_LIBPMPI)
 endif
 
+ifeq ($(USE_CUDA), TRUE)
+      F90FLAGS := $(subst -gopt, ,$(F90FLAGS))
+endif
+
 ifeq ($(USE_GRAV), TRUE)
   DEFINES += -DGRAVITY
 endif
 
 ifeq ($(NO_HYDRO), TRUE)
   DEFINES += -DNO_HYDRO
+else
+
+ifeq ($(USE_HEATCOOL), TRUE)
+  DEFINES += -DHEATCOOL
+endif
+
+ifeq ($(USE_SAVE_REACT), TRUE)
+  DEFINES += -DSAVE_REACT
+endif
+
+endif
+
+ifeq ($(USE_CONST_SPECIES), TRUE)
+  DEFINES += -DCONST_SPECIES
 endif
 
 ifeq ($(USE_AGN), TRUE)
@@ -44,40 +66,19 @@ ifeq ($(NEUTRINO_PARTICLES), TRUE)
   DEFINES += -DNEUTRINO_PARTICLES
 endif
 
-ifeq ($(USE_HEATCOOL), TRUE)
-  DEFINES += -DHEATCOOL
+ifeq ($(NEUTRINO_DARK_PARTICLES), TRUE)
+  DEFINES += -DNEUTRINO_DARK_PARTICLES
 endif
 
 ifeq ($(USE_SDC), TRUE)
   DEFINES += -DSDC
 endif
 
-ifeq ($(USE_FORCING), TRUE)
-  DEFINES += -DFORCING
-endif
-
-DEFINES += -DBL_NOLINEVALUES
-
 GIMLET_DIR ?= /home/vince/Development/gimlet
 # Gimlet needs FFTW MPI.
 FFTW_INC ?= /usr/include
 FFTW_DIR ?= /usr/lib/x86_64-linux-gnu
 
-REEBER_HOME ?= /project/projectdirs/nyx/ghweber/reeber2
-# Reeber needs Boost (both headers and libraries) and diy2.
-BOOST_INCLUDE_DIR ?= /project/projectdirs/nyx/ghweber/boost-1.61.0-noarch/include
-DIY_INCLUDE_DIR ?= /project/projectdirs/nyx/ghweber/diy/include
-
-ifeq ($(REEBER), TRUE)
-  DEFINES += -DREEBER
-  DEFINES += -DREEBER_USE_BOXLIB_READER -DREEBER_IN_SITU
-  DEFINES += -DPARALLEL_MPI -DBOOST_DATE_TIME_NO_LOCALE
-  INCLUDE_LOCATIONS += $(BOOST_INCLUDE_DIR)
-  INCLUDE_LOCATIONS += $(DIY_INCLUDE_DIR)
-  INCLUDE_LOCATIONS += $(REEBER_HOME)/include $(REEBER_HOME)/examples/include $(REEBER_HOME)/examples/local-global
-  VPATH_LOCATIONS += $(REEBER_HOME)/src $(REEBER_HOME)/examples/local-global
-  LIBRARIES += -lpthread
-endif
 ifeq ($(DEBUG), TRUE)
   DEFINES += -DDEBUG
 endif
@@ -100,11 +101,74 @@ ifeq ($(GIMLET), TRUE)
 
 endif
 
+
+ifeq ($(USE_SUNDIALS),TRUE)
+SUNDIALS_ROOT ?= $(TOP)/../sundials/instdir
+SUNDIALS_LIB_DIR ?= $(SUNDIALS_ROOT)/lib
+
+USE_CVODE_LIBS ?= TRUE
+USE_ARKODE_LIBS ?= TRUE
+
+INCLUDE_LOCATIONS += $(SUNDIALS_ROOT)/include
+LIBRARY_LOCATIONS += $(SUNDIALS_LIB_DIR)
+
+ifneq (,$(wildcard $(SUNDIALS_LIB_DIR)/libsundials_core*))
+    LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_core
+endif
+
+ifeq ($(USE_CVODE_LIBS),TRUE)
+  LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_cvode
+endif
+
+ifeq ($(USE_ARKODE_LIBS),TRUE)
+  LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_arkode
+endif
+
+LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_nvecserial
+
+ifeq ($(USE_CUDA),TRUE)
+  LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_nveccuda
+endif
+
+ifeq ($(USE_HIP),TRUE)
+  LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_nvechip
+endif
+
+ifeq ($(USE_DPCPP),TRUE)
+  LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_nvecsycl
+endif
+
+ifneq ($(USE_GPU),TRUE)
+ifeq ($(USE_OMP),TRUE)
+ifneq ($(USE_HIP), TRUE)
+  LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_nvecopenmp
+endif
+endif
+endif
+
+ifeq ($(USE_FUSED),TRUE)
+ifeq ($(USE_CUDA),TRUE)
+     LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_cvode_fused_cuda
+else
+ifeq ($(USE_HIP),TRUE)
+     LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_cvode_fused_hip
+else
+     LIBRARIES += -L$(SUNDIALS_LIB_DIR) -lsundials_cvode_fused_stubs
+endif
+endif
+endif
+endif
+
 #These are the directories in Nyx 
 
-Bdirs 	:= Source Source/Src_3d Source/HydroFortran Source/Tagging Source/Initialization
-Bdirs 	+= Source/EOS Source/Network Source/HeatCool
-Bdirs 	+= Source/SourceTerms Source/DerivedQuantities
+Bdirs   := Source/Driver Source/TimeStep Source/Hydro
+Bdirs   += Source/EOS Source/HeatCool Source/IO Source/Initialization
+Bdirs   += Source/DerivedQuantities Source/Forcing
+Bdirs   += Exec
+ifeq ($(USE_PARTICLES), TRUE)
+Bdirs   += Source/Particle
+endif
+
 ifeq ($(USE_MPI), TRUE)
 Bdirs 	+= Source/Monitors
 endif
@@ -112,12 +176,9 @@ endif
 ifeq ($(USE_GRAV), TRUE)
    Bdirs 	+= Source/Gravity
 endif
-ifeq ($(USE_FORCING), TRUE)
-   Bdirs 	+= Source/Forcing
-endif
-ifeq ($(USE_AGN), TRUE)
+#ifeq ($(USE_AGN), TRUE)
    Bdirs 	+= Source/AGN
-endif
+#endif
 
 Bpack	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs	+= $(foreach dir, $(Bdirs), $(TOP)/$(dir))
@@ -127,10 +188,18 @@ INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
 
 #These are the directories in AMReX
+Pdirs   := Base AmrCore Amr Boundary
 
-Pdirs   := Base AmrCore Amr Boundary Particle Extern/amrdata # F_Interfaces/Base
+ifeq ($(USE_PARTICLES), TRUE)
+Pdirs   += Particle
+endif
+
 ifeq ($(USE_SENSEI_INSITU),TRUE)
     Pdirs += Extern/SENSEI
+endif
+
+ifeq ($(USE_SUNDIALS),TRUE)
+    Pdirs += Extern/SUNDIALS
 endif
 Ppack	+= $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
 Plocs	+= $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir))
@@ -139,41 +208,24 @@ include $(Ppack)
 INCLUDE_LOCATIONS += $(Plocs)
 VPATH_LOCATIONS   += $(Plocs)
 
-include $(TOP)/Source/Constants/Make.package
-INCLUDE_LOCATIONS += $(TOP)/Source/Constants
-VPATH_LOCATIONS   += $(TOP)/Source/Constants
-
 USE_MG = FALSE
 ifeq ($(USE_GRAV), TRUE)
   USE_MG = TRUE
 endif
 
 ifeq ($(USE_MG), TRUE)
-  include $(AMREX_HOME)/Src/LinearSolvers/C_CellMG/Make.package
-  INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/C_CellMG
-  VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/C_CellMG
-
   include $(AMREX_HOME)/Src/LinearSolvers/MLMG/Make.package
   INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/LinearSolvers/MLMG
   VPATH_LOCATIONS   += $(AMREX_HOME)/Src/LinearSolvers/MLMG
 endif
 
-#INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/F_Interfaces
-#VPATH_LOCATIONS   += $(AMREX_HOME)/Src/F_Interfaces
-#INCLUDE_LOCATIONS += $(AMREX_HOME)/Src/F_Interfaces/Base
-#VPATH_LOCATIONS   += $(AMREX_HOME)/Src/F_Interfaces/Base
-
-VODE_dir    := $(TOP)/Util/VODE
-include $(VODE_dir)/Make.package
-
-BLAS_dir    := $(TOP)/Util/BLAS
-include $(BLAS_dir)/Make.package
-
-INCLUDE_LOCATIONS += $(VODE_dir)
-INCLUDE_LOCATIONS += $(BLAS_dir)
-
-VPATH_LOCATIONS   += $(VODE_dir)
-VPATH_LOCATIONS   += $(BLAS_dir)
+ifeq ($(REEBER), TRUE)
+     REEBER_NYX_HOME ?= $(TOP)/Util/reeber
+     DIY_INCLUDE_DIR ?= ../../../diy/include
+     REEBER_EXT_HOME ?= ../../../Reeber2
+#     BOOST_INCLUDE_DIR ?= /usr/include/boost
+     include $(REEBER_NYX_HOME)/Make.package
+endif
 
 all: $(executable) 
 	$(SILENT) $(RM) AMReX_buildInfo.cpp

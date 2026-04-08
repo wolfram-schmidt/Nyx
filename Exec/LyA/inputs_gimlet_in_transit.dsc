@@ -3,12 +3,9 @@
 max_step = 400
 
 nyx.ppm_type         = 1
-nyx.ppm_reference    = 1
-nyx.use_colglaz      = 0
-nyx.corner_coupling  = 1
 
 nyx.add_ext_src      = 0
-nyx.heat_cool_type   = 3
+nyx.heat_cool_type   = 11
 nyx.strang_split     = 1
 
 #This is 1e-8 times the lowest density in plt00000
@@ -35,10 +32,8 @@ amr.data_log = runlog
 #max_step = 4
 #particles.particle_output_file = particle_output
 
-gravity.gravity_type = PoissonGrav
 gravity.no_sync      = 1
 gravity.no_composite = 1
-mg.bottom_solver = 4
 
 # PROBLEM SIZE & GEOMETRY
 geometry.is_periodic =  1     1     1
@@ -80,12 +75,6 @@ nyx.particle_init_type = BinaryFile
 nyx.binary_particle_file = 1024s_20mpc.nyx
 particles.nparts_per_read = 2097152
 
-# >>>>>>>>>>>>>  PARTICLE MOVE OPTIONS <<<<<<<<<<<<<<<<
-#  "Gravitational"    "Random"
-# >>>>>>>>>>>>>  PARTICLE MOVE OPTIONS <<<<<<<<<<<<<<<<
-nyx.particle_move_type = Gravitational
-
-
 # TIME STEP CONTROL
 nyx.relative_max_change_a = 0.02    # max change in scale factor
 particles.cfl             = 0.5     # 'cfl' for particles 
@@ -95,7 +84,6 @@ nyx.change_max            = 1.1     # factor by which timestep can change
 nyx.dt_cutoff             = 5.e-20  # level 0 timestep below which we halt
 
 # DIAGNOSTICS & VERBOSITY
-nyx.print_fortran_warnings = 0
 nyx.sum_interval      = -1      # timesteps between computing mass
 nyx.v                 = 1       # verbosity in Nyx.cpp
 gravity.v             = 1       # verbosity in Gravity.cpp
@@ -130,5 +118,5 @@ amr.plot_vars        = density
 #amr.derive_plot_vars = particle_mass_density
 
 #PROBIN FILENAME
-amr.probin_file = probin
+amr.probin_file = ""
 
